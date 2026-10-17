@@ -9,16 +9,24 @@ namespace ZombieSurvival.Player
     [RequireComponent(typeof(Health), typeof(FirstPersonController))]
     public sealed class PlayerLifeCycle : MonoBehaviour
     {
-        [Header("Respawn")]
-        [Tooltip("Optional scene point. Without one, use the player's initial position and yaw.")]
+        [Header("Возрождение")]
+        [Tooltip("Необязательная точка возрождения сцены. Без неё используется стартовая позиция игрока.")]
         [SerializeField] private Transform respawnPoint;
+        [Tooltip("Время после смерти до разрешённого возрождения, с.")]
         [SerializeField, Min(0f)] private float respawnDelay = 1.5f;
+        [Tooltip("Доля здоровья после возрождения от 0 до 1.")]
         [SerializeField, Range(.01f, 1f)] private float respawnHealthFraction = 1f;
+        [Tooltip("Защита от урона после возрождения, с.")]
         [SerializeField, Min(0f)] private float spawnProtectionSeconds = 1.5f;
+        [Tooltip("Восстанавливать стартовый запас выносливости при возрождении.")]
         [SerializeField] private bool resetStaminaOnRespawn = true;
+        [Tooltip("Слои препятствий для проверки свободного места перед возрождением.")]
         [SerializeField] private LayerMask spawnObstructionMask = ~0;
+        [Tooltip("Принимать ввод только когда окно игры активно.")]
         [SerializeField] private bool requireApplicationFocus = true;
+        [Tooltip("Команды возрождения, по умолчанию R и Start на геймпаде.")]
         [SerializeField] private InputAction respawnInput = CreateRespawnInput();
+        [Tooltip("Событие успешного возрождения после восстановления позы и показателей.")]
         [SerializeField] private UnityEvent onRespawned = new UnityEvent();
         private FirstPersonController motor;
         private CharacterController capsule;

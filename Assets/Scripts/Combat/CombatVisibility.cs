@@ -17,7 +17,7 @@ namespace ZombieSurvival.Combat
             {
                 Transform hitTransform = hit.collider.transform;
                 if (hitTransform == owner || hitTransform.IsChildOf(owner)) continue;
-                if (hitTransform.root.gameObject.GetEntityId() == ignoredRoot) continue;
+                if (ActorIdentity.Entity(hitTransform) == ignoredRoot) continue;
                 if (target != null && (hitTransform == target || hitTransform.IsChildOf(target))) return true;
                 return false;
             }

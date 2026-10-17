@@ -5,19 +5,30 @@ namespace ZombieSurvival.Player
     [DisallowMultipleComponent]
     public sealed class PlayerStamina : MonoBehaviour
     {
-        [Header("Reserve")]
+        [Header("Запас")]
+        [Tooltip("Включить расход и восстановление выносливости. Выключение полезно для тестирования механик.")]
         [SerializeField] private bool staminaEnabled = true;
+        [Tooltip("Максимальный запас выносливости.")]
         [SerializeField, Min(1f)] private float capacity = 100f;
+        [Tooltip("Начальная доля максимального запаса от 0 до 1.")]
         [SerializeField, Range(0f, 1f)] private float startingFraction = 1f;
+        [Tooltip("Доля выносливости, которую нужно восстановить после истощения, чтобы снова бежать.")]
         [SerializeField, Range(.01f, 1f)] private float sprintResumeFraction = .2f;
-        [Header("Recovery")]
+        [Header("Восстановление")]
+        [Tooltip("Сколько выносливости восстанавливается за секунду отдыха.")]
         [SerializeField, Min(0f)] private float recoveryPerSecond = 18f;
+        [Tooltip("Задержка восстановления выносливости после последнего расхода, с.")]
         [SerializeField, Min(0f)] private float recoveryDelay = 1.5f;
-        [Header("Costs")]
+        [Header("Затраты выносливости")]
+        [Tooltip("Расход выносливости за секунду фактического бега.")]
         [SerializeField, Min(0f)] private float sprintPerSecond = 16f;
+        [Tooltip("Расход выносливости на один прыжок.")]
         [SerializeField, Min(0f)] private float jumpCost = 10f;
+        [Tooltip("Цена одного подтягивания в единицах выносливости.")]
         [SerializeField, Min(0f)] private float climbCost = 16f;
+        [Tooltip("Расход выносливости на одно преодоление низкого препятствия.")]
         [SerializeField, Min(0f)] private float vaultCost = 8f;
+        [Tooltip("Цена одного переката в единицах выносливости.")]
         [SerializeField, Min(0f)] private float rollCost = 12f;
 
         private float current, recoveryWait;

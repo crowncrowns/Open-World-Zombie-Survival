@@ -6,10 +6,14 @@ namespace ZombieSurvival.Combat
     [DisallowMultipleComponent]
     public sealed class DamageableHealth : MonoBehaviour, IDamageable
     {
+        [Tooltip("Максимальное здоровье старого компонента. Новые актёры используют Health; не ставьте оба компонента одновременно.")]
         [SerializeField, Min(1f)] private float maximumHealth = 100f;
+        [Tooltip("Событие получения урона старым компонентом здоровья.")]
         [SerializeField] private UnityEvent onDamaged = new UnityEvent();
+        [Tooltip("Событие смерти старого компонента здоровья.")]
         [SerializeField] private UnityEvent onDeath = new UnityEvent();
-        [SerializeField, Tooltip("Runtime value; initialized from Maximum Health in Awake.")]
+        [SerializeField]
+        [Tooltip("Текущее здоровье в Play; диагностическое поле.")]
         private float currentHealth;
 
         public float CurrentHealth => currentHealth;

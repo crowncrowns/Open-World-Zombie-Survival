@@ -7,13 +7,19 @@ namespace ZombieSurvival.Combat
     [DisallowMultipleComponent]
     public sealed class Health : MonoBehaviour, IDamageable
     {
-        [Header("Health")]
+        [Header("Здоровье")]
+        [Tooltip("Максимальный запас здоровья.")]
         [SerializeField, Min(1f)] private float maximum = 100f;
+        [Tooltip("Начальная доля максимального запаса от 0 до 1.")]
         [SerializeField, Range(.01f, 1f)] private float startingFraction = 1f;
+        [Tooltip("Неуязвимость: игнорировать входящий урон.")]
         [SerializeField] private bool invincible;
-        [Header("Events")]
+        [Header("События")]
+        [Tooltip("Событие изменения здоровья, передаёт текущее значение.")]
         [SerializeField] private UnityEvent<float> onHealthChanged = new UnityEvent<float>();
+        [Tooltip("Событие смерти, вызывается один раз до возрождения.")]
         [SerializeField] private UnityEvent onDied = new UnityEvent();
+        [Tooltip("Событие явного возрождения актёра.")]
         [SerializeField] private UnityEvent onRevived = new UnityEvent();
         private float current, protectedUntil = float.NegativeInfinity;
         public float Current => current;

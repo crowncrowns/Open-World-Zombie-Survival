@@ -8,40 +8,63 @@ namespace ZombieSurvival.Player
     [RequireComponent(typeof(CharacterController))]
     public sealed class PlayerVisual : MonoBehaviour
     {
-        public enum FirstPersonVisibility { HideSelectedRenderers, ShadowsOnly, ShowWholeModel }
+        public enum FirstPersonVisibility { [InspectorName("Скрыть выбранные меши")] HideSelectedRenderers, [InspectorName("Только тени")] ShadowsOnly, [InspectorName("Показать полную модель")] ShowWholeModel }
 
-        [Header("Appearance")]
-        [Tooltip("A visual-only prefab. Use a PlayerModelDefinition for model-specific animator and head references.")]
+        [Header("Внешность")]
+        [Tooltip("Префаб только внешности, без контроллера игрока. Для применения используйте кнопку замены модели.")]
         [SerializeField] private GameObject modelPrefab;
+        [Tooltip("Точка крепления внешности на игроке, вне заменяемой модели.")]
         [SerializeField] private Transform modelAnchor;
+        [Tooltip("Локальное смещение внешности относительно точки крепления, м.")]
         [SerializeField] private Vector3 localPosition;
+        [Tooltip("Локальный поворот внешности относительно точки крепления, градусов.")]
         [SerializeField] private Vector3 localEulerAngles;
+        [Tooltip("Локальный масштаб внешности. Физическая капсула игрока не изменяется.")]
         [SerializeField] private Vector3 localScale = Vector3.one;
+        [Tooltip("Отключать коллайдеры заменяемой внешности, чтобы они не мешали основной капсуле.")]
         [SerializeField] private bool disableModelColliders = true;
 
-        [Header("First Person")]
+        [Header("Вид от первого лица")]
+        [Tooltip("Собственная камера игрока, для которой применяется скрытие верхней части модели.")]
         [SerializeField] private Camera firstPersonCamera;
+        [Tooltip("Способ скрытия верхней части модели от собственной камеры. Другие камеры видят полную модель.")]
         [SerializeField] private FirstPersonVisibility firstPersonVisibility = FirstPersonVisibility.HideSelectedRenderers;
 
-        [Header("Animation")]
+        [Header("Анимация")]
+        [Tooltip("Передавать движение и состояния игрока в параметры Animator.")]
         [SerializeField] private bool driveAnimator = true;
+        [Tooltip("Общий множитель скорости анимации модели.")]
         [SerializeField, Min(0f)] private float animationPlaybackSpeed = 1f;
-        [Tooltip("Physical speeds matching walk/run/crouch clips. Used to normalize blend tree parameters.")]
+        [Tooltip("Физическая скорость, соответствующая клипу ходьбы, м/с. Нужна для настройки смешивания анимаций.")]
         [SerializeField, Min(0.01f)] private float walkAnimationSpeed = 4f;
+        [Tooltip("Физическая скорость, соответствующая клипу бега, м/с. Нужна для смешивания анимации.")]
         [SerializeField, Min(0.01f)] private float runAnimationSpeed = 7f;
+        [Tooltip("Физическая скорость, соответствующая клипу ходьбы сидя, м/с.")]
         [SerializeField, Min(0.01f)] private float crouchAnimationSpeed = 2f;
+        [Tooltip("Время сглаживания параметров движения Animator, с.")]
         [SerializeField, Min(0f)] private float animationDamping = 0.1f;
+        [Tooltip("Имя параметра Animator для движения вбок. Должно совпадать с контроллером модели; отсутствующий параметр пропускается.")]
         [SerializeField] private string moveXParameter = "MoveX";
+        [Tooltip("Имя параметра Animator для движения вперёд/назад. Должно совпадать с контроллером модели; отсутствующий параметр пропускается.")]
         [SerializeField] private string moveZParameter = "MoveZ";
+        [Tooltip("Имя параметра Animator для скорости движения. Должно совпадать с контроллером модели; отсутствующий параметр пропускается.")]
         [SerializeField] private string speedParameter = "Speed";
+        [Tooltip("Имя параметра Animator для приседания. Должно совпадать с контроллером модели; отсутствующий параметр пропускается.")]
         [SerializeField] private string crouchParameter = "Crouched";
+        [Tooltip("Имя параметра Animator для контакта с землёй. Должно совпадать с контроллером модели; отсутствующий параметр пропускается.")]
         [SerializeField] private string groundedParameter = "Grounded";
+        [Tooltip("Имя параметра Animator для вертикальной скорости. Должно совпадать с контроллером модели; отсутствующий параметр пропускается.")]
         [SerializeField] private string verticalSpeedParameter = "VerticalSpeed";
+        [Tooltip("Имя параметра Animator для текущего действия паркура. Должно совпадать с контроллером модели; отсутствующий параметр пропускается.")]
         [SerializeField] private string parkourStateParameter = "ParkourState";
+        [Tooltip("Имя параметра Animator для положения лёжа. Должно совпадать с контроллером модели; отсутствующий параметр пропускается.")]
         [SerializeField] private string proneParameter = "Prone";
+        [Tooltip("Имя параметра Animator для смерти. Должно совпадать с контроллером модели; отсутствующий параметр пропускается.")]
         [SerializeField] private string deadParameter = "Dead";
 
+        [Tooltip("Текущий экземпляр внешности, обслуживается PlayerVisual автоматически.")]
         [SerializeField, HideInInspector] private GameObject modelInstance;
+        [Tooltip("Служебная ссылка на применённый префаб внешности; обновляется PlayerVisual.")]
         [SerializeField, HideInInspector] private GameObject appliedPrefab;
         private CharacterController capsule;
         private FirstPersonController locomotion;

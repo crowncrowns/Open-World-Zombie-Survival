@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 28e478065ebce8548929deaf153d43db, type: 3}
+  m_Name: CampingAxe
+  m_EditorClassIdentifier: Assembly-CSharp::ZombieSurvival.Weapons.WeaponDefinition
+  kind: 0
+  damage: 40
+  range: 1.9
+  cooldown: 0.8
+  windup: 0.28
+  meleeRadius: 0.15
+  staminaCost: 16
+  ammo: {fileID: 0}
+  magazineSize: 12
+  reloadSeconds: 1.7
+  automatic: 0
+  hipSpread: 1.5
+  aimSpread: 0.15
+  recoil: 2
+  recoilRecovery: 7
+  noise: {x: 2, y: 12}
+  viewPrefab: {fileID: 3737084057913135072, guid: f0ebb2685c26cf44c87e2bb156b31772, type: 3}
+  holdPosition: {x: 0.32, y: -0.35, z: 0.55}
+  aimPosition: {x: 0, y: -0.18, z: 0.55}
+  holdEuler: {x: 0, y: -15, z: -15}
+  viewScale: {x: 1, y: 1, z: 1}
+  muzzleOffset: {x: 0.18, y: -0.15, z: 0.55}
+  attacks:
+  - {fileID: 8300000, guid: e0dda31ba5f30884fb72b6907b3bb2b7, type: 3}
+  reloadSound: {fileID: 0}
+  impactSound: {fileID: 8300000, guid: 3d8f480d252db9449b2f978284506f8e, type: 3}
+  volume: 0.7

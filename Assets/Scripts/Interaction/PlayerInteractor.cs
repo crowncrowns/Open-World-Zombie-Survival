@@ -10,16 +10,24 @@ namespace ZombieSurvival.Interaction
     public sealed class PlayerInteractor : MonoBehaviour
     {
         [Header("Selection")]
+        [Tooltip("Камера для выбора предметов лучом из центра экрана.")]
         [SerializeField] private Camera viewCamera;
+        [Tooltip("Максимальная дистанция взаимодействия от камеры, м.")]
         [SerializeField, Min(.1f)] private float interactionDistance = 2.5f;
-        [Tooltip("Geometry that blocks the ray. Include walls, doors and props, not just interactables.")]
+        [Tooltip("Слои твёрдых объектов, перекрывающих взаимодействие. Предмет за стеной недоступен.")]
         [SerializeField] private LayerMask occlusionMask = ~0;
+        [Tooltip("Слои интерактивных объектов для выбора лучом камеры.")]
         [SerializeField] private LayerMask targetMask = ~0;
+        [Tooltip("Разрешить взаимодействие в воздухе.")]
         [SerializeField] private bool allowWhileAirborne;
+        [Tooltip("Разрешить взаимодействие с миром лёжа.")]
         [SerializeField] private bool allowWhileProne = true;
         [Header("Input and Feedback")]
+        [Tooltip("Имя команды взаимодействия в карте Player, по умолчанию Interact.")]
         [SerializeField] private string actionName = "Interact";
+        [Tooltip("Минимальная пауза между взаимодействиями, с. Удержание кнопки не повторяет действие.")]
         [SerializeField, Min(0f)] private float repeatCooldown = .2f;
+        [Tooltip("Время показа сообщения о результате взаимодействия, с.")]
         [SerializeField, Min(0f)] private float feedbackDuration = 1.5f;
         private FirstPersonController motor;
         private InputAction action;
@@ -29,6 +37,7 @@ namespace ZombieSurvival.Interaction
         private bool armed;
         private float nextUse, feedbackUntil;
         private string feedback;
+        public event System.Action SuccessfulInteraction;
 
         public IInteractable Target => targetComponent != null ? target : null;
         public bool CanUseTarget => Target != null && targetComponent.isActiveAndEnabled && target.CanInteract(this);
@@ -40,11 +49,22 @@ namespace ZombieSurvival.Interaction
 
         private void Awake()
         {
-            motor = GetComponent<FirstPersonController>();
+            ResolveReferences();
+        }
+
+        private void ResolveReferences()
+        {
+            if (motor == null) motor = GetComponent<FirstPersonController>();
             if (viewCamera == null) viewCamera = GetComponentInChildren<Camera>();
         }
-        private void OnEnable() { armed = false; }
-        private void OnDisable() { ClearTarget(); armed = false; feedback = ""; }
+        private void OnEnable() { ResolveReferences(); ResetRuntimeState(); }
+        private void OnDisable() => ResetRuntimeState();
+
+        private void ResetRuntimeState()
+        {
+            ClearTarget(); action = null; armed = false;
+            nextUse = feedbackUntil = 0f; feedback = "";
+        }
 
         public void ShowFeedback(string message) { feedback = message; feedbackUntil = Time.time + feedbackDuration; }
 
@@ -67,7 +87,14 @@ namespace ZombieSurvival.Interaction
 
         private void LateUpdate()
         {
-            if (action == null) action = motor.FindGameplayAction(actionName);
+            // Обновление префаба/скриптов в Editor может обнулить сериализованную камеру без нового Awake.
+            // Карта команд принадлежит контроллеру: не удерживаем старую копию после её замены.
+            ResolveReferences();
+            var currentAction = motor != null ? motor.FindGameplayAction(actionName) : null;
+            if (!ReferenceEquals(action, currentAction))
+            {
+                ResetRuntimeState(); action = currentAction;
+            }
             if (!IsAvailable || action == null || !action.enabled)
             {
                 ClearTarget(); armed = false; feedback = "";
@@ -80,8 +107,8 @@ namespace ZombieSurvival.Interaction
             armed = false;
             if (Time.time < nextUse || !CanUseTarget) return;
             // Selection was just recomputed from this frame's camera; no delayed/stale target callbacks.
-            if (target.Interact(this)) nextUse = Time.time + repeatCooldown;
-            SelectTarget();
+            if (target.Interact(this)) { nextUse = Time.time + repeatCooldown; SuccessfulInteraction?.Invoke(); }
+            if (IsAvailable) SelectTarget(); else ClearTarget();
         }
 
         private void ClearTarget() { targetComponent = null; target = null; }

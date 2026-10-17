@@ -1,8 +1,10 @@
 # Enemy AI
 
+Shared actor/faction/damage/noise contracts, the exported ZombieMaleActor prefab, lab navigation, migration and merge checks are documented in [Docs/ActorIntegration.md](../../../Docs/ActorIntegration.md). Read it before integrating new monsters or NPCs. The current character lab includes the source-scene zombie and stealth tests.
+
 Add `EnemyBrain` to an NPC on a baked NavMesh. It requires/adds `NavMeshAgent` and, on first addition in the Editor, adds a configurable `MeleeAttack` if no attack exists. For a Y-axis CapsuleCollider, initial agent dimensions, base offset, and eyes are fitted to the capsule. Check these values for other meshes/scales. Do not combine a driving NavMeshAgent with a non-kinematic Rigidbody. Exclude moving actors from the navigation bake with `NavMeshModifier` → Ignore From Build.
 
-Add `CombatTarget` and `DamageableHealth` to a player or another intended target. Set the target's Aim Offset inside its collider. Health exposes runtime Current Health and On Damaged/On Death events, without a UI or automatic respawn. Targets at zero health are ignored. No factions are provided: all CombatTargets are potential enemies except the NPC's own hierarchy.
+Add `CombatTarget` to an intended target. The player uses the full `Health` component with HUD and `PlayerLifeCycle`; existing simple targets may keep `DamageableHealth`. Both implement the single contract in `Combat/IDamageable.cs`: `IsDead` and `ApplyDamage(DamageInfo)`. CombatTarget prefers Health if both components are present, so attacks affect the player's visible reserve and lifecycle rather than a second hidden pool. DamageableHealth retains its public IsAlive and TakeDamage(float) for existing UnityEvents. Set the target's Aim Offset inside its collider. Targets at zero health are ignored. ActorIdentity now supplies directed hostility masks; unconfigured legacy attackers keep their previous permissive behaviour. New actors must assign a faction.
 
 ## Inspector
 
@@ -10,7 +12,7 @@ EnemyBrain: patrol radius around its initial spawn, patrol/maximum speeds, pause
 
 Hearing loudness is gameplay data, not decibels. Received loudness = emitted loudness / (1 + (distance/referenceDistance)^2), optionally multiplied by Occluded Noise Multiplier. Both emitter range and listener hearing range apply. Heard uncertainty radius = Minimum Uncertainty + distance × Uncertainty Per Metre; the estimated center is displaced by up to 80% of that radius. Only this estimate survives the event. The NPC searches random reachable points in the estimated area. It never follows an unseen emitter's Transform. Losing sight searches the last seen location until Search Duration expires, then returns to its spawn patrol.
 
-MeleeAttack: range, cooldown measured from attack start, stop delay, windup, recovery, damage. On Started/On Impact can trigger animations or effects. Damage occurs once after windup and rechecks live range, target health, and obstacles. Movement remains stopped through recovery. An attack can miss if its target moves out of range or behind cover. No animation or weapon is installed.
+MeleeAttack: range, cooldown measured from attack start, stop delay, windup, recovery, damage. On Started/On Impact can trigger animations or effects. Damage occurs once after windup and rechecks live range, target health, and obstacles. Movement remains stopped through recovery. An attack can miss if its target moves out of range or behind cover. The reusable ZombieMaleActor prefab supplies the current model/animations; other actors can assign their own EnemyAnimationBridge parameters.
 
 ## Gameplay noise versus audio
 
@@ -20,7 +22,7 @@ MeleeAttack: range, cooldown measured from attack start, stop delay, windup, rec
 ZombieSurvival.AI.GameplayNoise.Emit(transform.position, 8f, 90f, gameObject);
 ```
 
-The optional emitter is used only for ignoring one's own noise. Hearing does not retain a reference to it. `PlayerNoiseEmitter` emits footsteps only while grounded and actually moving; running is louder and has greater range. It does not create audio clips. Teleports over five metres in one frame do not generate footsteps.
+The optional emitter is used only for ignoring one's own noise. Hearing does not retain a reference to it. `PlayerNoiseEmitter` uses FirstPersonController.IsSprinting and the common damage contract. It emits footsteps only while grounded, alive and actually moving; running is louder and has greater range. It does not create audio clips. Teleports over five metres in one frame do not generate footsteps.
 
 ## Other attacks
 
@@ -60,3 +62,22 @@ Foot orientation uses human IK-goal space, not the imported foot bone's local ax
 Before/after dynamic measurements on the same straight Terrain route (100 samples per gait): original walk 1.799 m/s had about 0.153 m mean stance clearance and 1.753 m/s stance slip; adjusted walk 0.299 m/s had 0.0105 m clearance and 0.100 m/s slip. Original run 5.434 m/s had 0.144 m clearance and 1.934 m/s slip; adjusted run 2.999 m/s had 0.0095 m clearance and 0.131 m/s slip. Root-to-agent drift was zero. These are ankle-minus-feet-bottom approximations during detected support, not a promise of zero sliding on every surface. Some repositioning remains at support changes/turns; uneven stairs and extreme terrain have not been exhaustively tuned.
 
 The subsequent transition fix was measured over six complete walk and six run cycles with per-frame LateUpdate recording. The old walk lock reset its active target six times per foot and moved a foot about 0.30 m in one frame; the new transitions had zero active-target replacements and zero frame jumps over 0.10 m. Maximum walk frame displacements were 0.031/0.019 m, and run 0.051/0.062 m. These peaks include legitimate swing motion and depend on frame duration; the key invariant is no active-target reset. Contact clearance remained about 0.012 m walking and 0.007 m running. Brief animation yaw/sliding during acquire/release is allowed, rather than forcing a discontinuous full-weight pose.
+
+
+### Crawl pursuit / Russian tuning UI
+
+See `Docs/CrawlPursuitAndSettings.md` for observed-entry crawling, dual NavMesh surfaces, 360-degree hearing, Alt quiet walking and noise HUD. Investigating uses its own speed instead of the very slow patrol speed. `EnemyCrawlPursuit` selects posture/navigation; `HumanoidGrounding` delegates low-pose IK to `HumanoidCrawlPose`. Do not drive the navigation root from animation or remove target visibility/faction checks.
+
+Actor settings: `Tools > Zombie Survival > Настройки персонажа и зомби`. Shared faction/health settings are in the first tab. Inspector tooltips explain project parameters in Russian. Inventory contracts for future NPC loot are in `Docs/Inventory.md`; repository AI entry point is `AGENTS.md`.
+
+
+### Geometry-gated crawl and actor audio
+
+Crawling is not mirrored from the player's posture. EnemyCrawlPursuit checks the standing and low capsule corridor, stores only a timed snapshot of an observed entry, walks to the entrance upright and lowers near the obstruction. Open ground and solid walls must not initiate crawling. Test both before changing detection.
+
+Audio is composed independently: ActorAudioEmitter + ActorAudioProfile, with PlayerMovementAudio or NavMeshActorAudio adapters. Profiles and generated cue provenance are described in `Docs/ActorAudio.md`. Audio playback never emits GameplayNoise, preventing a second hearing simulation or event feedback loop. Select an actor and use the `Звук` tab in the actor settings window. Death and voice use a separate channel from footsteps.
+
+
+## Оружие игрока (этап 10)
+
+См. Docs/Weapons.md. PlayerWeapons наносит урон общему CombatTarget/Health через WeaponHitQuery; зомби не нуждается в специальном компоненте для пистолета или топора. Твёрдые коллайдеры останавливают удар/выстрел; фракции проверяются от атакующего. Шум Gunshot/Melee отправляется через GameplayNoise и не раскрывает Transform. Вооружённый NPC может использовать WeaponDefinition и WeaponHitQuery, но не PlayerWeapons (он зависит от ввода игрока). Боезапас магазина принадлежит ItemStack конкретного предмета.

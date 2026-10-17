@@ -8,25 +8,42 @@ namespace ZombieSurvival.Player
     [RequireComponent(typeof(FirstPersonController))]
     public sealed class PlayerCrawlAnimation : MonoBehaviour
     {
+        [Tooltip("Включить процедурную анимацию ползания Humanoid. На физику и путь не влияет.")]
         [SerializeField] private bool animationEnabled = true;
+        [Tooltip("Скорость плавного перехода между обычной позой и ползанием.")]
         [SerializeField, Min(.1f)] private float blendSpeed = 8f;
+        [Tooltip("Пройденное расстояние на полный цикл движения рук и ног, м.")]
         [SerializeField, Min(.1f)] private float metresPerCycle = 1.3f;
-        [Header("Torso")]
+        [Header("Тело")]
+        [Tooltip("Высота таза над землёй в позе ползания, м.")]
         [SerializeField, Min(.1f)] private float bodyHeight = .42f;
+        [Tooltip("Смещение таза вперёд от корня в ползании, м. Отрицательное значение смещает назад.")]
         [SerializeField] private float bodyForwardOffset = -.08f;
+        [Tooltip("Наклон тела вперёд при ползании, градусов.")]
         [SerializeField, Range(45f, 100f)] private float bodyPitch = 82f;
+        [Tooltip("Амплитуда покачивания тела при ползании, м.")]
         [SerializeField, Min(0f)] private float bodyBob = .018f;
-        [Header("Hands")]
+        [Header("Руки")]
+        [Tooltip("Положение кистей впереди корня при ползании, м.")]
         [SerializeField] private float handForward = .64f;
+        [Tooltip("Боковое расстояние кисти от оси тела при ползании, м.")]
         [SerializeField, Min(0f)] private float handWidth = .28f;
+        [Tooltip("Высота кистей над землёй при ползании, м.")]
         [SerializeField, Min(0f)] private float handHeight = .12f;
+        [Tooltip("Амплитуда движения рук в направлении ползания, м.")]
         [SerializeField, Min(0f)] private float reach = .18f;
+        [Tooltip("Высота подъёма переносимой руки, м.")]
         [SerializeField, Min(0f)] private float handLift = .07f;
-        [Header("Feet and Knees")]
+        [Header("Стопы и колени")]
+        [Tooltip("Положение стоп вдоль тела относительно корня, м. Отрицательное — позади.")]
         [SerializeField] private float footForward = -.65f;
+        [Tooltip("Боковое расстояние стопы от оси тела при ползании, м.")]
         [SerializeField, Min(0f)] private float footWidth = .19f;
+        [Tooltip("Высота стоп над землёй при ползании, м.")]
         [SerializeField, Min(0f)] private float footHeight = .1f;
+        [Tooltip("Боковой вынос коленей при ползании, м.")]
         [SerializeField, Min(0f)] private float kneeWidth = .32f;
+        [Tooltip("Амплитуда перемещения стоп вдоль направления движения, м.")]
         [SerializeField, Min(0f)] private float footReach = .16f;
 
         private FirstPersonController motor;

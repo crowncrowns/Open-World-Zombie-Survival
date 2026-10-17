@@ -15,6 +15,9 @@ public static class PlayerInteractionSetup
         {
             var interactor = player.GetComponent<PlayerInteractor>();
             if (interactor == null) interactor = player.AddComponent<PlayerInteractor>();
+            var interactionSettings = new SerializedObject(interactor);
+            interactionSettings.FindProperty("viewCamera").objectReferenceValue = player.GetComponentInChildren<Camera>(true);
+            interactionSettings.ApplyModifiedPropertiesWithoutUndo();
             if (player.GetComponentInChildren<InteractionHUD>(true) == null) CreateHUD(player.transform, interactor);
             PrefabUtility.SaveAsPrefabAsset(player, Root + "/Prefabs/CharacterTestPlayer.prefab");
         }

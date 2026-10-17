@@ -5,9 +5,12 @@ namespace ZombieSurvival.Interaction
 {
     public abstract class Interactable : MonoBehaviour, IInteractable
     {
-        [Header("Interaction")]
+        [Header("Взаимодействие")]
+        [Tooltip("Разрешить взаимодействие с этим объектом.")]
         [SerializeField] private bool interactionEnabled = true;
+        [Tooltip("Название предмета в интерфейсе.")]
         [SerializeField] private string displayName = "Объект";
+        [Tooltip("Событие успешно завершённого взаимодействия.")]
         [SerializeField] private UnityEvent onInteracted = new UnityEvent();
 
         public string DisplayName => displayName;

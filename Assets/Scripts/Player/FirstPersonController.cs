@@ -8,83 +8,131 @@ namespace ZombieSurvival.Player
     [RequireComponent(typeof(CharacterController))]
     public sealed class FirstPersonController : MonoBehaviour
     {
-        [Header("Input Actions")]
-        [Tooltip("Source asset. Each player uses its own runtime copy; UI actions are not disabled by this controller.")]
+        [Header("Команды ввода")]
+        [Tooltip("Исходный набор команд. Каждый игрок использует отдельную копию в Play, не отключая команды интерфейса.")]
         [SerializeField] private InputActionAsset inputActions;
+        [Tooltip("Название карты команд игрока в Input Actions.")]
         [SerializeField] private string playerActionMap = "Player";
+        [Tooltip("Имя команды перемещения в карте Input Actions игрока. Привязки клавиш меняются в Input Actions, не в этом поле.")]
         [SerializeField] private string moveActionName = "Move";
+        [Tooltip("Имя команды обзора в карте Input Actions игрока. Привязки клавиш меняются в Input Actions, не в этом поле.")]
         [SerializeField] private string lookActionName = "Look";
+        [Tooltip("Имя команды бега в карте Input Actions игрока. Привязки клавиш меняются в Input Actions, не в этом поле.")]
         [SerializeField] private string sprintActionName = "Sprint";
+        [Tooltip("Имя команды приседания в карте Input Actions игрока. Привязки клавиш меняются в Input Actions, не в этом поле.")]
         [SerializeField] private string crouchActionName = "Crouch";
+        [Tooltip("Имя команды прыжка в карте Input Actions игрока. Привязки клавиш меняются в Input Actions, не в этом поле.")]
         [SerializeField] private string jumpActionName = "Jump";
+        [Tooltip("Имя команды переката в карте Input Actions игрока. Привязки клавиш меняются в Input Actions, не в этом поле.")]
         [SerializeField] private string rollActionName = "Roll";
+        [Tooltip("Имя команды положения лёжа в карте Input Actions игрока. Привязки клавиш меняются в Input Actions, не в этом поле.")]
         [SerializeField] private string proneActionName = "Prone";
-        [Tooltip("Bindings can be edited here without changing code.")]
+        [Tooltip("Команда освобождения курсора, по умолчанию Escape. Привязки редактируются без изменения кода.")]
         [SerializeField] private InputAction releaseCursorInput = new InputAction("ReleaseCursor", InputActionType.Button, "<Keyboard>/escape");
+        [Tooltip("Команда захвата курсора для обзора; по умолчанию левая кнопка мыши.")]
         [SerializeField] private InputAction captureCursorInput = new InputAction("CaptureCursor", InputActionType.Button, "<Mouse>/leftButton");
 
-        [Header("Movement")]
+        [Header("Движение")]
+        [Tooltip("Разрешить движение персонажа от команд игрока.")]
         [SerializeField] private bool movementEnabled = true;
+        [Tooltip("Разрешить бег с расходом выносливости.")]
         [SerializeField] private bool sprintEnabled = true;
+        [Tooltip("Скорость обычной ходьбы, м/с.")]
         [SerializeField, Min(0f)] private float walkSpeed = 4f;
+        [Tooltip("Скорость бега, м/с.")]
         [SerializeField, Min(0f)] private float runSpeed = 7f;
 
-        [Header("Jump and Air Movement")]
+        [Tooltip("Скорость тихого шага при удержании Alt, м/с. Alt имеет приоритет над бегом.")]
+        [SerializeField, Min(0f)] private float slowWalkSpeed = 1.5f;
+        [Tooltip("Имя команды тихого шага в карте Input Actions игрока. Привязки клавиш меняются в Input Actions, не в этом поле.")]
+        [SerializeField] private string slowWalkActionName = "SlowWalk";
+
+        [Header("Прыжок и движение в воздухе")]
+        [Tooltip("Разрешить прыжки с земли.")]
         [SerializeField] private bool jumpEnabled = true;
+        [Tooltip("Расчётная высота прыжка без препятствий, м.")]
         [SerializeField, Min(0.1f)] private float jumpHeight = 1.15f;
+        [Tooltip("Время после схода с края, когда ещё можно прыгнуть, с.")]
         [SerializeField, Min(0f)] private float coyoteTime = 0.12f;
+        [Tooltip("Сколько секунд хранить нажатие прыжка до приземления.")]
         [SerializeField, Min(0f)] private float jumpBufferTime = 0.12f;
+        [Tooltip("Минимальная пауза между прыжками, с.")]
         [SerializeField, Min(0.01f)] private float jumpCooldown = 0.15f;
+        [Tooltip("Ускорение управления в воздухе, м/с².")]
         [SerializeField, Min(0f)] private float airAcceleration = 8f;
+        [Tooltip("Доля управления направлением в воздухе: 0 — без управления, 1 — полное.")]
         [SerializeField, Range(0f, 1f)] private float airControl = 0.5f;
+        [Tooltip("Торможение горизонтального движения в воздухе, м/с².")]
         [SerializeField, Min(0f)] private float airDrag = 0.5f;
+        [Tooltip("Ограничение горизонтальной скорости в воздухе, м/с.")]
         [SerializeField, Min(0.1f)] private float maxAirSpeed = 9f;
+        [Tooltip("Множитель гравитации при падении. Больше — быстрее падение.")]
         [SerializeField, Min(1f)] private float fallingGravityMultiplier = 1.25f;
 
-        [Header("Crouch")]
+        [Header("Приседание")]
+        [Tooltip("Разрешить приседание.")]
         [SerializeField] private bool crouchEnabled = true;
-        [Tooltip("Off: hold the crouch button. On: press once to crouch, again to stand.")]
+        [Tooltip("Выключено — удерживать C; включено — нажатие переключает приседание и вставание.")]
         [SerializeField] private bool toggleCrouch;
+        [Tooltip("Высота физической капсулы сидя, м. Ноги остаются на земле.")]
         [SerializeField, Min(0.1f)] private float crouchHeight = 1f;
+        [Tooltip("Скорость передвижения сидя, м/с.")]
         [SerializeField, Min(0f)] private float crouchSpeed = 2f;
-        [Tooltip("Capsule height change in metres per second. Camera follows the same transition.")]
+        [Tooltip("Скорость изменения высоты капсулы при приседании, м/с. Камера следует за капсулой.")]
         [SerializeField, Min(0.1f)] private float crouchTransitionSpeed = 4f;
+        [Tooltip("Опускание камеры относительно стоячей позы при приседании, м.")]
         [SerializeField, Min(0f)] private float crouchCameraDrop = 0.75f;
-        [Tooltip("Minimum distance between the camera and capsule top/bottom.")]
+        [Tooltip("Минимальный зазор камеры до верхней и нижней границ капсулы, м.")]
         [SerializeField, Min(0f)] private float cameraHeadClearance = 0.1f;
-        [Tooltip("Extra room above the standing capsule, in world metres.")]
+        [Tooltip("Дополнительный запас места над головой перед вставанием, м.")]
         [SerializeField, Min(0f)] private float standingClearance = 0.02f;
+        [Tooltip("Слои препятствий для проверки вставания. Собственные коллайдеры и триггеры игнорируются.")]
         [SerializeField] private LayerMask standingObstructionMask = ~0;
 
-        [Header("Prone and Crawl")]
+        [Header("Положение лёжа и ползание")]
+        [Tooltip("Разрешить переход в положение лёжа и ползание.")]
         [SerializeField] private bool proneEnabled = true;
+        [Tooltip("Высота физической капсулы лёжа, м. Не меньше двух радиусов капсулы.")]
         [SerializeField, Min(.1f)] private float proneHeight = .8f;
+        [Tooltip("Скорость ползания, м/с.")]
         [SerializeField, Min(0f)] private float crawlSpeed = 1.1f;
+        [Tooltip("Опускание камеры относительно стоячей позы при ползании, м.")]
         [SerializeField, Min(0f)] private float proneCameraDrop = 1.1f;
+        [Tooltip("Скорость изменения высоты капсулы при переходе лёжа, м/с.")]
         [SerializeField, Min(.1f)] private float proneTransitionSpeed = 3f;
 
-        [Header("Gravity")]
+        [Header("Гравитация")]
+        [Tooltip("Ускорение свободного падения, м/с².")]
         [SerializeField, Min(0.1f)] private float gravity = 20f;
-        [Tooltip("Downward speed used to maintain ground contact, in metres per second.")]
+        [Tooltip("Небольшая скорость вниз для сохранения контакта с землёй, м/с.")]
         [SerializeField, Min(0f)] private float groundStickSpeed = 2f;
+        [Tooltip("Предельная вертикальная скорость падения, м/с.")]
         [SerializeField, Min(0.1f)] private float terminalFallSpeed = 50f;
 
-        [Header("Look")]
+        [Header("Обзор")]
+        [Tooltip("Точка камеры игрока. Поворачивается вверх и вниз и опускается при смене позы.")]
         [SerializeField] private Transform playerCamera;
+        [Tooltip("Разрешить обзор мышью и правым стиком.")]
         [SerializeField] private bool lookEnabled = true;
-        [Tooltip("Degrees per pixel of mouse movement.")]
+        [Tooltip("Поворот камеры в градусах на пиксель движения мыши.")]
         [SerializeField, Min(0f)] private float mouseSensitivity = 0.1f;
+        [Tooltip("Множитель чувствительности горизонтального обзора.")]
         [SerializeField, Min(0f)] private float horizontalLookMultiplier = 1f;
+        [Tooltip("Множитель чувствительности вертикального обзора.")]
         [SerializeField, Min(0f)] private float verticalLookMultiplier = 1f;
-        [Tooltip("Stick look speed in degrees per second. Mouse movement is not multiplied by deltaTime.")]
+        [Tooltip("Скорость обзора стиком, градусов/с. Движение мыши не умножается на время кадра.")]
         [SerializeField, Min(0f)] private float stickLookSpeed = 180f;
+        [Tooltip("Инвертировать направление вертикального обзора.")]
         [SerializeField] private bool invertVerticalLook;
+        [Tooltip("Предел наклона камеры вверх и вниз, градусов.")]
         [SerializeField, Range(1f, 89f)] private float verticalLookLimit = 85f;
 
-        [Header("Cursor and Focus")]
+        [Header("Курсор и фокус окна")]
+        [Tooltip("Захватывать курсор при включении управления и возвращении в игру.")]
         [SerializeField] private bool captureCursorOnEnable = true;
-        [Tooltip("Require a captured cursor for gameplay. Turn off for tests or gameplay without mouse capture.")]
+        [Tooltip("Принимать игровые команды только при захваченном курсоре. Для автоматических тестов можно отключить.")]
         [SerializeField] private bool requireCursorCapture = true;
+        [Tooltip("Принимать ввод только когда окно игры активно.")]
         [SerializeField] private bool requireApplicationFocus = true;
 
         private CharacterController controller;
@@ -93,6 +141,7 @@ namespace ZombieSurvival.Player
         private InputAction moveAction;
         private InputAction lookAction;
         private InputAction sprintAction;
+        private InputAction slowWalkAction;
         private InputAction crouchAction;
         private InputAction jumpAction;
         private InputAction rollAction;
@@ -125,6 +174,7 @@ namespace ZombieSurvival.Player
         public bool GameplayInputEnabled => gameplayInputEnabled;
         public bool IsAlive { get; private set; } = true;
         public event Action<float> Landed;
+        public event Action Jumped;
         public bool AcceptingGameplayInput => IsAlive && isActiveAndEnabled && gameplayInputEnabled && HasFocus
             && (!requireCursorCapture || Cursor.lockState == CursorLockMode.Locked)
             && gameplayMap != null && gameplayMap.enabled && Time.deltaTime > 0f;
@@ -135,6 +185,7 @@ namespace ZombieSurvival.Player
         public bool IsProne => IsAlive && (parkour == null || !parkour.OwnsMovement)
             && (proneRequested || controller != null && controller.height < Mathf.Clamp(crouchHeight, controller.radius * 2f, standingHeight) - .05f);
         public bool IsSprinting { get; private set; }
+        public bool IsSlowWalking { get; private set; }
         public PlayerStamina Stamina => stamina;
         public bool IsGrounded => controller != null && controller.isGrounded && verticalVelocity <= 0f
             && (parkour == null || !parkour.OwnsMovement);
@@ -185,10 +236,14 @@ namespace ZombieSurvival.Player
             moveAction = gameplayMap?.FindAction(moveActionName);
             lookAction = gameplayMap?.FindAction(lookActionName);
             sprintAction = gameplayMap?.FindAction(sprintActionName);
+            slowWalkAction = gameplayMap?.FindAction(slowWalkActionName);
+            if (slowWalkAction != null) slowWalkAction.wantsInitialStateCheck = true;
             crouchAction = gameplayMap?.FindAction(crouchActionName);
             jumpAction = gameplayMap?.FindAction(jumpActionName);
             rollAction = gameplayMap?.FindAction(rollActionName);
             proneAction = gameplayMap?.FindAction(proneActionName);
+            if (parkour != null && rollAction == null || proneEnabled && proneAction == null)
+                Debug.LogWarning("Player Input Actions are missing Roll or Prone. Restore those actions/bindings to enable traversal controls.", this);
             if (moveAction == null || lookAction == null || sprintAction == null || crouchAction == null || jumpAction == null)
             {
                 Debug.LogError("FirstPersonController: a required movement action is missing. Check the Input Actions fields.", this);
@@ -245,7 +300,7 @@ namespace ZombieSurvival.Player
         {
             if (!IsAlive)
             {
-                IsSprinting = false;
+                IsSprinting = false; IsSlowWalking = false;
                 if (Time.deltaTime > 0f && controller.enabled)
                 {
                     verticalVelocity = controller.isGrounded ? -groundStickSpeed
@@ -262,7 +317,7 @@ namespace ZombieSurvival.Player
             bool acceptingInput = gameplayInputEnabled && HasFocus
                 && (!requireCursorCapture || Cursor.lockState == CursorLockMode.Locked);
             if (!acceptingInput) lastJumpPress = float.NegativeInfinity;
-            IsSprinting = false;
+            IsSprinting = false; IsSlowWalking = false;
             if (stamina != null) stamina.Tick(Time.deltaTime, acceptingInput);
             if (acceptingInput != gameplayMap.enabled)
             {
@@ -279,7 +334,8 @@ namespace ZombieSurvival.Player
             Vector2 movement = acceptingInput && movementEnabled
                 ? Vector2.ClampMagnitude(moveAction.ReadValue<Vector2>(), 1f) : Vector2.zero;
             if (parkour == null || !parkour.OwnsMovement) UpdateCrouch(acceptingInput);
-            bool running = acceptingInput && sprintEnabled && !IsCrouching && !IsProne && sprintAction.IsPressed()
+            IsSlowWalking = acceptingInput && !IsCrouching && !IsProne && slowWalkAction != null && slowWalkAction.IsPressed();
+            bool running = !IsSlowWalking && acceptingInput && sprintEnabled && !IsCrouching && !IsProne && sprintAction.IsPressed()
                 && (stamina == null || stamina.CanSprint);
             bool jumpPressed = acceptingInput && !skipJumpInput && jumpAction.WasPressedThisFrame();
             bool crouchPressed = acceptingInput && crouchAction.WasPressedThisFrame();
@@ -300,7 +356,7 @@ namespace ZombieSurvival.Player
             skipLook = false;
 
             Vector3 desiredVelocity = (transform.right * movement.x + transform.forward * movement.y)
-                * (IsProne ? crawlSpeed : IsCrouching ? crouchSpeed : running ? runSpeed : walkSpeed);
+                * (IsProne ? crawlSpeed : IsCrouching ? crouchSpeed : running ? runSpeed : IsSlowWalking ? slowWalkSpeed : walkSpeed);
             if (parkour != null && parkour.Tick(Time.deltaTime, acceptingInput, movement, desiredVelocity,
                 jumpPressed, crouchPressed, rollPressed))
             {
@@ -324,6 +380,7 @@ namespace ZombieSurvival.Player
                 lastJumpPress = float.NegativeInfinity;
                 lastGroundedTime = float.NegativeInfinity;
                 grounded = false;
+                Jumped?.Invoke();
             }
             if (grounded)
             {
@@ -364,7 +421,7 @@ namespace ZombieSurvival.Player
             {
                 if (parkour != null) parkour.ResetTraversal();
                 ReleaseParkour(Vector3.zero);
-                IsSprinting = false;
+                IsSprinting = false; IsSlowWalking = false;
             }
             SetCursorCaptured(alive && gameplayInputEnabled && captureCursorOnEnable && HasFocus);
         }
@@ -378,7 +435,7 @@ namespace ZombieSurvival.Player
             controller.height = standingHeight; controller.center = standingCenter; controller.stepOffset = standingStepOffset;
             playerCamera.position = transform.TransformPoint(standingCameraPosition);
             playerCamera.localRotation = Quaternion.identity;
-            pitch = 0f; IsStandingBlocked = false; IsSprinting = false;
+            pitch = 0f; IsStandingBlocked = false; IsSprinting = false; IsSlowWalking = false;
             crouchRequested = proneRequested = crouchToggleArmed = proneToggleArmed = false;
             lastJumpTime = float.NegativeInfinity;
             ReleaseParkour(Vector3.zero, -groundStickSpeed);

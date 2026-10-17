@@ -5,8 +5,11 @@ namespace ZombieSurvival.Interaction
 {
     public sealed class HealthTestInteractable : Interactable
     {
+        [Tooltip("Включено — лечить, выключено — наносить тестовый урон.")]
         [SerializeField] private bool healing;
+        [Tooltip("Количество здоровья для тестового лечения или урона.")]
         [SerializeField, Min(.01f)] private float amount = 25f;
+        [Tooltip("Текст предлагаемого действия в HUD.")]
         [SerializeField] private string prompt = "Получить тестовый урон";
         public override string GetPrompt(PlayerInteractor actor) => prompt;
         public override bool CanInteract(PlayerInteractor actor)

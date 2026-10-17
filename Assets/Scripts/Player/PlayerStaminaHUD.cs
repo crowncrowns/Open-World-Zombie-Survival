@@ -6,14 +6,23 @@ namespace ZombieSurvival.Player
     [DisallowMultipleComponent]
     public sealed class PlayerStaminaHUD : MonoBehaviour
     {
+        [Tooltip("Компонент выносливости, отображаемый этим HUD.")]
         [SerializeField] private PlayerStamina stamina;
+        [Tooltip("Полоса уровня шума.")]
         [SerializeField] private Image fill;
+        [Tooltip("Текст текущего и максимального запаса выносливости.")]
         [SerializeField] private Text reserveText;
+        [Tooltip("Текст состояния истощения в HUD.")]
         [SerializeField] private Text stateText;
+        [Tooltip("Цвет показателя при нормальном запасе.")]
         [SerializeField] private Color normalColor = new Color(.25f, .85f, .65f);
+        [Tooltip("Цвет показателя при низком запасе.")]
         [SerializeField] private Color lowColor = new Color(1f, .68f, .23f);
+        [Tooltip("Цвет показателя при полном истощении.")]
         [SerializeField] private Color exhaustedColor = new Color(.95f, .28f, .25f);
+        [Tooltip("Доля запаса, ниже которой полоса меняет цвет на предупреждающий.")]
         [SerializeField, Range(0f, 1f)] private float lowThreshold = .25f;
+        [Tooltip("Скорость изменения заполнения полосы в секунду; 0 — обновлять сразу.")]
         [SerializeField, Min(0f)] private float fillSpeed = 2f;
         private float displayed;
         private int lastCurrent = -1, lastCapacity = -1;

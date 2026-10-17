@@ -6,10 +6,11 @@ namespace ZombieSurvival.Player
     [DisallowMultipleComponent]
     public sealed class PlayerModelDefinition : MonoBehaviour
     {
+        [Tooltip("Animator Humanoid-модели. Без явной ссылки ищется на модели актёра.")]
         [SerializeField] private Animator modelAnimator;
-        [Tooltip("Separate head, hair, eyes etc. Hidden only for the player's camera; still cast shadows.")]
+        [Tooltip("Меши головы, волос и глаз, скрытые только от собственной камеры игрока. Продолжают отбрасывать тени.")]
         [SerializeField] private Renderer[] firstPersonHiddenRenderers = new Renderer[0];
-        [Tooltip("Optional dedicated first-person meshes. Revealed only for the player's camera.")]
+        [Tooltip("Необязательные отдельные меши от первого лица, видимые только в собственной камере игрока.")]
         [SerializeField] private Renderer[] firstPersonOnlyRenderers = new Renderer[0];
 
         public Animator ModelAnimator => modelAnimator;

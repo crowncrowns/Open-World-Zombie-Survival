@@ -9,66 +9,110 @@ namespace ZombieSurvival.Player
     {
         public enum TraversalState { None, Hanging, Climbing, Vaulting, Rolling }
 
-        [Header("Detection")]
+        [Header("Обнаружение поверхностей")]
+        [Tooltip("Слои геометрии, которую можно обнаруживать и преодолевать паркуром.")]
         [SerializeField] private LayerMask obstacleMask = ~0;
+        [Tooltip("Расстояние проверки поверхности, м.")]
         [SerializeField, Min(.1f)] private float probeDistance = 0.9f;
+        [Tooltip("Высота луча поиска стены относительно ног, м.")]
         [SerializeField, Min(.05f)] private float wallProbeHeight = .5f;
+        [Tooltip("Отступ луча внутрь поверхности при поиске верхней грани, м.")]
         [SerializeField, Min(.02f)] private float topProbeInset = .15f;
+        [Tooltip("Максимальный угол наклона верхней поверхности выступа, градусов.")]
         [SerializeField, Range(0f, 60f)] private float maxTopSlope = 30f;
+        [Tooltip("Зазор капсулы от поверхности на траектории паркура, м.")]
         [SerializeField, Min(.01f)] private float surfaceClearance = .06f;
+        [Tooltip("Допустимое расхождение с траекторией паркура, м. При блокировке действие прерывается.")]
         [SerializeField, Min(.02f)] private float maxPathError = .12f;
 
-        [Header("Ledge Grab")]
+        [Header("Захват выступа")]
+        [Tooltip("Разрешить захват выступов руками.")]
         [SerializeField] private bool ledgeGrabEnabled = true;
+        [Tooltip("Автоматически хвататься за доступный выступ при движении вперёд.")]
         [SerializeField] private bool autoGrabWhileMovingForward = true;
+        [Tooltip("Минимальная высота захватываемого выступа над ногами, м.")]
         [SerializeField, Min(.1f)] private float minGrabHeight = 1.05f;
+        [Tooltip("Максимальная высота захватываемого выступа над ногами, м.")]
         [SerializeField, Min(.2f)] private float maxGrabHeight = 2.2f;
-        [Tooltip("Height of the ledge above the player's feet while hanging.")]
+        [Tooltip("Высота выступа над ногами во время виса, м.")]
         [SerializeField, Min(.2f)] private float hangingHandHeight = 1.65f;
+        [Tooltip("Допустимая вертикальная погрешность захвата края, м.")]
         [SerializeField, Min(.05f)] private float grabVerticalTolerance = .45f;
+        [Tooltip("Максимальная скорость подъёма, при которой разрешён захват, м/с.")]
         [SerializeField, Min(0f)] private float maxAscendingGrabSpeed = 6f;
+        [Tooltip("Зазор между физической капсулой и стеной при висе, м.")]
         [SerializeField, Min(.01f)] private float wallGap = .08f;
+        [Tooltip("Запрет повторного захвата после отпускания, с.")]
         [SerializeField, Min(0f)] private float regrabDelay = .4f;
+        [Tooltip("Скорость отталкивания от стены при отпускании выступа, м/с.")]
         [SerializeField, Min(0f)] private float dropPushOffSpeed = 1f;
+        [Tooltip("Предел горизонтального обзора относительно стены при висе, градусов.")]
         [SerializeField, Range(0f, 90f)] private float hangingLookAngle = 65f;
 
-        [Header("Humanoid Hand IK")]
+        [Header("Положение рук на выступе (Humanoid IK)")]
+        [Tooltip("Привязывать руки Humanoid-модели к выступу с помощью IK.")]
         [SerializeField] private bool handIKEnabled = true;
+        [Tooltip("Расстояние кисти от центра захвата, м.")]
         [SerializeField, Min(.05f)] private float handSpacing = .22f;
+        [Tooltip("Поправка высоты кистей относительно края выступа, м.")]
         [SerializeField] private float handHeightOffset = .02f;
+        [Tooltip("Отступ кистей наружу от стены при висе, м.")]
         [SerializeField, Min(0f)] private float handOutset = .035f;
+        [Tooltip("Скорость плавного включения и отпускания IK рук.")]
         [SerializeField, Min(.1f)] private float handIKBlendSpeed = 8f;
+        [Tooltip("Доля подтягивания, на которой кисти отпускают край: от 0 до 1.")]
         [SerializeField, Range(0f, 1f)] private float handIKClimbReleaseProgress = .2f;
 
-        [Header("Climb and Shimmy")]
+        [Header("Подтягивание и движение вдоль края")]
+        [Tooltip("Разрешить подтягивание из виса на выступ.")]
         [SerializeField] private bool climbEnabled = true;
+        [Tooltip("Разрешить движение вдоль края во время виса.")]
         [SerializeField] private bool shimmyEnabled = true;
+        [Tooltip("Скорость движения вдоль края, м/с.")]
         [SerializeField, Min(0f)] private float shimmySpeed = 1.1f;
+        [Tooltip("Допустимый перепад высоты края при движении вдоль него, м.")]
         [SerializeField, Min(.02f)] private float maxShimmyHeightChange = .15f;
+        [Tooltip("Отступ внутрь площадки для безопасного вставания после подтягивания, м.")]
         [SerializeField, Min(.01f)] private float standInset = .16f;
+        [Tooltip("Длительность подтягивания на выступ, с.")]
         [SerializeField, Min(.1f)] private float climbDuration = .85f;
 
-        [Header("Low Obstacles")]
+        [Header("Низкие препятствия")]
+        [Tooltip("Разрешить преодоление низких препятствий.")]
         [SerializeField] private bool vaultEnabled = true;
+        [Tooltip("Минимальная высота низкого препятствия для преодоления, м.")]
         [SerializeField, Min(.1f)] private float minVaultHeight = .45f;
+        [Tooltip("Максимальная высота низкого препятствия, м.")]
         [SerializeField, Min(.2f)] private float maxVaultHeight = 1.15f;
+        [Tooltip("Дальность поиска места приземления за стенкой, м.")]
         [SerializeField, Min(.5f)] private float vaultReachBeyondWall = 1.5f;
+        [Tooltip("Допустимое падение за преодолеваемым препятствием, м.")]
         [SerializeField, Min(0f)] private float maxVaultDrop = 1.2f;
+        [Tooltip("Длительность преодоления низкого препятствия, с.")]
         [SerializeField, Min(.1f)] private float vaultDuration = .55f;
 
-        [Header("Roll")]
+        [Header("Перекат и подкат")]
+        [Tooltip("Разрешить перекаты и подкаты.")]
         [SerializeField] private bool rollEnabled = true;
+        [Tooltip("Горизонтальная скорость переката/подката, м/с.")]
         [SerializeField, Min(.1f)] private float rollSpeed = 6.5f;
+        [Tooltip("Полная длительность переката на открытом месте, с.")]
         [SerializeField, Min(.1f)] private float rollDuration = .6f;
+        [Tooltip("Пауза перед следующим перекатом, с.")]
         [SerializeField, Min(0f)] private float rollCooldown = .45f;
+        [Tooltip("Высота физической капсулы во время переката, м.")]
         [SerializeField, Min(.1f)] private float rollCapsuleHeight = .8f;
+        [Tooltip("Опускание камеры во время переката, м.")]
         [SerializeField, Min(0f)] private float rollCameraDrop = .95f;
-        [Tooltip("Optional camera tilt. Set to zero to remove the roll camera effect.")]
+        [Tooltip("Боковой наклон камеры при перекате, градусов. 0 отключает эффект.")]
         [SerializeField, Range(0f, 40f)] private float rollCameraTilt = 10f;
+        [Tooltip("Сколько секунд хранить нажатие переката перед приземлением.")]
         [SerializeField, Min(0f)] private float landingRollBuffer = .35f;
+        [Tooltip("Минимальная скорость падения для переката при приземлении, м/с.")]
         [SerializeField, Min(0f)] private float minimumLandingRollSpeed = 6f;
+        [Tooltip("Автоматически выполнять перекат при жёстком приземлении, если хватает выносливости.")]
         [SerializeField] private bool autoRollOnHardLanding;
-        [Tooltip("Under a roof too low for crouching, end the roll and begin crawling after this many seconds.")]
+        [Tooltip("Под низкой крышей завершить подкат и перейти к ползанию через указанное время, с.")]
         [SerializeField, Min(0f)] private float rollToCrawlAfter = .25f;
 
         private FirstPersonController motor;

@@ -7,15 +7,25 @@ namespace ZombieSurvival.Interaction
     public sealed class DoorInteractable : Interactable
     {
         [Header("Door")]
+        [Tooltip("Ось вращения двери.")]
         [SerializeField] private Transform hinge;
+        [Tooltip("Твёрдый коллайдер движущегося полотна двери.")]
         [SerializeField] private BoxCollider leaf;
+        [Tooltip("Угол открытия двери, градусов.")]
         [SerializeField, Range(10f, 160f)] private float openAngle = 100f;
+        [Tooltip("Скорость поворота двери, градусов/с.")]
         [SerializeField, Min(1f)] private float angularSpeed = 110f;
+        [Tooltip("Шаг проверки столкновений при повороте двери, градусов. Меньше — точнее, больше нагрузка.")]
         [SerializeField, Range(.25f, 5f)] private float collisionStepDegrees = 2f;
+        [Tooltip("Слои препятствий, перекрывающих луч или действие. Для двери — препятствия её движению.")]
         [SerializeField] private LayerMask obstructionMask = ~0;
+        [Tooltip("Дополнительный зазор двери от препятствий, м.")]
         [SerializeField, Min(0f)] private float collisionMargin = .005f;
+        [Tooltip("Открывать дверь от игрока, выбирая сторону по его позиции.")]
         [SerializeField] private bool openAwayFromActor = true;
+        [Tooltip("Текст действия открытия двери.")]
         [SerializeField] private string openPrompt = "Открыть дверь";
+        [Tooltip("Текст действия закрытия двери.")]
         [SerializeField] private string closePrompt = "Закрыть дверь";
         private Quaternion closedRotation;
         private float angle, targetAngle, openSign = 1f;

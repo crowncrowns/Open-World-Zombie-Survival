@@ -7,14 +7,23 @@ namespace ZombieSurvival.Interaction
     public sealed class ToggleInteractable : Interactable
     {
         [Header("Switch")]
+        [Tooltip("Начальное состояние переключателя.")]
         [SerializeField] private bool startsOn;
+        [Tooltip("Текст действия включения.")]
         [SerializeField] private string turnOnPrompt = "Включить";
+        [Tooltip("Текст действия выключения.")]
         [SerializeField] private string turnOffPrompt = "Выключить";
+        [Tooltip("Сообщение после включения.")]
         [SerializeField] private string onMessage = "Включено";
+        [Tooltip("Сообщение после выключения.")]
         [SerializeField] private string offMessage = "Выключено";
+        [Tooltip("Индикаторы, цвет которых меняется вместе с переключателем.")]
         [SerializeField] private Renderer[] indicators;
+        [Tooltip("Цвет индикатора в выключенном состоянии.")]
         [SerializeField] private Color offColor = new Color(.85f, .18f, .13f);
+        [Tooltip("Цвет индикатора во включённом состоянии.")]
         [SerializeField] private Color onColor = new Color(.15f, .85f, .4f);
+        [Tooltip("Событие смены состояния переключателя.")]
         [SerializeField] private UnityEvent<bool> onStateChanged = new UnityEvent<bool>();
         private MaterialPropertyBlock colors;
         private static readonly int BaseColor = Shader.PropertyToID("_BaseColor");

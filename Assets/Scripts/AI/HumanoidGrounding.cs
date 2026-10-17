@@ -6,22 +6,35 @@ namespace ZombieSurvival.AI
 {
     /// <summary>Grounds the animated body without moving the navigation root; preserves lifted swing feet.</summary>
     [DisallowMultipleComponent]
-    [RequireComponent(typeof(Animator), typeof(NavMeshAgent))]
+    [RequireComponent(typeof(Animator))]
     public sealed class HumanoidGrounding : MonoBehaviour
     {
+        [Tooltip("Слои земли для процедурной постановки ног.")]
         [SerializeField] private LayerMask groundLayers = ~0;
+        [Tooltip("Высота начала проверки земли над стопой, м.")]
         [SerializeField, Min(0.1f)] private float probeHeight = 0.6f;
+        [Tooltip("Расстояние проверки поверхности, м.")]
         [SerializeField, Min(0.2f)] private float probeDistance = 1.4f;
+        [Tooltip("Предельное смещение визуального тела относительно корня навигации по высоте, м.")]
         [SerializeField, Range(0.05f, 0.6f)] private float maximumBodyCorrection = 0.35f;
+        [Tooltip("Зазор подошвы над землёй, м.")]
         [SerializeField, Range(0f, 0.1f)] private float soleClearance = 0.008f;
+        [Tooltip("Высота стопы над землёй для начала фиксации, м.")]
         [SerializeField, Range(0.01f, 0.2f)] private float plantHeight = 0.025f;
+        [Tooltip("Высота стопы над землёй, при которой фиксация отпускается, м.")]
         [SerializeField, Range(0.02f, 0.3f)] private float releaseHeight = 0.055f;
+        [Tooltip("Предельное растяжение зафиксированной ноги до отпускания стопы, м.")]
         [SerializeField, Range(0.05f, 0.6f)] private float maximumPlantStretch = 0.3f;
+        [Tooltip("Скорость сглаживания визуальной постановки ног.")]
         [SerializeField, Min(1f)] private float smoothing = 20f;
+        [Tooltip("Время плавного закрепления стопы на земле, с.")]
         [SerializeField, Range(0.04f, 0.4f)] private float acquireDuration = 0.12f;
+        [Tooltip("Время плавного отпускания закреплённой стопы, с.")]
         [SerializeField, Range(0.04f, 0.4f)] private float releaseDuration = 0.16f;
+        [Tooltip("Максимальный угол наклона земли для постановки стоп, градусов.")]
         [SerializeField, Range(0f, 60f)] private float maximumGroundSlope = 50f;
-        [SerializeField, Tooltip("Runtime body offset; root transform remains driven by NavMeshAgent.")]
+        [SerializeField]
+        [Tooltip("Текущая вертикальная поправка визуального тела в Play. Корень остаётся под управлением NavMeshAgent.")]
         private float bodyOffset;
 
         private Animator animator;
@@ -31,6 +44,7 @@ namespace ZombieSurvival.AI
         private Transform leftToes;
         private Transform rightToes;
         private EnemyAttack[] attacks;
+        private IDamageable health;
         private Foot left = new Foot();
         private Foot right = new Foot();
         public float BodyOffset => bodyOffset;
@@ -63,8 +77,9 @@ namespace ZombieSurvival.AI
         private void Initialize()
         {
             animator = GetComponent<Animator>();
-            agent = GetComponent<NavMeshAgent>();
-            attacks = GetComponents<EnemyAttack>();
+            agent = GetComponentInParent<NavMeshAgent>();
+            attacks = agent != null ? agent.GetComponents<EnemyAttack>() : GetComponentsInParent<EnemyAttack>();
+            health = DamageReceiver.Find(this);
             if (!animator.isHuman) return;
             leftBone = animator.GetBoneTransform(HumanBodyBones.LeftFoot);
             rightBone = animator.GetBoneTransform(HumanBodyBones.RightFoot);
@@ -77,7 +92,16 @@ namespace ZombieSurvival.AI
 
         private void OnAnimatorIK(int layerIndex)
         {
-            if (layerIndex != 0 || leftBone == null || rightBone == null || !agent.enabled || !agent.isOnNavMesh) return;
+            if (layerIndex != 0 || leftBone == null || rightBone == null || agent == null || !agent.enabled || !agent.isOnNavMesh) return;
+            if (!DamageReceiver.IsAlive(health))
+            {
+                bodyOffset = 0f; left.planted = right.planted = false;
+                animator.SetIKPositionWeight(AvatarIKGoal.LeftFoot, 0f); animator.SetIKPositionWeight(AvatarIKGoal.RightFoot, 0f);
+                animator.SetIKRotationWeight(AvatarIKGoal.LeftFoot, 0f); animator.SetIKRotationWeight(AvatarIKGoal.RightFoot, 0f);
+                return;
+            }
+            var crawlPose = GetComponent<HumanoidCrawlPose>();
+            if (crawlPose != null && crawlPose.ApplyIK(animator)) { bodyOffset = 0f; left.planted = right.planted = false; return; }
             float blend = 1f - Mathf.Exp(-smoothing * Time.deltaTime);
             // NavMesh rasterization can sit above the actual collider surface. Correct the visual body only.
             float desiredOffset = 0f;

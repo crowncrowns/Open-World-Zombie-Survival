@@ -21,7 +21,7 @@
 ```csharp
 using ZombieSurvival.Combat;
 
-var receiver = hit.collider.GetComponentInParent<IDamageable>();
+var receiver = DamageReceiver.Find(hit.collider);
 receiver?.ApplyDamage(new DamageInfo(
     amount: 20f,
     source: gameObject,
@@ -76,7 +76,7 @@ receiver?.ApplyDamage(new DamageInfo(
 
 ## Источники урона и HUD
 
-**DamageZone** работает с BoxCollider (Is Trigger) и кинематическим Rigidbody. Damage, Interval и Affected Layers задаются в Inspector. Интервал ведётся отдельно для каждого Health, чтобы несколько его коллайдеров не наносили несколько ударов одновременно. Защищённый персонаж не расходует интервал зоны на отклонённый удар. Отключение зоны очищает её интервалы.
+**DamageZone** работает с BoxCollider (Is Trigger) и кинематическим Rigidbody. Damage, Interval и Affected Layers задаются в Inspector. Интервал ведётся отдельно для каждого получателя IDamageable, чтобы несколько его коллайдеров не наносили несколько ударов одновременно. Защищённый персонаж не расходует интервал зоны на отклонённый удар. Отключение зоны очищает её интервалы.
 
 **HealthTestInteractable** — тестовая консоль с Amount, Healing и Prompt. Можно использовать для проверок без врага. Её события и клавиша наследуются от общей системы взаимодействия.
 
