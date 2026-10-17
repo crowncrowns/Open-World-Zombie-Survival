@@ -22,6 +22,7 @@ namespace ZombieSurvival.Player
         private float verticalVelocity;
         private float pitch;
         private bool skipLook;
+        public bool IsRunning { get; private set; }
 
         private void Awake()
         {
@@ -84,6 +85,7 @@ namespace ZombieSurvival.Player
                 * (running ? runSpeed : walkSpeed);
             velocity.y = verticalVelocity;
             CollisionFlags collisions = controller.Move(velocity * Time.deltaTime);
+            IsRunning = running && movement.sqrMagnitude > 0f;
             if ((collisions & CollisionFlags.Above) != 0 && verticalVelocity > 0f) verticalVelocity = 0f;
         }
 
