@@ -3532,7 +3532,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &660732216
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3546,12 +3546,94 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ZombieSurvival.Player.FirstPersonController
   inputActions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  playerActionMap: Player
+  moveActionName: Move
+  lookActionName: Look
+  sprintActionName: Sprint
+  crouchActionName: Crouch
+  jumpActionName: Jump
+  rollActionName: Roll
+  proneActionName: Prone
+  releaseCursorInput:
+    m_Name: ReleaseCursor
+    m_Type: 1
+    m_ExpectedControlType: 
+    m_Id: 091ac4a0-535e-4ad4-a2ee-0e9aa3824256
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: 26548e6d-800f-437e-9f39-251aa298e85a
+      m_Path: <Keyboard>/escape
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: ReleaseCursor
+      m_Flags: 0
+    m_Flags: 0
+    m_Priority: 0
+  captureCursorInput:
+    m_Name: CaptureCursor
+    m_Type: 1
+    m_ExpectedControlType: 
+    m_Id: 1efc3595-b848-4044-b197-f8e7bea967d7
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: 30ef3078-1435-4dd3-b34f-7fdc39eafd18
+      m_Path: <Mouse>/leftButton
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: CaptureCursor
+      m_Flags: 0
+    m_Flags: 0
+    m_Priority: 0
+  movementEnabled: 1
+  sprintEnabled: 1
   walkSpeed: 4
   runSpeed: 7
+  jumpEnabled: 1
+  jumpHeight: 1.15
+  coyoteTime: 0.12
+  jumpBufferTime: 0.12
+  jumpCooldown: 0.15
+  airAcceleration: 8
+  airControl: 0.5
+  airDrag: 0.5
+  maxAirSpeed: 9
+  fallingGravityMultiplier: 1.25
+  crouchEnabled: 1
+  toggleCrouch: 0
+  crouchHeight: 1
+  crouchSpeed: 2
+  crouchTransitionSpeed: 4
+  crouchCameraDrop: 0.75
+  cameraHeadClearance: 0.1
+  standingClearance: 0.02
+  standingObstructionMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  proneEnabled: 1
+  proneHeight: 0.8
+  crawlSpeed: 1.1
+  proneCameraDrop: 1.1
+  proneTransitionSpeed: 3
   gravity: 20
+  groundStickSpeed: 2
+  terminalFallSpeed: 50
   playerCamera: {fileID: 330585546}
+  lookEnabled: 1
   mouseSensitivity: 0.1
+  horizontalLookMultiplier: 1
+  verticalLookMultiplier: 1
+  stickLookSpeed: 180
+  invertVerticalLook: 0
   verticalLookLimit: 85
+  captureCursorOnEnable: 1
+  requireCursorCapture: 1
+  requireApplicationFocus: 1
 --- !u!143 &660732217
 CharacterController:
   m_ObjectHideFlags: 0

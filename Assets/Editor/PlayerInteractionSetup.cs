@@ -90,7 +90,7 @@ public static class PlayerInteractionSetup
         var g = new GameObject(value.Split('\n')[0]); g.transform.SetParent(parent, false); g.transform.position = position;
         var text = g.AddComponent<TextMesh>();text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         text.text = value; text.fontSize = 64; text.characterSize = .1f; text.anchor = TextAnchor.MiddleCenter; text.alignment = TextAlignment.Center;
-        g.GetComponent<MeshRenderer>().sharedMaterial = text.font.material;
+        g.GetComponent<MeshRenderer>().sharedMaterial = text.font.material; WorldSpacePresentationSetup.ConfigurePlaque(text);
     }
     private static RectTransform Rect(string name, Transform parent, Vector2 min, Vector2 max, Vector2 a, Vector2 b)
     {
@@ -125,3 +125,4 @@ public static class PlayerInteractionSetup
         so.ApplyModifiedPropertiesWithoutUndo(); panel.gameObject.SetActive(false);
     }
 }
+

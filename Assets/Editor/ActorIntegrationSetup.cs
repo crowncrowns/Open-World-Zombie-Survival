@@ -136,7 +136,7 @@ public static class ActorIntegrationSetup
     {
         var obj = new GameObject(value.Split('\n')[0]);obj.transform.SetParent(parent, false);obj.transform.position = position;
         var text = obj.AddComponent<TextMesh>();text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");text.text = value;text.fontSize = 64;text.characterSize = .14f;text.anchor = TextAnchor.MiddleCenter;text.alignment = TextAlignment.Center;
-        obj.GetComponent<MeshRenderer>().sharedMaterial = text.font.material;
+        obj.GetComponent<MeshRenderer>().sharedMaterial = text.font.material; WorldSpacePresentationSetup.ConfigurePlaque(text);
     }
     private static void Set(Object target, string name, object value)
     {
@@ -149,3 +149,4 @@ public static class ActorIntegrationSetup
         so.ApplyModifiedPropertiesWithoutUndo();
     }
 }
+

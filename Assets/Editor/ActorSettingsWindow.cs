@@ -10,9 +10,11 @@ public sealed class ActorSettingsWindow : EditorWindow
 {
     private GameObject actor;
     private int tab;
+    [SerializeField, Tooltip("Общий тип предмета для редактирования категории, лимита и максимальной прочности без дублирования настроек.")]
+    private ZombieSurvival.Inventory.ItemDefinition itemType;
     private Vector2 scroll;
     private readonly Dictionary<EntityId, Editor> editors = new Dictionary<EntityId, Editor>();
-    private readonly string[] tabs = { "Общие", "Движение", "Паркур", "Скрытность / ИИ", "Внешность", "Инвентарь", "Звук", "Бой / оружие" };
+    private readonly string[] tabs = { "Общие", "Движение", "Паркур", "Скрытность / ИИ", "Внешность", "Инвентарь", "Звук", "Бой / оружие", "Деньги / бюджет" };
     [MenuItem("Tools/Zombie Survival/Настройки персонажа и зомби")]
     public static void Open() { var window = GetWindow<ActorSettingsWindow>("Настройки актёра"); window.minSize = new Vector2(650,450); window.ReadSelection(); }
     private void OnEnable() { Selection.selectionChanged += ReadSelection; ReadSelection(); }
@@ -56,6 +58,17 @@ public sealed class ActorSettingsWindow : EditorWindow
             EditorGUILayout.Space(); EditorGUILayout.LabelField(Title(component.GetType().Name), EditorStyles.boldLabel);
             editor.OnInspectorGUI();
         }
+        if (tab == 5)
+        {
+            EditorGUILayout.Space();
+            itemType = (ZombieSurvival.Inventory.ItemDefinition)EditorGUILayout.ObjectField("Тип предмета", itemType, typeof(ZombieSurvival.Inventory.ItemDefinition), false);
+            if (itemType != null)
+            {
+                var id = itemType.GetEntityId();
+                if (!editors.TryGetValue(id, out var typeEditor) || typeEditor == null) editors[id] = typeEditor = Editor.CreateEditor(itemType);
+                typeEditor.OnInspectorGUI();
+            }
+        }
         EditorGUILayout.EndScrollView();
     }
     private static int Group(string type)
@@ -68,6 +81,7 @@ public sealed class ActorSettingsWindow : EditorWindow
             case "PlayerNoiseEmitter": case "PlayerInteractor": case "EnemyBrain": case "EnemyCrawlPursuit": case "MeleeAttack": case "NoiseEmitter": return 3;
             case "PlayerVisual": case "PlayerModelDefinition": case "PlayerCrawlAnimation": case "HumanoidCrawlPose": case "HumanoidGrounding": case "EnemyAnimationBridge": return 4;
             case "ItemStorage": case "PlayerInventory": return 5;
+            case "Wallet": case "TraderBudget": return 8;
             case "ActorAudioEmitter": case "PlayerMovementAudio": case "NavMeshActorAudio": return 6;
             case "PlayerWeapons": case "WeaponPracticeTarget": return 7;
             default: return -1;
@@ -107,3 +121,5 @@ public sealed class ActorIdentityEditor : Editor
         var p = serializedObject.FindProperty(field); EditorGUILayout.PropertyField(p,new GUIContent(label,p.tooltip),true);
     }
 }
+
+

@@ -160,6 +160,67 @@ Transform:
   - {fileID: 1067129491389269725}
   m_Father: {fileID: 7896039804362695620}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &426094111685567746
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1124384560120795114}
+  - component: {fileID: 1378055151594274255}
+  m_Layer: 0
+  m_Name: Health indicator
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1124384560120795114
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 426094111685567746}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0.0066310167}
+  m_LocalScale: {x: 0.001875, y: 0.001875, z: 0.001875}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 8750369208222729865}
+  m_Father: {fileID: 6980050577486793301}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0.000000059604645, y: 1.9057512}
+  m_SizeDelta: {x: 128, y: 128}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!223 &1378055151594274255
+Canvas:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 426094111685567746}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_RenderMode: 2
+  m_Camera: {fileID: 0}
+  m_PlaneDistance: 100
+  m_PixelPerfect: 0
+  m_ReceivesEvents: 1
+  m_OverrideSorting: 0
+  m_OverridePixelPerfect: 0
+  m_SortingBucketNormalizedSize: 0
+  m_VertexColorAlwaysGammaSpace: 0
+  m_UseReflectionProbes: 0
+  m_AdditionalShaderChannelsFlag: 0
+  m_UpdateRectTransformForStandalone: 0
+  m_SortingLayerID: 0
+  m_SortingOrder: 0
+  m_TargetDisplay: 0
 --- !u!1 &712415140820621887
 GameObject:
   m_ObjectHideFlags: 0
@@ -2213,6 +2274,73 @@ Transform:
   - {fileID: 3982703882669095873}
   m_Father: {fileID: 5551098567001224359}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &3784124345722548270
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8750369208222729865}
+  - component: {fileID: 6827917214322973489}
+  - component: {fileID: 1436973308629969717}
+  m_Layer: 0
+  m_Name: Radial health ring
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &8750369208222729865
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3784124345722548270}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1124384560120795114}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 128, y: 128}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &6827917214322973489
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3784124345722548270}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3509a84bf40d7fa468035a965431137c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ZombieSurvival.Presentation.HollowHealthRing
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 0.035, b: 0.035, a: 1}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  lostHealthColor: {r: 1, g: 1, b: 1, a: 1}
+  innerRadiusRatio: 0.68
+--- !u!222 &1436973308629969717
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3784124345722548270}
+  m_CullTransparentMesh: 1
 --- !u!1 &4082062340406765983
 GameObject:
   m_ObjectHideFlags: 0
@@ -2749,6 +2877,7 @@ GameObject:
   - component: {fileID: 4112347946163897572}
   - component: {fileID: 4355403605305681425}
   - component: {fileID: 6776774690622614912}
+  - component: {fileID: 4566365760265978228}
   m_Layer: 0
   m_Name: ZombieMaleActor
   m_TagString: Untagged
@@ -2773,6 +2902,7 @@ Transform:
   - {fileID: 891765005310978379}
   - {fileID: 9003446611769139150}
   - {fileID: 2535088499468599750}
+  - {fileID: 1124384560120795114}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!95 &6960420866511837739
@@ -3121,6 +3251,24 @@ MonoBehaviour:
   voiceInterval: {x: 4, y: 9}
   idleVoice: 1
   teleportDistance: 4
+--- !u!114 &4566365760265978228
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6075541374222267141}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 29f9b1ae0e780c54fb862bf4cb5b7b25, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ZombieSurvival.Presentation.ActorHealthIndicator
+  health: {fileID: 8938571694874595003}
+  indicatorCanvas: {fileID: 1378055151594274255}
+  healthGraphic: {fileID: 6827917214322973489}
+  head: {fileID: 4109894766972438810}
+  headClearance: 0.28
+  viewCamera: {fileID: 0}
 --- !u!1 &6086582245082692367
 GameObject:
   m_ObjectHideFlags: 0

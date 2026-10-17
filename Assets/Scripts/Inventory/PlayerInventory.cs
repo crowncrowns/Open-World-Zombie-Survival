@@ -75,8 +75,9 @@ namespace ZombieSurvival.Inventory
             var obj = Instantiate(stack.Definition.WorldPrefab, destination, Quaternion.identity);
             obj.SetActive(false); var world = obj.GetComponent<WorldItem>();
             if (world == null) { Destroy(obj); return false; }
-            world.Initialize(stack.Copy(amount));
-            if (!Storage.Remove(index, amount)) { Destroy(obj); return false; }
+            if (!Storage.TryExtract(index, amount, out var extracted)) { Destroy(obj); return false; }
+            try { world.Initialize(extracted); }
+            catch (System.Exception exception) { Storage.RestoreExtracted(index, extracted); Destroy(obj); Debug.LogException(exception, this); return false; }
             obj.SetActive(true); return true;
         }
         private void OnGUI()
@@ -92,7 +93,7 @@ namespace ZombieSurvival.Inventory
             GUI.DrawTexture(new Rect((width - 900) / 2, (height - 620) / 2, 900, 620), Texture2D.whiteTexture);
             GUI.color = oldColor;
             GUILayout.BeginArea(new Rect((width - 900) / 2, (height - 620) / 2, 900, 620), GUI.skin.box);
-            GUILayout.BeginHorizontal(); GUILayout.Label("РЮКЗАК" + (hadContainer ? "  /  ЯЩИК" : ""));
+            GUILayout.BeginHorizontal(); GUILayout.Label("РЮКЗАК" + (hadContainer ? "  /  ЯЩИК" : "") + (GetComponent<ZombieSurvival.Economy.Wallet>() != null ? "    " + GetComponent<ZombieSurvival.Economy.Wallet>().FormattedBalance : ""));
             if (GUILayout.Button("Закрыть [Tab / Esc]", GUILayout.Width(190))) Close(); GUILayout.EndHorizontal();
             GUILayout.Label("Мир продолжает жить. Выбери слот, затем перенеси или выброси стопку.");
             GUILayout.BeginHorizontal(); DrawStorage(storage, false, ref leftScroll);
@@ -131,9 +132,15 @@ namespace ZombieSurvival.Inventory
                 var slot = target.GetSlot(i); bool active = selected == i && selectedContainer == isContainer;
                 string title = $"{i + 1:00}  " + (slot == null || slot.IsEmpty ? "— свободно —" : $"{slot.Definition.DisplayName} ×{slot.Quantity} / {slot.Definition.MaxStack}");
                 if (slot != null && !slot.IsEmpty && slot.Definition.Weapon != null && slot.Definition.Weapon.kind == ZombieSurvival.Weapons.WeaponKind.Firearm) title += $"  [магазин: {slot.LoadedRounds}]";
+                if (slot != null && !slot.IsEmpty)
+                {
+                    title += "  [" + slot.Definition.CategoryLabel + " / " + slot.Definition.SubcategoryLabel + "]";
+                    if (slot.Definition.HasDurability) title += $"  [прочность: {slot.Durability:0.#}/{slot.Definition.MaximumDurability:0.#}]";
+                }
                 if (GUILayout.Toggle(active, title, GUI.skin.button, GUILayout.Height(35)) && !active) { selected = i; selectedContainer = isContainer; feedback = ""; }
             }
             GUILayout.EndScrollView(); GUILayout.EndVertical();
         }
     }
 }
+

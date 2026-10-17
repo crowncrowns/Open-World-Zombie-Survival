@@ -145,5 +145,6 @@ public static class WeaponLabSetup
         Sign(go.transform,title,position+new Vector3(0,2.4f,0),.065f); go.AddComponent<WeaponPracticeTarget>();
     }
     private static void Sign(Transform parent,string text,Vector3 point,float scale)
-    { var go=new GameObject("Instructions"); go.transform.SetParent(parent); go.transform.position=point; go.transform.rotation=Quaternion.identity; var t=go.AddComponent<TextMesh>(); t.text=text; t.fontSize=36; t.characterSize=scale; t.anchor=TextAnchor.MiddleCenter; t.color=Color.white; }
+    { var go=new GameObject("Instructions"); go.transform.SetParent(parent); go.transform.position=point; go.transform.rotation=Quaternion.identity; var t=go.AddComponent<TextMesh>(); t.text=text; t.fontSize=36; t.characterSize=scale; t.anchor=TextAnchor.MiddleCenter; t.color=Color.white; if(parent.name=="Stage10_Weapons") WorldSpacePresentationSetup.ConfigurePlaque(t); }
 }
+

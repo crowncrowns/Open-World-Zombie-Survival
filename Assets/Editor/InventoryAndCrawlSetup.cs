@@ -153,6 +153,7 @@ public static class InventoryAndCrawlSetup
     private static void Sign(Transform parent, string label, Vector3 position)
     {
         var obj = new GameObject(label.Split('\n')[0]); obj.transform.SetParent(parent,false); obj.transform.position = position;
-        var text = obj.AddComponent<TextMesh>(); text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"); text.text = label; text.fontSize = 64; text.characterSize = .11f; text.anchor = TextAnchor.MiddleCenter; text.alignment = TextAlignment.Center; obj.GetComponent<MeshRenderer>().sharedMaterial = text.font.material;
+        var text = obj.AddComponent<TextMesh>(); text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"); text.text = label; text.fontSize = 64; text.characterSize = .11f; text.anchor = TextAnchor.MiddleCenter; text.alignment = TextAlignment.Center; obj.GetComponent<MeshRenderer>().sharedMaterial = text.font.material; WorldSpacePresentationSetup.ConfigurePlaque(text);
     }
 }
+
