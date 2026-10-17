@@ -3,12 +3,6 @@ using UnityEngine.Events;
 
 namespace ZombieSurvival.Combat
 {
-    public interface IDamageable
-    {
-        bool IsAlive { get; }
-        void TakeDamage(float amount);
-    }
-
     [DisallowMultipleComponent]
     public sealed class DamageableHealth : MonoBehaviour, IDamageable
     {
@@ -20,6 +14,7 @@ namespace ZombieSurvival.Combat
 
         public float CurrentHealth => currentHealth;
         public bool IsAlive => currentHealth > 0f;
+        public bool IsDead => !IsAlive;
         private void Awake() => currentHealth = maximumHealth;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -29,12 +24,17 @@ namespace ZombieSurvival.Combat
                 health.currentHealth = health.maximumHealth;
         }
 
-        public void TakeDamage(float amount)
+        // Preserve UnityEvent/legacy callers while sharing the same contract as player Health.
+        public void TakeDamage(float amount) => ApplyDamage(new DamageInfo(amount, null, transform.position));
+
+        public bool ApplyDamage(DamageInfo damage)
         {
-            if (!IsAlive || amount <= 0f || float.IsNaN(amount)) return;
+            float amount = damage.Amount;
+            if (!isActiveAndEnabled || !IsAlive || amount <= 0f || float.IsNaN(amount) || float.IsInfinity(amount)) return false;
             currentHealth = Mathf.Max(0f, currentHealth - amount);
             onDamaged.Invoke();
             if (!IsAlive) onDeath.Invoke();
+            return true;
         }
     }
 }

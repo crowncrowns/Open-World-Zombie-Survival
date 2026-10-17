@@ -12,7 +12,7 @@ namespace ZombieSurvival.Combat
 
         public static IEnumerable<CombatTarget> ActiveTargets => targets;
         public Vector3 AimPosition => transform.TransformPoint(aimOffset);
-        public bool IsAlive => isActiveAndEnabled && (damageable == null || damageable.IsAlive);
+        public bool IsAlive => isActiveAndEnabled && (damageable == null || !damageable.IsDead);
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetRegistry() => targets.Clear();
@@ -22,13 +22,20 @@ namespace ZombieSurvival.Combat
             targets.Clear();
             foreach (var target in Object.FindObjectsByType<CombatTarget>(FindObjectsInactive.Include))
             {
-                target.damageable = target.GetComponent<IDamageable>();
+                target.ResolveHealth();
                 if (target.isActiveAndEnabled) targets.Add(target);
             }
         }
-        private void Awake() => damageable = GetComponent<IDamageable>();
+        private void ResolveHealth()
+        {
+            // Prefer the player's full health/lifecycle component if a merged scene contains both.
+            var health = GetComponent<Health>();
+            damageable = health != null ? (IDamageable)health : GetComponent<IDamageable>();
+        }
+        private void Awake() => ResolveHealth();
         private void OnEnable() => targets.Add(this);
         private void OnDisable() => targets.Remove(this);
-        public void ReceiveDamage(float amount) => damageable?.TakeDamage(amount);
+        public void ReceiveDamage(float amount) => ReceiveDamage(new DamageInfo(amount, null, AimPosition));
+        public void ReceiveDamage(DamageInfo damage) => damageable?.ApplyDamage(damage);
     }
 }

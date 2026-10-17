@@ -16,7 +16,7 @@ namespace ZombieSurvival.Player
         [SerializeField, Min(0f)] private float runRange = 28f;
         private CharacterController body;
         private FirstPersonController movement;
-        private DamageableHealth health;
+        private IDamageable health;
         private Vector3 previousPosition;
         private float travelled;
 
@@ -24,7 +24,8 @@ namespace ZombieSurvival.Player
         {
             body = GetComponent<CharacterController>();
             movement = GetComponent<FirstPersonController>();
-            health = GetComponent<DamageableHealth>();
+            var playerHealth = GetComponent<Health>();
+            health = playerHealth != null ? (IDamageable)playerHealth : GetComponent<IDamageable>();
         }
         private void OnEnable() { previousPosition = transform.position; travelled = 0f; }
 
@@ -33,14 +34,14 @@ namespace ZombieSurvival.Player
             Vector3 delta = transform.position - previousPosition;
             previousPosition = transform.position;
             delta.y = 0f;
-            if ((health != null && !health.IsAlive) || !body.isGrounded || !movement.enabled
+            if ((health != null && health.IsDead) || !body.isGrounded || !movement.enabled || !movement.IsAlive
                 || delta.sqrMagnitude < 0.000001f || delta.sqrMagnitude > 25f)
             {
                 travelled = 0f;
                 return;
             }
             travelled += delta.magnitude;
-            bool running = movement.IsRunning;
+            bool running = movement.IsSprinting;
             if (travelled < (running ? runStepDistance : walkStepDistance)) return;
             travelled = 0f;
             GameplayNoise.Emit(transform.position, running ? runLoudness : walkLoudness,
