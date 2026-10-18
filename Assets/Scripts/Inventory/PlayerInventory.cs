@@ -98,7 +98,7 @@ namespace ZombieSurvival.Inventory
                 if (!selectedContainer && needs != null && needs.CanConsume(stack.Definition) && GUILayout.Button("Употребить 1"))
                     feedback = needs.TryConsume(selected) ? "Предмет употреблён" : "Показатели полные или предмет недоступен";
                 if (!selectedContainer && stack.Definition.Weapon != null && GUILayout.Button("Экипировать"))
-                { var weapons = GetComponent<ZombieSurvival.Weapons.PlayerWeapons>(); if (weapons != null) { weapons.Equip(selected); feedback = "Оружие выбрано. Закрой рюкзак для атаки."; } }
+                { var weapons = GetComponent<ZombieSurvival.Weapons.PlayerWeapons>(); if (weapons != null) feedback = weapons.Equip(selected) ? "Оружие выбрано. Закрой рюкзак для атаки." : "Нельзя экипировать: проверь допуск типа в хотбар и состояние персонажа."; }
                 if (hadContainer && container != null)
                 {
                     var destination = selectedContainer ? storage : container;
@@ -154,7 +154,7 @@ namespace ZombieSurvival.Inventory
                     if (GUILayout.Button(title, GUILayout.Height(24))) hotbar.Select(slot);
                     GUILayout.BeginHorizontal();
                     bool enabled = GUI.enabled;
-                    GUI.enabled = enabled && !selectedContainer && selectedStack != null && !selectedStack.IsEmpty;
+                    GUI.enabled = enabled && !selectedContainer && selectedStack != null && !selectedStack.IsEmpty && selectedStack.Definition.AllowInHotbar;
                     if (GUILayout.Button("Назначить")) feedback = hotbar.Assign(slot, selected) ? "Предмет назначен в быстрый слот " + (slot + 1) : "Назначить можно только предмет из своего рюкзака";
                     GUI.enabled = enabled;
                     if (GUILayout.Button("×", GUILayout.Width(24))) { hotbar.Clear(slot); feedback = "Назначение очищено; предмет остался в рюкзаке"; }

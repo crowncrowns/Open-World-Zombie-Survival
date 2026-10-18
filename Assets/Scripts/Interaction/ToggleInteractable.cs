@@ -29,8 +29,13 @@ namespace ZombieSurvival.Interaction
         private static readonly int BaseColor = Shader.PropertyToID("_BaseColor");
         private static readonly int ColorId = Shader.PropertyToID("_Color");
         public bool IsOn { get; private set; }
+        private bool restored;
+        public event System.Action<bool> StateRestored;
 
-        private void Awake() { IsOn = startsOn; colors = new MaterialPropertyBlock(); ApplyColor(); }
+        private void Awake() { if (!restored) IsOn = startsOn; colors = new MaterialPropertyBlock(); ApplyColor(); }
+        internal void RestoreStateSilently(bool on) { IsOn = on; restored = true; }
+        // Не повторять onStateChanged: он мог выдать предмет/XP. Восстановление уведомляет отдельным событием.
+        internal void NotifyWorldRestore() { ApplyColor(); StateRestored?.Invoke(IsOn); }
         public override string GetPrompt(PlayerInteractor actor) => IsOn ? turnOffPrompt : turnOnPrompt;
         protected override bool PerformInteraction(PlayerInteractor actor)
         {
@@ -42,6 +47,7 @@ namespace ZombieSurvival.Interaction
         }
         private void ApplyColor()
         {
+            if (colors == null) colors = new MaterialPropertyBlock();
             if (indicators == null) return;
             foreach (var indicator in indicators)
             {

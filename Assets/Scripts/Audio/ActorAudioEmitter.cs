@@ -38,7 +38,7 @@ namespace ZombieSurvival.Audio
         {
             Unsubscribe();
             health = GetComponent<Health>();
-            if (health != null) { health.Damaged += OnDamaged; health.Died += OnDied; health.Revived += StopAll; }
+            if (health != null) { health.Damaged += OnDamaged; health.Died += OnDied; health.Revived += StopAll; health.WorldStateRestored += StopAll; }
             if (movementSource == null) movementSource = CreateSource("Movement audio");
             if (voiceSource == null) voiceSource = CreateSource("Voice audio");
             Configure(movementSource); Configure(voiceSource); StopAll(); previous.Clear();
@@ -58,7 +58,7 @@ namespace ZombieSurvival.Audio
         }
         private void Unsubscribe()
         {
-            if (health != null) { health.Damaged -= OnDamaged; health.Died -= OnDied; health.Revived -= StopAll; }
+            if (health != null) { health.Damaged -= OnDamaged; health.Died -= OnDied; health.Revived -= StopAll; health.WorldStateRestored -= StopAll; }
         }
         private void OnDisable() { Unsubscribe(); StopAll(); }
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]

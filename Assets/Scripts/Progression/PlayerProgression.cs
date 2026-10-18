@@ -199,15 +199,17 @@ namespace ZombieSurvival.Progression
         }
 
         public void ApplyPreparedRestore(PreparedProgressionState prepared)
+            => ApplyPreparedRestore(prepared,true);
+        internal void ApplyPreparedRestore(PreparedProgressionState prepared,bool notify)
         {
             if (prepared == null || prepared.Owner != this || prepared.Tree != tree || prepared.TreeJson != JsonUtility.ToJson(tree))
                 throw new ArgumentException("Подготовленное развитие принадлежит другому игроку или дерево изменилось после проверки.");
             experience = prepared.Experience; bonusPoints = prepared.BonusPoints; ranks.Clear();
             foreach (var pair in prepared.Ranks) ranks.Add(pair.Key, pair.Value);
-            initialized = true; Rebuild();
+            initialized = true; Rebuild(notify);
         }
 
-        private void Rebuild()
+        private void Rebuild(bool notify = true)
         {
             abilities.Clear();
             bool valid = tree != null && tree.Validate(out _);
@@ -217,8 +219,9 @@ namespace ZombieSurvival.Progression
             if (modifiers == null) modifiers = GetComponent<PlayerStatModifiers>();
             // Ошибка авторинга не должна превращаться в NaN физики или исключение Awake.
             // Сохраняем ранги для исправления/миграции, но временно убираем производные эффекты неверного графа.
-            modifiers?.Replace(valid ? tree : null, ranks); Changed?.Invoke();
+            modifiers?.Replace(valid ? tree : null, ranks,notify); if(notify)Changed?.Invoke();
         }
+        internal void NotifySavedRestore() => Changed?.Invoke();
 
         private long SpentPoints(IReadOnlyDictionary<string, int> purchased)
         {

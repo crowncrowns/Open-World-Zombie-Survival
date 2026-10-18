@@ -21,6 +21,8 @@ namespace ZombieSurvival.Economy
             if (!modeInitialized) { wallet.SetInfiniteMode(startInfinite); modeInitialized = true; }
         }
         internal void InitializeForNewPlay() { modeInitialized = false; Initialize(); }
+        internal void MarkSavedModeInitialized() { wallet = GetComponent<Wallet>(); modeInitialized = true; }
+        internal void NotifySavedMode() => ModeChanged?.Invoke();
         public void SetInfinite(bool value)
         {
             Initialize(); if (wallet.IsInfinite == value) return;

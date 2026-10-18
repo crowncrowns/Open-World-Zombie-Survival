@@ -18,6 +18,10 @@ namespace ZombieSurvival.Combat
         [Tooltip("Считать ли врагами старых актёров без ActorIdentity. Для новых NPC всегда добавляйте ActorIdentity на корень.")]
         [SerializeField] private bool targetActorsWithoutIdentity;
         public ActorFaction Faction => faction;
+        internal FactionMask SavedHostility => hostileFactions;
+        internal bool SavedLegacyTargets => targetActorsWithoutIdentity;
+        internal void RestoreRelations(ActorFaction value, FactionMask hostility, bool legacyTargets)
+        { faction = value; hostileFactions = hostility; targetActorsWithoutIdentity = legacyTargets; }
         public FactionMask FactionBit => (FactionMask)(1 << (int)faction);
         public bool IsAlive => DamageReceiver.IsAlive(DamageReceiver.Find(this));
         public bool IsHostileTo(ActorIdentity other) => other != null

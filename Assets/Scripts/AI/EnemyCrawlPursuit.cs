@@ -50,9 +50,30 @@ namespace ZombieSurvival.AI
 
         private void Awake()
         {
+            if (agent != null) return;
             agent = GetComponent<NavMeshAgent>(); body = GetComponent<CapsuleCollider>();
             standingType = agent.agentTypeID; standingHeight = body.height;
             standingCenter = body.center; standingOffset = agent.baseOffset;
+        }
+        internal int SavedAgentType(bool crawling) { if (agent == null) Awake(); return crawling ? crawlAgentType : standingType; }
+        // У Instantiate живого ползущего актёра native-капсула уже низкая, а несериализованный кэш отсутствует.
+        // Для проверочной копии переносим исходную стоячую конфигурацию, иначе она неверно проверит старую позу.
+        internal void CopySavedConfigurationFrom(EnemyCrawlPursuit source)
+        {
+            if (source.agent == null) source.Awake();
+            agent = GetComponent<NavMeshAgent>(); body = GetComponent<CapsuleCollider>();
+            standingType = source.standingType; standingHeight = source.standingHeight;
+            standingCenter = source.standingCenter; standingOffset = source.standingOffset;
+        }
+        // Вызывается загрузчиком при выключенном агенте. Не ищет цель и не меняет позицию по SamplePosition.
+        internal void RestoreSavedPosture(bool crawling)
+        {
+            if (agent == null) Awake(); CancelObservedEntry();
+            agent.agentTypeID = crawling ? crawlAgentType : standingType;
+            body.height = crawling ? Mathf.Max(crawlHeight, body.radius * 2) : standingHeight;
+            body.center = crawling ? new Vector3(standingCenter.x, body.height * .5f, standingCenter.z) : standingCenter;
+            agent.height = body.height; agent.baseOffset = crawling ? 0 : standingOffset;
+            IsCrawling = crawling; PoseWeight = crawling ? 1 : 0; transitionEnds = 0;
         }
         private void Update()
         {

@@ -110,6 +110,14 @@ namespace ZombieSurvival.AI
             activeAttack = null;
             Bool(Attacking, false);
         }
+        // Возвращаем Animator из терминального death/attack-состояния без повторного урона или события смерти.
+        internal void RestoreWorldPresentation()
+        {
+            Initialize(); if (animator == null || animator.runtimeAnimatorController == null) return;
+            Vector3 point = transform.position, scale = transform.localScale; Quaternion rotation = transform.rotation;
+            animator.Rebind(); Bool(Dead, !DamageReceiver.IsAlive(health)); Bool(Attacking, false); Float(Speed, 0);
+            transform.SetPositionAndRotation(point, rotation); transform.localScale = scale;
+        }
         private bool Has(int hash, AnimatorControllerParameterType type) => parameters.TryGetValue(hash, out var actual) && actual == type;
         private void Float(int hash, float value) { if (Has(hash, AnimatorControllerParameterType.Float)) animator.SetFloat(hash, value); }
         private void Bool(int hash, bool value) { if (Has(hash, AnimatorControllerParameterType.Bool)) animator.SetBool(hash, value); }

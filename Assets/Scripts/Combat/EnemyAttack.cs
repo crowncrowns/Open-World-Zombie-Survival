@@ -90,6 +90,7 @@ namespace ZombieSurvival.Combat
             IsBusy = false;
             if (wasBusy) AttackFinished?.Invoke(this);
         }
+        internal void ResetAfterWorldLoad() { Cancel(); nextAllowedTime = 0; }
         protected virtual void OnDisable() => Cancel();
     }
 }

@@ -32,9 +32,13 @@ namespace ZombieSurvival.Inventory
         public override string GetPrompt(PlayerInteractor actor) => item != null ? $"Взять: {item.DisplayName} ×{quantity}" : "Не назначен тип предмета";
         protected override bool PerformInteraction(PlayerInteractor actor)
         {
+            var hotbar = actor.GetComponent<PlayerHotbar>();
+            var before = hotbar != null && item.AllowInHotbar ? hotbar.CapturePickupQuantities(item) : null;
             collecting = true;
             if (!(instance != null && !instance.IsEmpty ? actor.GetComponent<ItemStorage>().TryAddStack(instance) : actor.GetComponent<ItemStorage>().TryAddAll(item, quantity))) { collecting = false; actor.ShowFeedback("Нет места в рюкзаке — предмет остался на земле"); return false; }
-            quantity = 0; actor.ShowFeedback("Предмет добавлен в рюкзак"); gameObject.SetActive(false); Destroy(gameObject); return true;
+            quantity = 0; gameObject.SetActive(false); Destroy(gameObject);
+            hotbar?.CompleteWorldPickup(item, before);
+            actor.ShowFeedback("Предмет добавлен в рюкзак"); return true;
         }
     }
 }

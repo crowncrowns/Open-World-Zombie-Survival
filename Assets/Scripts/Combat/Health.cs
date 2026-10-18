@@ -24,7 +24,8 @@ namespace ZombieSurvival.Combat
         [SerializeField] private UnityEvent onRevived = new UnityEvent();
         private float current, protectedUntil = float.NegativeInfinity;
         private PlayerStatModifiers statModifiers;
-        public float Current => current;
+        private bool initialized;
+        public float Current { get { EnsureInitialized(); return current; } }
         public float BaseMaximum => Mathf.Max(1f, maximum);
         public float Maximum
         {
@@ -42,6 +43,7 @@ namespace ZombieSurvival.Combat
         public event Action<DamageInfo> Damaged;
         public event Action Died;
         public event Action Revived;
+        public event Action WorldStateRestored;
         // Общее событие канонического Health: награда привязана к источнику последнего смертельного удара,
         // а не к имени модели, конкретному EnemyBrain или опросу всех NPC каждый кадр.
         public static event Action<Health, DamageInfo> ActorKilled;
@@ -49,7 +51,8 @@ namespace ZombieSurvival.Combat
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetEvents() => ActorKilled = null;
 
-        private void Awake() { current = Maximum * startingFraction; }
+        private void EnsureInitialized() { if (initialized) return; initialized = true; current = Maximum * startingFraction; }
+        private void Awake() => EnsureInitialized();
 
         public bool ApplyDamage(DamageInfo damage)
         {
@@ -77,6 +80,7 @@ namespace ZombieSurvival.Combat
         /// <summary>Explicit lifecycle operation; healing never resurrects a dead character.</summary>
         public void Revive(float fraction = 1f, float protectionSeconds = 0f)
         {
+            initialized = true;
             current = Maximum * Mathf.Clamp(fraction, .01f, 1f);
             IsDead = false;
             protectedUntil = Time.time + Mathf.Max(0f, protectionSeconds);
@@ -87,15 +91,29 @@ namespace ZombieSurvival.Combat
         // Player-only alive snapshot restore; unlike Revive's fraction this preserves sub-1 HP exactly.
         internal void RestoreAlive(float value)
         {
+            initialized = true;
             current = Mathf.Clamp(value, .0001f, Maximum); IsDead = false;
             protectedUntil = float.NegativeInfinity; LastDamage = default;
             Changed?.Invoke(); onHealthChanged.Invoke(current); Revived?.Invoke(); onRevived.Invoke();
         }
+        // Загрузка мира не является ударом/убийством: XP и Damaged не воспроизводятся.
+        internal void RestoreWorldStateSilently(float value, bool dead)
+        {
+            initialized = true; current = value; IsDead = dead;
+            protectedUntil = float.NegativeInfinity; LastDamage = default;
+        }
+        internal void NotifyWorldRestore()
+        {
+            Changed?.Invoke(); onHealthChanged.Invoke(current);
+            // Died/Revived и UnityEvent могли выдавать добычу: загрузка не повторяет игровые последствия.
+            WorldStateRestored?.Invoke();
+        }
         /// <summary>Смена максимума сохраняет абсолютное HP: покупка/повторная загрузка не лечит бесплатно.</summary>
-        public void RefreshDerivedMaximum()
+        public void RefreshDerivedMaximum() => RefreshDerivedMaximum(true);
+        internal void RefreshDerivedMaximum(bool notify)
         {
             current = Mathf.Clamp(current, 0f, Maximum);
-            Changed?.Invoke(); onHealthChanged.Invoke(current);
+            if(notify){Changed?.Invoke(); onHealthChanged.Invoke(current);}
         }
         private static bool ValidAmount(float amount) => amount > 0f && !float.IsNaN(amount) && !float.IsInfinity(amount);
     }

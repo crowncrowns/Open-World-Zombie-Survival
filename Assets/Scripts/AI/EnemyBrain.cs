@@ -94,7 +94,7 @@ namespace ZombieSurvival.AI
         private float lastVisibleAt = float.NegativeInfinity;
 
         public BehaviourState State => state;
-        public Vector3 SpawnPosition => spawnPosition;
+        public Vector3 SpawnPosition => started ? spawnPosition : transform.position;
         public Vector3 SearchCenter => searchCenter;
         public float SearchRadius => searchRadius;
         public bool IsAlive => DamageReceiver.IsAlive(health);
@@ -182,6 +182,20 @@ namespace ZombieSurvival.AI
             nextSightTime = nextRepathTime = waitUntil = 0f;
             foreach (var attack in attacks) if (attack != null) attack.Cancel();
             InitializeSpawn();
+        }
+        // Сохраняем только опору патруля, а не живую ссылку на скрытого игрока/корутину атаки.
+        internal void RestoreAfterWorldLoad(Vector3 patrolOrigin, bool brainEnabled)
+        {
+            if (agent == null) Awake();
+            foreach (var attack in attacks) if (attack != null) attack.Cancel();
+            visibleTarget = null; activeAttack = null; hasDestination = false;
+            lastSeenPosition = searchCenter = Vector3.zero; searchRadius = 0;
+            lastVisibleAt = float.NegativeInfinity;
+            nextSightTime = nextRepathTime = waitUntil = searchEndsAt = destinationExpires = 0;
+            crawl?.CancelObservedEntry(); spawnPosition = patrolOrigin; started = true;
+            state = IsAlive ? BehaviourState.Patrol : BehaviourState.Dead;
+            enabled = brainEnabled;
+            if (CanNavigate) { agent.ResetPath(); agent.isStopped = !IsAlive; }
         }
 
         private void Update()

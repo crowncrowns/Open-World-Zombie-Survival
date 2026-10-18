@@ -1305,6 +1305,11 @@ GameObject:
   - component: {fileID: 1582641862744016322}
   - component: {fileID: 7819511705963125339}
   - component: {fileID: 7597633315160807396}
+  - component: {fileID: 1981053963884047814}
+  - component: {fileID: 6178498486198403643}
+  - component: {fileID: 6305308422426640020}
+  - component: {fileID: 1238592991080586786}
+  - component: {fileID: 7093068383827326038}
   m_Layer: 0
   m_Name: CharacterTestPlayer
   m_TagString: Untagged
@@ -1981,6 +1986,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 23dfcf55581926746b089899c771f34a, type: 2}
   - {fileID: 11400000, guid: b875b2d812222964bbe603d95f07c210, type: 2}
   - {fileID: 11400000, guid: faa892afc318fad4e9850451e7f59094, type: 2}
+  worldRegistry: {fileID: 0}
   saveInput:
     m_Name: QuickSave
     m_Type: 1
@@ -2173,6 +2179,109 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ZombieSurvival.Economy.Wallet
   startingBalance: 0
+--- !u!114 &1981053963884047814
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4323131168981000575}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1d19a9e7e20a4ea3846070e28b1472ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ZombieSurvival.Persistence.WorldSaveObject
+  saveTransform: 1
+--- !u!114 &6178498486198403643
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4323131168981000575}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b1a0041ea80c4972926b2f95ba0a4d74, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ZombieSurvival.Persistence.WorldWalletSaveAdapter
+--- !u!114 &6305308422426640020
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4323131168981000575}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: da1d4822981545ec8fca4b461cf77b68, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ZombieSurvival.Persistence.WorldIdentitySaveAdapter
+--- !u!114 &1238592991080586786
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4323131168981000575}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6a2f4983935948c4ae6ef54079ce945f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ZombieSurvival.Persistence.PlayerSaveSlots
+  autoSaveEnabled: 1
+  intervalSeconds: 300
+  autoSlotCount: 3
+  manualSlotCount: 3
+  retrySeconds: 30
+--- !u!114 &7093068383827326038
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4323131168981000575}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c387dc0eac15481ba6322c1df61fca63, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ZombieSurvival.Persistence.PlayerSaveMenu
+  toggleInput:
+    m_Name: SaveMenu
+    m_Type: 1
+    m_ExpectedControlType: 
+    m_Id: 6c8a0053-367b-4f8b-ab8f-8e769fcb5213
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: 6ee19e20-d99e-4d25-af14-027f59cd0847
+      m_Path: <Keyboard>/f6
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: SaveMenu
+      m_Flags: 0
+    m_Flags: 0
+    m_Priority: 0
+  closeInput:
+    m_Name: CloseSaveMenu
+    m_Type: 1
+    m_ExpectedControlType: 
+    m_Id: e72fb640-968a-4598-8b68-da2d2f201bf4
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: 129269ac-34f0-4b0e-9f62-674d66920e98
+      m_Path: <Keyboard>/escape
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: CloseSaveMenu
+      m_Flags: 0
+    m_Flags: 0
+    m_Priority: 0
+  requireApplicationFocus: 1
 --- !u!1 &4411578025396193111
 GameObject:
   m_ObjectHideFlags: 0

@@ -22,10 +22,12 @@ namespace ZombieSurvival.Persistence
         public Vector3 position, scale;
         public Quaternion rotation;
         public bool active, enabled;
+        public bool hasBody;
+        public RigidbodyWorldState body;
     }
     [Serializable] internal sealed class CharacterSaveData
     {
-        public int version=2;
+        public int version=3;
         public string scene, savedUtc, equippedId;
         public Vector3 position;
         public float yaw, pitch, health, stamina, recoveryWait, food, water;
@@ -33,6 +35,7 @@ namespace ZombieSurvival.Persistence
         public ProgressionState progression;
         public string[] hotbar;
         public int hotbarSelected;
+        public WorldSceneState worldState;
         public List<SavedStorage> storages=new List<SavedStorage>();
         public List<SavedWorldItem> world=new List<SavedWorldItem>();
     }

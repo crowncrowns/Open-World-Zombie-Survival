@@ -2,6 +2,12 @@ using UnityEngine;
 
 namespace ZombieSurvival.Interaction
 {
+    [System.Serializable] public sealed class DoorWorldState
+    {
+        public Quaternion closedRotation;
+        public float angle, targetAngle, openSign;
+        public bool open, blocked;
+    }
     /// <summary>A hinged test door. Its solid collider remains enabled and stops before obstructions.</summary>
     [DisallowMultipleComponent]
     public sealed class DoorInteractable : Interactable
@@ -30,15 +36,36 @@ namespace ZombieSurvival.Interaction
         private Quaternion closedRotation;
         private float angle, targetAngle, openSign = 1f;
         private bool open;
+        private bool initialized;
         private readonly Collider[] overlaps = new Collider[32];
         public bool IsOpen => open;
         public bool IsBlocked { get; private set; }
         public bool IsMoving => Mathf.Abs(angle - targetAngle) > .01f;
 
-        private void Awake()
+        private void Awake() => EnsureInitialized();
+        private void EnsureInitialized()
         {
+            if (initialized) return;
             if (hinge == null) hinge = transform;
-            closedRotation = hinge.localRotation;
+            closedRotation = hinge.localRotation; initialized = true;
+        }
+        internal DoorWorldState CaptureWorldState()
+        {
+            EnsureInitialized(); return new DoorWorldState { closedRotation = closedRotation, angle = angle, targetAngle = targetAngle, openSign = openSign, open = open, blocked = IsBlocked };
+        }
+        internal bool ValidateWorldState(DoorWorldState state)
+        {
+            EnsureInitialized();
+            var q = state.closedRotation; float norm = q.x*q.x + q.y*q.y + q.z*q.z + q.w*q.w;
+            return hinge != null && leaf != null && !float.IsNaN(norm) && !float.IsInfinity(norm) && Mathf.Abs(norm-1)<.001f
+                && !float.IsNaN(state.angle) && !float.IsNaN(state.targetAngle) && Mathf.Abs(state.angle)<=Mathf.Abs(openAngle)+.01f
+                && Mathf.Abs(state.openSign)==1 && Mathf.Abs(state.targetAngle-(state.open?Mathf.Abs(openAngle)*state.openSign:0))<.01f;
+        }
+        internal void RestoreWorldState(DoorWorldState state)
+        {
+            EnsureInitialized(); closedRotation = state.closedRotation; angle = state.angle; targetAngle = state.targetAngle;
+            openSign = state.openSign; open = state.open; IsBlocked = state.blocked;
+            hinge.localRotation = closedRotation * Quaternion.Euler(0, angle, 0);
         }
         public override bool CanInteract(PlayerInteractor actor) => base.CanInteract(actor) && leaf != null && hinge != null;
         public override string GetPrompt(PlayerInteractor actor) => IsBlocked ? "Проход занят — изменить направление" : open ? closePrompt : openPrompt;

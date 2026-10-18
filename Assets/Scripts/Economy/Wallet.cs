@@ -21,6 +21,9 @@ namespace ZombieSurvival.Economy
         private void OnEnable() => EnsureInitialized();
         private void EnsureInitialized() { if (!initialized) { balance = Math.Max(0L, startingBalance); initialized = true; } }
         internal void SetInfiniteMode(bool value) { EnsureInitialized(); infinite = value; }
+        // Только проверенный общий снимок CM-04; торговля не должна вызывать этот обход начисления/списания.
+        internal void RestoreSavedState(long reserve, bool infiniteMode) { balance = reserve; infinite = infiniteMode; initialized = true; }
+        internal void NotifySavedRestore() => Changed?.Invoke();
         internal void InitializeForNewPlay() { balance = Math.Max(0L, startingBalance); initialized = true; infinite = false; }
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void RestoreForPlay()

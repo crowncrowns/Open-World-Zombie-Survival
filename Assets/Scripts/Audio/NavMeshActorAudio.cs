@@ -40,6 +40,7 @@ namespace ZombieSurvival.Audio
             lastPosition=transform.position; travelled=0f; ScheduleVoice();
         }
         private void OnDisable() => Unsubscribe();
+        internal void ResetAfterWorldLoad() { lastPosition=transform.position;travelled=0;ScheduleVoice(); }
         private void Unsubscribe() { if (attacks != null) foreach (var attack in attacks) if (attack != null) attack.AnimationStarted -= Attack; }
         private void Attack(EnemyAttack attack) { emitter.Play(ActorSound.Attack); ScheduleVoice(); }
         private void ScheduleVoice() => nextVoice=Time.time+Random.Range(Mathf.Max(1f,voiceInterval.x),Mathf.Max(1f,voiceInterval.y));

@@ -14,7 +14,7 @@ public class CharacterStage11Inspector : Editor
         {"sprintMultiplier","Расход при беге"},{"emptyDamagePerSecond","Урон от истощения в секунду"},{"resetOnRespawn","Сброс при возрождении"},{"consumables","Еда и напитки"},
         {"showHud","Показать HUD"},{"item","Тип предмета"},{"food","Восстановление сытости"},{"water","Восстановление воды"},{"healing","Лечение"},
         {"fileName","Имя файла сохранения"},{"itemCatalog","Каталог типов предметов"},{"saveInput","Сохранить"},{"loadInput","Загрузить"},
-        {"requireApplicationFocus","Требовать фокус окна"},{"obstructionMask","Слои проверки препятствий"},{"supportDistance","Допуск расстояния до опоры"},
+        {"requireApplicationFocus","Требовать фокус окна"},{"obstructionMask","Слои проверки препятствий"},{"supportDistance","Допуск расстояния до опоры"},{"worldRegistry","Реестр области мира"},
         {"persistentId","Постоянный ID"},{"motionEnabled","Покачивание включено"},{"viewCamera","Камера игрока"},{"amplitude","Амплитуда, м"},
         {"walkFrequency","Частота ходьбы, Гц"},{"runFrequency","Частота бега, Гц"},{"runAmplitude","Амплитуда при беге"},{"blendSpeed","Плавность перехода, м/с"},
         {"action","Действие консоли"},{"interactionEnabled","Взаимодействие включено"},{"displayName","Название"},{"onInteracted","После взаимодействия"}

@@ -28,7 +28,7 @@ namespace ZombieSurvival.Progression
             return (float)Math.Max(0d, Math.Min(1000000d, value));
         }
 
-        internal void Replace(SkillTreeDefinition tree, IReadOnlyDictionary<string, int> ranks)
+        internal void Replace(SkillTreeDefinition tree, IReadOnlyDictionary<string, int> ranks, bool notify = true)
         {
             flat.Clear(); percent.Clear();
             if (tree != null && tree.Nodes != null) foreach (var node in tree.Nodes)
@@ -41,15 +41,16 @@ namespace ZombieSurvival.Progression
                     percent.TryGetValue(effect.stat, out double percentage); percent[effect.stat] = percentage + (double)effect.percent * rank;
                 }
             }
-            RefreshConsumers(); Changed?.Invoke();
+            RefreshConsumers(notify); if(notify)Changed?.Invoke();
         }
 
         private void OnEnable() => RefreshConsumers();
         private void OnDisable() => RefreshConsumers();
-        private void RefreshConsumers()
+        private void RefreshConsumers(bool notify = true)
         {
-            GetComponent<Health>()?.RefreshDerivedMaximum();
+            GetComponent<Health>()?.RefreshDerivedMaximum(notify);
             GetComponent<PlayerStamina>()?.RefreshDerivedCapacity();
         }
+        internal void NotifySavedRestore() => Changed?.Invoke();
     }
 }

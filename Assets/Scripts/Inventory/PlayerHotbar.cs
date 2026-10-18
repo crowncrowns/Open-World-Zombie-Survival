@@ -89,12 +89,13 @@ namespace ZombieSurvival.Inventory
         public ItemStack GetAssignedItem(int index)
         {
             EnsureLayout();
-            return index >= 0 && index < assignments.Length ? Storage.GetSlot(FindInventorySlot(assignments[index])) : null;
+            var item = index >= 0 && index < assignments.Length ? Storage.GetSlot(FindInventorySlot(assignments[index])) : null;
+            return item != null && item.Definition.AllowInHotbar ? item : null;
         }
         public bool Assign(int hotbarSlot, int inventorySlot)
         {
             EnsureLayout(); var item = Storage.GetSlot(inventorySlot);
-            if (hotbarSlot < 0 || hotbarSlot >= SlotCount || item == null || item.IsEmpty || !Storage.Contains(item)) return false;
+            if (hotbarSlot < 0 || hotbarSlot >= SlotCount || item == null || item.IsEmpty || !item.Definition.AllowInHotbar || !Storage.Contains(item)) return false;
             for (int i = 0; i < assignments.Length; i++) if (assignments[i] == item.InstanceId) assignments[i] = null;
             assignments[hotbarSlot] = item.InstanceId;
             armed = false; SyncWeapon(); Changed?.Invoke(); return true;
@@ -103,6 +104,32 @@ namespace ZombieSurvival.Inventory
         {
             EnsureLayout(); if (slot < 0 || slot >= SlotCount) return;
             assignments[slot] = null; armed = false; SyncWeapon(); Changed?.Invoke();
+        }
+        // Только успешный подбор с пола вызывает этот маршрут. Changed/загрузка/торговля не заполняют пустые слоты сами.
+        // Сравнение количества ловит merge в существующую стопку и новые остатки, не выбирая произвольную вещь того же типа.
+        internal Dictionary<string, int> CapturePickupQuantities(ItemDefinition type)
+        {
+            var before = new Dictionary<string, int>(StringComparer.Ordinal);
+            for (int i = 0; i < Storage.SlotCount; i++)
+            {
+                var stack = Storage.GetSlot(i);
+                if (stack != null && !stack.IsEmpty && stack.Definition == type) before[stack.InstanceId] = stack.Quantity;
+            }
+            return before;
+        }
+        internal void CompleteWorldPickup(ItemDefinition type, Dictionary<string, int> before)
+        {
+            if (type == null || !type.AllowInHotbar || before == null) return;
+            PruneAssignments();
+            for (int i = 0; i < Storage.SlotCount; i++)
+            {
+                var stack = Storage.GetSlot(i);
+                if (stack == null || stack.IsEmpty || stack.Definition != type || Array.IndexOf(assignments, stack.InstanceId) >= 0) continue;
+                if (before.TryGetValue(stack.InstanceId, out int quantity) && stack.Quantity <= quantity) continue;
+                int empty = Array.FindIndex(assignments, string.IsNullOrEmpty);
+                if (empty < 0) break;
+                Assign(empty, i);
+            }
         }
         public bool Select(int slot)
         {
@@ -132,7 +159,8 @@ namespace ZombieSurvival.Inventory
             for (int i = 0; i < assignments.Length; i++)
             {
                 if (string.IsNullOrEmpty(assignments[i])) continue;
-                if (FindInventorySlot(assignments[i]) >= 0 && seen.Add(assignments[i])) continue;
+                var item = Storage.GetSlot(FindInventorySlot(assignments[i]));
+                if (item != null && item.Definition.AllowInHotbar && seen.Add(assignments[i])) continue;
                 assignments[i] = null; changed = true;
             }
             return changed;

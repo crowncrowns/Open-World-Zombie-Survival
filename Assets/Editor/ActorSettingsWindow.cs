@@ -69,6 +69,18 @@ public sealed class ActorSettingsWindow : EditorWindow
                 typeEditor.OnInspectorGUI();
             }
         }
+        if(tab==9)
+        {
+            var registries=UnityEngine.Object.FindObjectsByType<ZombieSurvival.Persistence.WorldSaveRegistry>(FindObjectsInactive.Include);
+            foreach(var registry in registries)
+            {
+                if(registry.gameObject.scene!=actor.scene)continue;
+                EditorGUILayout.Space();EditorGUILayout.LabelField("Область мира и каталог создаваемых объектов",EditorStyles.boldLabel);
+                var id=registry.GetEntityId();
+                if(!editors.TryGetValue(id,out var registryEditor)||registryEditor==null)editors[id]=registryEditor=Editor.CreateEditor(registry);
+                registryEditor.OnInspectorGUI();
+            }
+        }
         EditorGUILayout.EndScrollView();
     }
     private static int Group(string type)
@@ -83,7 +95,7 @@ public sealed class ActorSettingsWindow : EditorWindow
             case "ItemStorage": case "PlayerInventory": return 5;
             case "PlayerProgression": case "PlayerStatModifiers": case "PlayerProgressionMenu": case "PlayerHotbar": return 10;
             case "Wallet": case "TraderBudget": return 8;
-            case "PlayerNeeds": case "PlayerSaveSystem": case "SaveIdentity": return 9;
+            case "PlayerSaveSlots": case "PlayerSaveMenu": case "PlayerNeeds": case "PlayerSaveSystem": case "SaveIdentity": case "WorldSaveObject": case "WorldActorSaveAdapter": case "WorldIdentitySaveAdapter": case "WorldWalletSaveAdapter": case "WorldDoorSaveAdapter": case "WorldToggleSaveAdapter": case "WorldRigidbodySaveAdapter": return 9;
             case "ActorAudioEmitter": case "PlayerMovementAudio": case "NavMeshActorAudio": return 6;
             case "PlayerWeapons": case "WeaponPracticeTarget": return 7;
             default: return -1;
@@ -107,6 +119,15 @@ public sealed class ActorSettingsWindow : EditorWindow
             case "PlayerStatModifiers": return "Расчёт бонусов характеристик";
             case "PlayerProgressionMenu": return "Окно дерева развития";
             case "PlayerHotbar": return "Быстрые предметы и использование";
+            case "PlayerSaveSlots": return "Автосохранение и количество слотов";
+            case "PlayerSaveMenu": return "Меню сохранений и загрузки";
+            case "WorldSaveObject": return "Участие в сохранении мира";
+            case "WorldActorSaveAdapter": return "Состояние NPC: HP, поза, фракции и навигация";
+            case "WorldWalletSaveAdapter": return "Кошелёк в едином снимке";
+            case "WorldDoorSaveAdapter": return "Состояние двери";
+            case "WorldToggleSaveAdapter": return "Состояние переключателя";
+            case "WorldRigidbodySaveAdapter": return "Физика сохраняемого корня";
+            case "WorldIdentitySaveAdapter": return "Фракции в сохранении мира";
             default: return ObjectNames.NicifyVariableName(type);
         }
     }

@@ -37,10 +37,10 @@ namespace ZombieSurvival.Player
             if (health == null) health = GetComponentInParent<Health>();
             if (lifeCycle == null) lifeCycle = GetComponentInParent<PlayerLifeCycle>();
         }
-        private void OnEnable() { if (health != null) { health.Damaged += OnDamaged; health.Revived += OnRevived; } }
+        private void OnEnable() { if (health != null) { health.Damaged += OnDamaged; health.Revived += OnRevived; health.WorldStateRestored += OnRevived; } }
         private void OnDisable()
         {
-            if (health != null) { health.Damaged -= OnDamaged; health.Revived -= OnRevived; }
+            if (health != null) { health.Damaged -= OnDamaged; health.Revived -= OnRevived; health.WorldStateRestored -= OnRevived; }
             if (damageFlash != null) damageFlash.color = Color.clear;
             if (deathPanel != null) deathPanel.SetActive(false);
         }

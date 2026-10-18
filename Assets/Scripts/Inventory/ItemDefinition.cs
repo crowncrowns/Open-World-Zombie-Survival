@@ -31,6 +31,9 @@ namespace ZombieSurvival.Inventory
         private string repairProfileId;
         [SerializeField, Min(.01f), Tooltip("Максимальная прочность нового оружия/снаряжения, ед. Текущее значение хранится в экземпляре.")]
         private float maximumDurability = 100f;
+        [SerializeField, InspectorName("Можно в хотбар"), Tooltip("Разрешает ручное и автоматическое назначение этого типа в быстрые слоты. Обычно включено у оружия, еды, воды и аптечек; выключено у патронов и материалов. Не создаёт действие использования само по себе.")]
+        private bool allowInHotbar;
+        public bool AllowInHotbar => allowInHotbar;
         public ZombieSurvival.Weapons.WeaponDefinition Weapon => weapon;
         private bool warnedUncategorized;
         internal void WarnIfUncategorized()
