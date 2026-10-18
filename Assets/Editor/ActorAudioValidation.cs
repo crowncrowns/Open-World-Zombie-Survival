@@ -28,14 +28,14 @@ public static class ActorAudioValidation
                 }
             }
         }
-        foreach(var emitter in UnityEngine.Object.FindObjectsByType<ActorAudioEmitter>(FindObjectsInactive.Include,FindObjectsSortMode.None))
+        foreach(var emitter in UnityEngine.Object.FindObjectsByType<ActorAudioEmitter>(FindObjectsInactive.Include))
         {
             if(emitter.Profile==null)errors.Add(emitter.name+": не назначен профиль");
             if(emitter.MovementSource==null||emitter.VoiceSource==null||emitter.MovementSource==emitter.VoiceSource)
                 errors.Add(emitter.name+": нужны два отдельных AudioSource");
         }
         int listeners=0;
-        foreach(var listener in UnityEngine.Object.FindObjectsByType<AudioListener>(FindObjectsSortMode.None))if(listener.isActiveAndEnabled)listeners++;
+        foreach(var listener in UnityEngine.Object.FindObjectsByType<AudioListener>())if(listener.isActiveAndEnabled)listeners++;
         if(listeners!=1)errors.Add("В открытой сцене должен быть один активный AudioListener, найдено: "+listeners);
         if(errors.Count>0)throw new InvalidOperationException(string.Join("\n",errors));
         Debug.Log("ACTOR_AUDIO_VALIDATION_OK: audio profiles, clip references, independent sources and one listener.");

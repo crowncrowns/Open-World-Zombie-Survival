@@ -32,8 +32,22 @@ public static class WalletT3Checks
             check(adapter.TryReceiveFrom(b,100)&&b.Balance==long.MaxValue-100&&budget1.Balance==400,"infinite sink never grows hidden reserve");
             adapter.enabled=false;adapter.enabled=true;adapter.SetInfinite(false);check(budget1.Balance==400&&!budget1.IsInfinite,"finite/infinite/enable/finite restores same reserve");
             int before=events;a.TryDebit(1);a.TryDebit(1);check(a.Balance==old-2&&events==before+2,"repeated API invocation is a separate explicit request, no ledger");
+            var dormant=new GameObject("startup infinite");dormant.SetActive(false);dormant.transform.SetParent(root.transform);
+            var startup=dormant.AddComponent<Wallet>();var settings=new SerializedObject(startup);settings.FindProperty("startingBalance").longValue=321;settings.ApplyModifiedPropertiesWithoutUndo();
+            var startBudget=dormant.AddComponent<TraderBudget>();settings=new SerializedObject(startBudget);settings.FindProperty("startInfinite").boolValue=true;settings.ApplyModifiedPropertiesWithoutUndo();dormant.SetActive(true);
+            check(startBudget.IsInfinite&&startup.Balance==321,"starting infinite policy applied before first payment; long starting reserve321");
+            int modeEvents=0;startBudget.ModeChanged+=()=>modeEvents++;startBudget.SetInfinite(true);startBudget.SetInfinite(false);startBudget.SetInfinite(false);startBudget.SetInfinite(true);
+            check(modeEvents==2&&startup.Balance==321,"mode events only on actual mode changes; reserve unchanged");
+            startBudget.enabled=false;check(!startBudget.TryPay(a,1)&&!startBudget.TryReceiveFrom(a,1),"disabled budget adapter refuses both payment directions");startBudget.enabled=true;
+            startup.enabled=false;check(!startBudget.TryPay(a,1)&&!a.TryTransferTo(startup,1),"disabled underlying Wallet refuses operations even in infinite mode");startup.enabled=true;
+            var inf2=create("infinite peer");var infAdapter=inf2.gameObject.AddComponent<TraderBudget>();infAdapter.SetInfinite(true);int infiniteEvents=0;startup.Changed+=()=>infiniteEvents++;inf2.Changed+=()=>infiniteEvents++;
+            check(startBudget.TryPay(inf2,long.MaxValue)&&startup.Balance==321&&inf2.Balance==0&&infiniteEvents==0,"infinite endpoints transfer without reserve mutation or Changed");
+            bool zeroThrows=false;try{a.Credit(0);}catch(ArgumentOutOfRangeException){zeroThrows=true;}
+            bool insufficientThrows=false;try{a.Debit(long.MaxValue);}catch(InvalidOperationException){insufficientThrows=true;}
+            check(zeroThrows&&insufficientThrows,"throwing wrappers preserve explicit invalid/insufficient policies");
             return string.Join("\n",passed);
         }
         finally{UnityEngine.Object.DestroyImmediate(root);}
     }
 }
+

@@ -7,7 +7,7 @@ namespace ZombieSurvival.Economy
     [DisallowMultipleComponent, RequireComponent(typeof(Wallet))]
     public sealed class TraderBudget : MonoBehaviour
     {
-        [SerializeField, Tooltip("Явный бесконечный тестовый режим на старте сессии. Конечный резерв Wallet заморожен, не пополняется и не обнуляется.")]
+        [SerializeField, InspectorName("Бесконечный тестовый бюджет на старте"), Tooltip("Явный бесконечный тестовый режим на старте сессии. Конечный резерв Wallet заморожен, не пополняется и не обнуляется.")]
         private bool startInfinite;
         private Wallet wallet;
         private bool modeInitialized;
@@ -30,3 +30,4 @@ namespace ZombieSurvival.Economy
         public bool TryReceiveFrom(Wallet payer, long amount) => isActiveAndEnabled && payer != null && payer.TryTransferTo(Funds, amount);
     }
 }
+

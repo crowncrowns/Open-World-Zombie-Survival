@@ -21,21 +21,21 @@ public static class InventoryAndCrawlValidation
             if (item.WorldPrefab == null || item.WorldPrefab.GetComponent<WorldItem>() == null || item.WorldPrefab.GetComponentInChildren<Collider>(true) == null)
                 errors.Add(item.name + ": нужен WorldItem на корне мирового префаба и Collider в его иерархии");
         }
-        foreach (var world in UnityEngine.Object.FindObjectsByType<WorldItem>(FindObjectsSortMode.None))
+        foreach (var world in UnityEngine.Object.FindObjectsByType<WorldItem>())
             if (world.Item == null || world.Quantity <= 0) errors.Add(world.name + ": не назначен предмет или количество");
-        foreach (var player in UnityEngine.Object.FindObjectsByType<FirstPersonController>(FindObjectsSortMode.None))
+        foreach (var player in UnityEngine.Object.FindObjectsByType<FirstPersonController>())
         {
             if (player.GetComponent<ItemStorage>() == null || player.GetComponent<PlayerInventory>() == null || player.GetComponent<PlayerNoiseEmitter>() == null)
                 errors.Add(player.name + ": не хватает инвентаря или источника шума");
         }
-        foreach (var crawl in UnityEngine.Object.FindObjectsByType<EnemyCrawlPursuit>(FindObjectsSortMode.None))
+        foreach (var crawl in UnityEngine.Object.FindObjectsByType<EnemyCrawlPursuit>())
         {
             int type = new SerializedObject(crawl).FindProperty("crawlAgentType").intValue;
             var settings = NavMesh.GetSettingsByID(type);
             if (type == crawl.GetComponent<NavMeshAgent>().agentTypeID && !Application.isPlaying || settings.agentTypeID == -1 || settings.agentHeight > .85f)
                 errors.Add(crawl.name + ": неверный тип низкого агента");
             bool surfaceFound = false;
-            foreach (var surface in UnityEngine.Object.FindObjectsByType<NavMeshSurface>(FindObjectsSortMode.None))
+            foreach (var surface in UnityEngine.Object.FindObjectsByType<NavMeshSurface>())
                 if (surface.agentTypeID == type && surface.navMeshData != null) surfaceFound = true;
             if (!surfaceFound) errors.Add(crawl.name + ": в открытой сцене нет запечённой низкой поверхности");
         }

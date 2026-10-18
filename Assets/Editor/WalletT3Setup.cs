@@ -30,15 +30,19 @@ public static class WalletT3Setup
             for(int i=0;i<actions.Length;i++)
             {
                 var obj=GameObject.CreatePrimitive(PrimitiveType.Cube);obj.name=labels[i];obj.transform.SetParent(root.transform,false);
-                obj.transform.position=new Vector3(-6+i*3,.45f,-29);obj.transform.localScale=new Vector3(.55f,.9f,.55f);
+                obj.transform.position=new Vector3(-3+i*3,.45f,-29);obj.transform.localScale=new Vector3(.55f,.9f,.55f);
                 obj.GetComponent<Renderer>().sharedMaterial=AssetDatabase.LoadAssetAtPath<Material>("Assets/CharacterTesting/Materials/Concrete.mat");
                 var console=obj.AddComponent<WalletTestTerminal>();var so=new SerializedObject(console);
                 so.FindProperty("action").intValue=(int)actions[i];so.FindProperty("amount").longValue=amounts[i];so.FindProperty("budget").objectReferenceValue=budget;so.ApplyModifiedPropertiesWithoutUndo();
-                var sign=new GameObject("Т3 / "+labels[i]);sign.transform.SetParent(root.transform,false);sign.transform.position=new Vector3(-6+i*3,2,-28.4f);
+                var sign=new GameObject("Т3 / "+labels[i]);sign.transform.SetParent(root.transform,false);sign.transform.position=new Vector3(-3+i*3,2,-28.4f);
                 var source=sign.AddComponent<TextMesh>();source.text="Т3 / РУБЛИ\nE: "+labels[i]+"\nТест, не торговля | Старт игрока: 0 ₽";
                 WorldSpacePresentationSetup.ConfigurePlaque(source);
+                var plaque=sign.GetComponentInChildren<Canvas>().transform;
+                plaque.SetPositionAndRotation(new Vector3(-3+i*3,.035f,-27.4f),Quaternion.Euler(90,180,0));
             }
         }
         EditorSceneManager.MarkSceneDirty(scene);EditorSceneManager.SaveScene(scene);AssetDatabase.SaveAssets();
     }
 }
+
+

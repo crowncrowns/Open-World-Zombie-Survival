@@ -24,7 +24,7 @@ public static class ActorIntegrationSetup
         ConfigurePlayer(); ExportZombie();
         var scene = EditorSceneManager.OpenScene(Lab + "/CharacterTest.unity");
         if (GameObject.Find("06 - Actors and stealth") == null) CreateArena();
-        foreach (var door in Object.FindObjectsByType<DoorInteractable>(FindObjectsSortMode.None))
+        foreach (var door in Object.FindObjectsByType<DoorInteractable>())
         {
             if (door.GetComponent<NavMeshModifier>() == null) door.gameObject.AddComponent<NavMeshModifier>().ignoreFromBuild = true;
             var leaf = door.GetComponentInChildren<BoxCollider>();
@@ -71,7 +71,7 @@ public static class ActorIntegrationSetup
     {
         if (AssetDatabase.LoadAssetAtPath<GameObject>(ZombiePrefab) != null) return;
         var scene = EditorSceneManager.OpenScene("Assets/Scenes/SampleScene.unity");
-        var source = Object.FindObjectsByType<EnemyBrain>(FindObjectsInactive.Include, FindObjectsSortMode.None).Single(b => b.gameObject.name == "ZombieMale");
+        var source = Object.FindObjectsByType<EnemyBrain>(FindObjectsInactive.Include).Single(b => b.gameObject.name == "ZombieMale");
         var actor = Object.Instantiate(source.gameObject);actor.name = "ZombieMaleActor";
         try
         {

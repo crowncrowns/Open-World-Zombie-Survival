@@ -8,7 +8,7 @@ namespace ZombieSurvival.Economy
     [DisallowMultipleComponent]
     public sealed class Wallet : MonoBehaviour
     {
-        [SerializeField, Min(0), Tooltip("Начальный баланс новой игровой сессии, целые рубли. По умолчанию 0; enable/открытие UI его не начисляют повторно.")]
+        [SerializeField, InspectorName("Стартовый баланс, ₽"), Min(0), Tooltip("Начальный баланс новой игровой сессии, целые рубли. По умолчанию 0; enable/открытие UI его не начисляют повторно.")]
         private long startingBalance;
         private long balance;
         private bool initialized, infinite;
@@ -60,3 +60,4 @@ namespace ZombieSurvival.Economy
         }
     }
 }
+

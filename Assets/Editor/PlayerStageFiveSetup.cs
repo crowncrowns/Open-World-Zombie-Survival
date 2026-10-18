@@ -27,7 +27,7 @@ public static class PlayerStageFiveSetup
         finally { PrefabUtility.UnloadPrefabContents(player); }
         SetupAnimator();
         var scene = EditorSceneManager.OpenScene("Assets/CharacterTesting/CharacterTest.unity");
-        foreach (var text in Object.FindObjectsByType<TextMesh>(FindObjectsSortMode.None))
+        foreach (var text in Object.FindObjectsByType<TextMesh>())
         {
             if (text.text.Contains("05 / ROLL TUNNEL"))
                 text.text = "05 / ROLL TO CRAWL\nCtrl: roll in | Z: prone / stand\nLow roof keeps you crawling";

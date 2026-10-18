@@ -41,7 +41,7 @@ public static class PlayerHealthSetup
         var instance = Object.FindAnyObjectByType<PlayerLifeCycle>();
         var so = new SerializedObject(instance);so.FindProperty("respawnPoint").objectReferenceValue = GameObject.Find("Player respawn point").transform;so.ApplyModifiedPropertiesWithoutUndo();
         PrefabUtility.RecordPrefabInstancePropertyModifications(instance);
-        foreach (var text in Object.FindObjectsByType<TextMesh>(FindObjectsSortMode.None))
+        foreach (var text in Object.FindObjectsByType<TextMesh>())
             if (text.text.Contains("08 / LANDING ROLL")) text.text = "08 / FALL DAMAGE\n3 m drop | Ctrl before landing reduces damage\nRoll needs stamina";
         EditorSceneManager.SaveScene(scene);AssetDatabase.SaveAssets();
         Debug.Log("HEALTH_SETUP_OK: health, death/respawn, HUD, damage/heal consoles, zones and Kevin Iglesias death animation.");

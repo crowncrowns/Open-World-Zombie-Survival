@@ -30,7 +30,7 @@ public static class PlayerInteractionSetup
             target.name = "Interaction red switch";
             ConfigureSwitch(target, "Тестовый переключатель");
         }
-        foreach (var text in Object.FindObjectsByType<TextMesh>(FindObjectsSortMode.None))
+        foreach (var text in Object.FindObjectsByType<TextMesh>())
             if (text.text.Contains("07 / FUTURE INTERACTION")) text.text = "07 / INTERACTION\nAim at the red block + E\nRed: off | Green: on";
         if (GameObject.Find("04 - Interaction tests") == null)
         {

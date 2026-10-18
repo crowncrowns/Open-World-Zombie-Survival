@@ -14,7 +14,7 @@ public static class ActorContractValidation
     public static void Validate()
     {
         int errors = 0;
-        foreach (var player in Object.FindObjectsByType<FirstPersonController>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        foreach (var player in Object.FindObjectsByType<FirstPersonController>(FindObjectsInactive.Include))
         {
             var so = new SerializedObject(player);
             var asset = so.FindProperty("inputActions").objectReferenceValue as InputActionAsset;
@@ -32,13 +32,13 @@ public static class ActorContractValidation
             if (player.GetComponent<ActorIdentity>() == null || player.GetComponent<CombatTarget>() == null || player.GetComponent<PlayerNoiseEmitter>() == null)
             { Debug.LogError(player.name + ": AI integration needs ActorIdentity, CombatTarget and PlayerNoiseEmitter.", player); errors++; }
         }
-        foreach (var actor in Object.FindObjectsByType<ActorIdentity>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        foreach (var actor in Object.FindObjectsByType<ActorIdentity>(FindObjectsInactive.Include))
         {
             int pools = actor.GetComponents<MonoBehaviour>().Count(b => b is IDamageable);
             if (pools != 1)
             { Debug.LogError(actor.name + ": expected one health receiver on the actor root; found " + pools + ". Use Health or a compatible IDamageable.", actor); errors++; }
         }
-        foreach (var brain in Object.FindObjectsByType<EnemyBrain>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        foreach (var brain in Object.FindObjectsByType<EnemyBrain>(FindObjectsInactive.Include))
         {
             if (brain.GetComponent<ActorIdentity>() == null || brain.GetComponent<CombatTarget>() == null)
             { Debug.LogError(brain.name + ": set an ActorIdentity/faction and CombatTarget on the root.", brain); errors++; }

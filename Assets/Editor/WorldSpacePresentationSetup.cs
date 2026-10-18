@@ -78,7 +78,7 @@ public static class WorldSpacePresentationSetup
         var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
         if (EditorApplication.isPlaying || scene.path != "Assets/CharacterTesting/CharacterTest.unity")
             throw new InvalidOperationException("Run in the open CharacterTest scene outside Play Mode. Other scenes are deliberately not opened or replaced.");
-        foreach (var text in UnityEngine.Object.FindObjectsByType<TextMesh>(FindObjectsInactive.Include, FindObjectsSortMode.None)) if (text.gameObject.scene == scene) ConfigurePlaque(text);
+        foreach (var text in UnityEngine.Object.FindObjectsByType<TextMesh>(FindObjectsInactive.Include)) if (text.gameObject.scene == scene) ConfigurePlaque(text);
         ConfigureZombie();
         EditorSceneManager.MarkSceneDirty(scene); EditorSceneManager.SaveScene(scene); AssetDatabase.SaveAssets();
         Debug.Log("WORLD_PRESENTATION_READY: full-text floor plaques and shared zombie prefab HP ring saved.");

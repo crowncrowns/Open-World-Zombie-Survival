@@ -3,14 +3,14 @@ using ZombieSurvival.Interaction;
 
 namespace ZombieSurvival.Economy
 {
-    public enum WalletTestAction { Credit = 0, Debit = 1, PlayerPaysBudget = 2, BudgetPaysPlayer = 3, ToggleBudgetMode = 4 }
+    public enum WalletTestAction { [InspectorName("Начислить игроку")] Credit = 0, [InspectorName("Списать у игрока")] Debit = 1, [InspectorName("Игрок платит бюджету")] PlayerPaysBudget = 2, [InspectorName("Бюджет платит игроку")] BudgetPaysPlayer = 3, [InspectorName("Сменить режим бюджета")] ToggleBudgetMode = 4 }
     public sealed class WalletTestTerminal : Interactable
     {
-        [SerializeField, Tooltip("Явная тестовая денежная операция на одно нажатие E; не торговля и не награда.")]
+        [SerializeField, InspectorName("Действие тестовой консоли"), Tooltip("Явная тестовая денежная операция на одно нажатие E; не торговля и не награда.")]
         private WalletTestAction action;
-        [SerializeField, Min(1), Tooltip("Сумма операции, целые рубли. Не влияет на настройки рецептов ремонта.")]
+        [SerializeField, InspectorName("Сумма, ₽"), Min(1), Tooltip("Сумма операции, целые рубли. Не влияет на настройки рецептов ремонта.")]
         private long amount = 100;
-        [SerializeField, Tooltip("Общий тестовый бюджет для платежей/смены режима. У каждого будущего NPC свой Wallet.")]
+        [SerializeField, InspectorName("Тестовый бюджет"), Tooltip("Общий тестовый бюджет для платежей/смены режима. У каждого будущего NPC свой Wallet.")]
         private TraderBudget budget;
         public override string GetPrompt(PlayerInteractor actor)
         {
@@ -43,3 +43,4 @@ namespace ZombieSurvival.Economy
         }
     }
 }
+
