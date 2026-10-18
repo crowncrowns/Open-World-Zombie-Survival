@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 28e478065ebce8548929deaf153d43db, type: 3}
+  m_Name: ArmyPistol
+  m_EditorClassIdentifier: Assembly-CSharp::ZombieSurvival.Weapons.WeaponDefinition
+  kind: 1
+  damage: 28
+  range: 70
+  cooldown: 0.25
+  windup: 0.25
+  meleeRadius: 0.15
+  staminaCost: 0
+  ammo: {fileID: 11400000, guid: 865b5b10ba29d454093514537f248dc6, type: 2}
+  magazineSize: 12
+  reloadSeconds: 1.7
+  automatic: 0
+  hipSpread: 1.5
+  aimSpread: 0.15
+  recoil: 2
+  recoilRecovery: 7
+  noise: {x: 12, y: 65}
+  viewPrefab: {fileID: 5101793948214178821, guid: 34004bb4cb804784e91c7c05c837d5ca, type: 3}
+  holdPosition: {x: 0.28, y: -0.28, z: 0.5}
+  aimPosition: {x: 0, y: -0.075, z: 0.5}
+  holdEuler: {x: 0, y: -90, z: 0}
+  viewScale: {x: 1, y: 1, z: 1}
+  muzzleOffset: {x: 0.28, y: -0.22, z: 0.64}
+  aimMuzzleOffset: {x: 0, y: -0.015, z: 0.64}
+  attacks:
+  - {fileID: 8300000, guid: 99348524f0ef5b3469b6d1976f17370c, type: 3}
+  - {fileID: 8300000, guid: 0910b552636052c42a5d5fb6d168dc27, type: 3}
+  - {fileID: 8300000, guid: 8115c336b0fa59f41b1cb0af599a2271, type: 3}
+  reloadSound: {fileID: 8300000, guid: d52f4c92140f8bb4d83e76fd79dd27f3, type: 3}
+  impactSound: {fileID: 8300000, guid: 3d8f480d252db9449b2f978284506f8e, type: 3}
+  volume: 0.7
