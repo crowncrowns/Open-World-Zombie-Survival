@@ -18,6 +18,10 @@ namespace ZombieSurvival.Services
         private PlayerInteractor actor;
         private InputAction close;
         private ServicePoint point;
+        private Trader selectedTrader;
+        private long selectedVersion;
+        private string selectedItemId;
+        private Vector2 catalogScroll;
         public bool IsOpen { get; private set; }
         public ServicePoint Point => IsOpen ? point : null;
         public string Status { get; private set; } = "";
@@ -68,6 +72,7 @@ namespace ZombieSurvival.Services
         public void Close()
         {
             IsOpen = false; point = null;
+            selectedTrader = null; selectedVersion = 0; selectedItemId = null;
             if (motor != null) motor.SetGameplayInputLock(this, false);
         }
         private void OnGUI()
@@ -79,14 +84,37 @@ namespace ZombieSurvival.Services
             GUI.matrix = Matrix4x4.Scale(Vector3.one * scale);
             float width = Screen.width / scale, height = Screen.height / scale;
             GUI.color = new Color(0, 0, 0, .6f); GUI.DrawTexture(new Rect(0, 0, width, height), Texture2D.whiteTexture); GUI.color = color;
-            GUILayout.BeginArea(new Rect((width - 600) / 2, (height - 270) / 2, 600, 270), GUI.skin.box);
+            var trader = point.GetComponent<Trader>();
+            float panelHeight = trader != null ? 540 : 270;
+            GUILayout.BeginArea(new Rect((width - 600) / 2, (height - panelHeight) / 2, 600, panelHeight), GUI.skin.box);
             GUILayout.Label(point.SessionTitle.ToUpperInvariant()); GUILayout.Space(15);
             GUILayout.Label(point.SessionDescription); GUILayout.Space(12);
+            if (trader != null) DrawTraderCatalog(trader);
             GUILayout.Label("Движение и бой заблокированы. Мир продолжает работать.");
             if (GUILayout.Button("Проверить доступ")) Status = ValidateAccess(out var reason) ? "Доступ подтверждён." : reason;
             GUILayout.Label(Status); GUILayout.FlexibleSpace();
             if (GUILayout.Button("Закрыть · Escape")) Close();
             GUILayout.EndArea(); GUI.matrix = old; GUI.color = color;
+        }
+        private void DrawTraderCatalog(Trader trader)
+        {
+            if (selectedTrader != trader || selectedVersion != trader.CatalogVersion)
+            { selectedTrader = trader; selectedVersion = trader.CatalogVersion; selectedItemId = null; }
+            GUILayout.Label("Профиль: " + trader.Profile.DisplayName);
+            var budget = trader.GetComponent<ZombieSurvival.Economy.TraderBudget>();
+            GUILayout.Label("Бюджет: " + (budget.IsInfinite ? "бесконечный тестовый" : ZombieSurvival.Economy.Wallet.FormatRubles(budget.Funds.Balance)));
+            catalogScroll = GUILayout.BeginScrollView(catalogScroll, GUILayout.Height(215));
+            var storage = trader.ActiveStock;
+            string selectedLabel = null;
+            if (storage != null) for (int i = 0; i < storage.SlotCount; i++)
+            {
+                var item = storage.GetSlot(i); if (item == null || item.IsEmpty) continue;
+                string state = item.Definition.HasDurability ? " · " + item.Durability.ToString("0") + "/" + item.Definition.MaximumDurability.ToString("0") : "";
+                if (GUILayout.Button(item.Definition.DisplayName + " ×" + item.Quantity + state)) selectedItemId = item.InstanceId;
+                if (item.InstanceId == selectedItemId) selectedLabel = item.Definition.DisplayName + state;
+            }
+            GUILayout.EndScrollView();
+            GUILayout.Label(selectedLabel == null ? "Выберите вещь для просмотра. Покупка и продажа пока недоступны." : "Выбрано: " + selectedLabel + " (только просмотр)");
         }
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void ResetForPlay()
