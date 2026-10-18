@@ -1,4 +1,4 @@
-"""Blender 4.5+: editable stage-1 Kurs shell, FBX chunks and Unity manifest.
+"""Blender 4.5+: editable stage-3 Kurs architecture, FBX chunks and manifest.
 
 All construction coordinates below are Unity metres (X right, Y up, Z back).
 The entrance faces -Z; the building envelope, excluding the apron, is 93 x 130.
@@ -9,15 +9,26 @@ import json
 import math
 import pathlib
 import sys
+import argparse
+import re
 from collections import defaultdict
 from mathutils import Vector
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
+parser=argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--root',type=pathlib.Path,default=ROOT,help='Separate output root for authoring/verification before deployment')
+ROOT=parser.parse_args(sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else []).root.resolve()
 OUT = ROOT / "Assets/Environment/KursHub"
 SOURCE = ROOT / "Sources/KursHub"
 REPORT = ROOT / "work/KursHub"
 for directory in (OUT / "Models", SOURCE, REPORT):
     directory.mkdir(parents=True, exist_ok=True)
+previous_chunks={}
+if (OUT/'KursHubManifest.json').exists():
+    for record in json.loads((OUT/'KursHubManifest.json').read_text(encoding='utf-8'))['chunks']:
+        if 'region' in record:
+            key=(record['group'],record['material'],*record['region'],record['collider'],record.get('hidden',False))
+            previous_chunks[key]=record['name']
 bpy.ops.wm.read_factory_settings(use_empty=True)
 scene = bpy.context.scene
 scene.unit_settings.system = 'METRIC'
@@ -25,12 +36,18 @@ scene.unit_settings.scale_length = 1
 palette = {
     "Concrete": (0.57, 0.55, 0.49, 1),
     "Floor": (0.39, 0.40, 0.37, 1),
-    "BlueCladding": (0.035, 0.16, 0.27, 1),
+    "BlueCladding": (0.055, 0.26, 0.46, 1),
     "Frame": (0.095, 0.12, 0.13, 1),
     "Glass": (0.22, 0.40, 0.43, 0.28),
     "Roof": (0.22, 0.24, 0.25, 1),
     "Safety": (0.65, 0.43, 0.11, 1),
     "Lettering": (0.80, 0.79, 0.70, 1),
+    "MallBlue": (0.055, 0.26, 0.46, 1),
+    "CreamPanel": (0.64, 0.62, 0.53, 1),
+    "SteelOxide": (0.26, 0.15, 0.09, 1),
+    "TenantGreen": (0.22, 0.42, 0.09, 1),
+    "SignRed": (0.35, 0.08, 0.065, 1),
+    "SailOrange": (0.73, 0.29, 0.13, 1),
 }
 materials = {}
 for name, color in palette.items():
@@ -51,7 +68,10 @@ collision_boxes = []
 chunk_objects = defaultdict(list)
 
 def xyz(p):
-    return (p[0], -p[2], p[1])
+    # Unity's FBX importer handles handedness: +Blender Y arrives as +Unity Z.
+    # Recalculate source face winding after this axis permutation, never negate
+    # a prefab scale to compensate (visuals and collision must share the basis).
+    return (p[0], p[2], p[1])
 
 def collection(name):
     if name not in collections:
@@ -60,7 +80,7 @@ def collection(name):
         collections[name] = c
     return collections[name]
 
-def mesh(name, verts, faces, material, group, collide=True):
+def mesh(name, verts, faces, material, group, collide=True, hidden=False):
     data = bpy.data.meshes.new(name)
     data.from_pydata([xyz(v) for v in verts], [], faces)
     data.update()
@@ -74,11 +94,15 @@ def mesh(name, verts, faces, material, group, collide=True):
     data.materials.append(materials[material])
     obj['unity_collision'] = collide
     obj['construction_group'] = group
+    obj['hidden_collision_proxy'] = hidden
+    if hidden:
+        obj.hide_render=True
+        obj.display_type='WIRE'
     objects.append(obj)
     center = sum((v.co for v in data.vertices), Vector()) / len(data.vertices)
     # Spatial chunks allow Unity to cull wings separately; source stays editable.
-    zone = (math.floor(center.x / 24), math.floor(-center.y / 30))
-    chunk_objects[(group, material, *zone, collide)].append(obj)
+    zone = (math.floor(center.x / 24), math.floor(center.y / 30))
+    chunk_objects[(group, material, *zone, collide, hidden)].append(obj)
     return obj
 
 def box(name, center, size, material='Concrete', group='Structure', angle=0, collide=True):
@@ -174,29 +198,48 @@ for i,(a,b) in enumerate(segments):
     entrance=front and abs(cx)<3
     def panel(suffix,lo,hi,mat,thickness=.30):
         box(f'Facade_{i:03}_{suffix}',(cx,(lo+hi)/2,cz),(length+.025,hi-lo,thickness),mat,'Facade',angle)
+    curved=front and abs(cx)<30
+    # The real building reads as closed blue wings around one glazed rotunda.
+    # Selected window bays deliberately interrupt the side/rear panel fields.
+    window_bay=curved or (not front and i%5 in (1,2))
+    tall_bay=not front and i%9==2
+    top=12.15 if curved else (13.6 if (cx< -30 and cz< -20) else 12.35 if cz>35 else 11.8)
     if not entrance:
-        panel('Plinth',0,1,'Concrete')
-        if front:
-            panel('GroundWindow',1,4.45,'Glass',.16)
+        panel('Plinth',0,.85,'CreamPanel')
+        if curved:
+            panel('GroundWindow',.85,4.45,'Glass',.16)
+        elif window_bay:
+            panel('LowerPanel',.85,1.1 if tall_bay else 1.5,'CreamPanel')
+            panel('GroundWindow',1.1 if tall_bay else 1.5,4.25 if tall_bay else 3.55,'Glass',.16)
+            panel('UpperPanel',4.25 if tall_bay else 3.55,4.45,'BlueCladding')
         else:
-            panel('LowerPanel',1,2,'Concrete')
-            panel('GroundWindow',2,3.3,'Glass',.16)
-            panel('UpperPanel',3.3,4.45,'Concrete')
+            base=1.1 if not front and i%7 in (0,1) else 2.1
+            panel('GroundClosedBase',.85,base,'CreamPanel')
+            panel('GroundClosedBlue',base,4.45,'BlueCladding')
     else:
         panel('EntranceHeader',3.8,4.45,'Frame')
-    panel('Belt',4.45,5.5,'Concrete')
-    panel('UpperWindow',5.5,9.35,'Glass',.16)
-    panel('BlueFascia',9.35,11.35,'BlueCladding')
+    panel('Belt',4.45,5.5,'CreamPanel' if curved else 'BlueCladding')
+    if curved:
+        panel('UpperWindow',5.5,9.35,'Glass',.16)
+    elif window_bay:
+        panel('BlueLower',5.5,5.9,'BlueCladding')
+        panel('UpperWindow',5.9,8.05,'Glass',.16)
+        panel('BlueUpper',8.05,9.35,'BlueCladding')
+    else:
+        panel('BlueClosed',5.5,9.35,'BlueCladding')
+    # Retain the original Facade/BlueCladding chunk identity used by the scene.
+    panel('BlueFascia',9.35,top,'BlueCladding')
     # No vertical post in the open entrance.
-    if not entrance:
-        box(f'Facade_{i:03}_Mullion',(a[0],5.1,a[1]),(.085,8.4,.34),'Frame','Facade',angle)
-    for y in (1,4.45,5.5,9.35):
+    if not entrance and window_bay:
+        box(f'Facade_{i:03}_Mullion',(a[0],(5.5+9.35)/2,a[1]),(.085,3.85,.34),'Frame','Facade',angle)
+    for y in (.85,4.45,5.5,9.35,top):
         if not entrance or y>=4.45:
             box(f'Facade_{i:03}_Transom',(cx,y,cz),(length,.065,.34),'Frame','Facade',angle,False)
 
 # Columns use a 12 m structural rhythm. No column occupies the atrium or stairs.
 for x in (-36,-24,-16,16,24,36):
     for z in (-40,-28,-16,-4,8,20,32,44,56):
+        if x==-36 and z==44: continue  # Keep the roof stair half-landing clear.
         box(f'Column_{x}_{z}',(x,5.325,z),(.65,10.65,.65))
 for z in (-32,18):
     box('AtriumCrossBeam',(0,4.8,z),(31,.6,.6))
@@ -235,6 +278,12 @@ for x in (-40.9,-38.1):
     beam('RoofStairHandrailA',(x,6.6,38),(x,9.35,42.5),group='RoofStairs')
 for x in (-37.9,-35.1):
     beam('RoofStairHandrailB',(x,9.35,42.5),(x,12.1,38),group='RoofStairs')
+for x,ya,yb,za,zb in [(-40.9,5.5,8.25,38,42.5),(-38.1,5.5,8.25,38,42.5),
+                       (-37.9,8.25,11,42.5,38),(-35.1,8.25,11,42.5,38)]:
+    verts=[(x+dx,y,z) for dx in (-.055,.055)
+           for y,z in ((ya,za),(ya+1.1,za),(yb+1.1,zb),(yb,zb))]
+    mesh('RoofStairGuard',verts,[(0,3,2,1),(4,5,6,7),(0,1,5,4),(1,2,6,5),(2,3,7,6),(3,0,4,7)],
+         'Frame','RoofStairs')
 rail('RoofStairLandingBack',(-41,45),(-35,45),8.25,group='RoofStairs')
 rail('RoofStairLandingWest',(-41,42.5),(-41,45),8.25,group='RoofStairs')
 rail('RoofStairLandingEast',(-35,42.5),(-35,45),8.25,group='RoofStairs')
@@ -245,17 +294,22 @@ for x,w in [(-40,4.7),(-34.9,2.0)]:
     box('RoofAccessDoorSide',(x,12.5,36.65),(w,3,.3),'Concrete','RoofAccess')
 box('RoofAccessDoorHeader',(-36.5,13.65,36.65),(2.2,.7,.3),'Concrete','RoofAccess')
 box('RoofAccessCap',(-38,14.15,41.25),(9,.3,9.5),'Roof','RoofAccess')
+for a,b in [((-42,38),(-37.9,38)),((-35.1,38),(-34,38)),((-42,45),(-34,45)),
+             ((-42,38),(-42,45)),((-34,38),(-34,45))]:
+    rail('RoofOpeningGuard',a,b,11,group='RoofAccess')
 
 # Low external parapet and protected skylight perimeter.
 for i,(a,b) in enumerate(segments):
     dx,dz=b[0]-a[0],b[1]-a[1]
-    box('RoofParapet',((a[0]+b[0])/2,11.65,(a[1]+b[1])/2),(math.hypot(dx,dz)+.02,.6,.24),
-        'Concrete','RoofDeck',math.atan2(-dz,dx))
+    cx,cz=(a[0]+b[0])/2,(a[1]+b[1])/2
+    top=12.15 if cz< -49 and abs(cx)<30 else (13.6 if (cx< -30 and cz< -20) else 12.35 if cz>35 else 11.8)
+    box('RoofParapet',(cx,top-.15,cz),(math.hypot(dx,dz)+.02,.30,.24),
+        'MallBlue','RoofDeck',math.atan2(-dz,dx))
 for a,b in [((-15,-32),(15,-32)),((-15,18),(15,18)),((-15,-32),(-15,18)),((15,-32),(15,18))]:
     rail('SkylightGuard',a,b,11,height=1.1,group='Skylight')
 corners=[(-15,11,-32),(15,11,-32),(15,11,18),(-15,11,18)]
-ridgeA=(0,14,-24)
-ridgeB=(0,14,10)
+ridgeA=(0,11.55,-24)
+ridgeB=(0,11.55,10)
 for i,face in enumerate([[corners[0],corners[1],ridgeA],
                           [corners[1],corners[2],ridgeB,ridgeA],
                           [corners[2],corners[3],ridgeB],
@@ -269,7 +323,7 @@ for a,b in [(corners[0],ridgeA),(corners[1],ridgeA),(corners[2],ridgeB),(corners
     beam('SkylightRidge',a,b,.16,group='Skylight')
 for z in range(-28,19,4):
     t=max(0,min(1,(z+32)/8,(18-z)/8))
-    apex=(0,11+3*t,z)
+    apex=(0,11+.55*t,z)
     beam('SkylightRib',(-15,11,z),apex,.10,group='Skylight')
     beam('SkylightRib',apex,(15,11,z),.10,group='Skylight')
 
@@ -277,16 +331,16 @@ for z in range(-28,19,4):
 rect('EntranceApron',-20,20,-85,-64.7,-.35,0,'Floor','Approach')
 
 # Small identification on the actual entry side; no vendor logos or invented decoration.
-def text_object(text,location,size,material):
+def text_object(text,location,size,material,name='KursSign',group='Sign'):
     curve=bpy.data.curves.new('KursSign','FONT')
     curve.body=text
     font=pathlib.Path('C:/Windows/Fonts/arialbd.ttf')
-    if font.exists(): curve.font=bpy.data.fonts.load(str(font))
+    if font.exists(): curve.font=bpy.data.fonts.load(str(font),check_existing=True)
     curve.size=size
     curve.align_x='CENTER'
     curve.extrude=.035
-    obj=bpy.data.objects.new('KursSign',curve)
-    collection('Facade').objects.link(obj)
+    obj=bpy.data.objects.new(name,curve)
+    collection(group).objects.link(obj)
     obj.location=xyz(location)
     obj.rotation_euler=(math.pi/2,0,0)
     obj.data.materials.append(materials[material])
@@ -296,23 +350,157 @@ def text_object(text,location,size,material):
     obj=bpy.context.object
     bpy.ops.object.transform_apply(location=True,rotation=True,scale=True)
     obj['unity_collision']=False
+    obj['is_text']=True
     objects.append(obj)
-    chunk_objects[('Sign',material,0,-3,False)].append(obj)
+    zone=(0,-3) if group=='Sign' else (math.floor(location[0]/24),math.floor(location[2]/30))
+    chunk_objects[(group,material,*zone,False,False)].append(obj)
     obj.select_set(False)
-text_object('КУРС',(0,9.7,-65.25),1.35,'Lettering')
+    return obj
+
+# The stage-1 names remain reserved even as architecture gains new groups.
+# Existing prefab instances can override individual model children by fileID.
+legacy_names={key:f'{key[0]}_{key[1]}_{index:03}'+('_NC' if not key[4] else '')
+              for index,key in enumerate(sorted(chunk_objects))}
+
+# Stage 2: a generous open vestibule, with floor level unchanged at Y=0.
+for x in (-6,6):
+    box('VestibuleSideGlass',(x,1.9,-60.7),(.12,3.8,7.4),'Glass','Vestibule')
+    for z in (-64.4,-62,-59.5,-57):
+        box('VestibuleSidePost',(x,1.9,z),(.10,3.8,.10),'Frame','Vestibule')
+    for y in (.12,2.45,3.75):
+        box('VestibuleSideTransom',(x,y,-60.7),(.15,.075,7.4),'Frame','Vestibule')
+for z in (-64.4,-57):
+    for x in (-4.5,4.5):
+        box('VestibuleFixedGlass',(x,1.9,z),(2.9,3.8,.12),'Glass','Vestibule')
+    for x in (-6,-3,3,6):
+        box('VestibuleJamb',(x,1.9,z),(.12,3.8,.18),'Frame','Vestibule')
+    box('VestibuleHeader',(0,3.67,z),(12,.26,.22),'Frame','Vestibule')
+    box('LevelThreshold',(0,.004,z),(5.7,.008,.18),'Safety','VestibuleDetails',collide=False)
+box('VestibuleCeiling',(0,3.98,-60.7),(12.3,.20,7.7),'Concrete','Vestibule')
+text_object('ГЛАВНЫЙ ВХОД',(0,3.17,-64.56),.38,'Lettering','EntranceLabel','VestibuleDetails')
+
+# Entrance canopy is an attachment, outside the 93 x 130 exterior wall envelope.
+box('EntranceCanopy',(0,4.12,-67.8),(17.6,.20,6.8),'Roof','Canopy')
+for z in (-71.1,-64.5):
+    box('CanopyFascia',(0,3.96,z),(17.6,.35,.16),'BlueCladding','Canopy')
+for x in (-8.65,8.65):
+    box('CanopySideFascia',(x,3.96,-67.8),(.16,.35,6.8),'BlueCladding','Canopy')
+for x in (-7.5,7.5):
+    for z in (-70.3,-65.3):
+        box('CanopyColumn',(x,1.94,z),(.25,3.88,.25),'Frame','Canopy')
+    box('CanopyRafter',(x,3.84,-67.8),(.16,.16,6.8),'Frame','Canopy')
+for x in (-5,-2.5,0,2.5,5):
+    box('CanopyRoofSeam',(x,4.23,-67.8),(.045,.025,6.8),'Frame','CanopyDetails',collide=False)
+
+# Fine facade framing and panel joints are visual only; the original closed
+# wall/glass meshes continue to define player collision.
+for i,(a,b) in enumerate(segments):
+    dx,dz=b[0]-a[0],b[1]-a[1]
+    length=math.hypot(dx,dz);angle=math.atan2(-dz,dx)
+    cx,cz=(a[0]+b[0])/2,(a[1]+b[1])/2
+    entrance=cz < -49 and abs(cx)<3
+    curved=cz < -49 and abs(cx)<30
+    window_bay=curved or (cz>=-49 and i%5 in (1,2))
+    tall_bay=cz>=-49 and i%9==2
+    top=12.15 if curved else (13.6 if (cx< -30 and cz< -20) else 12.35 if cz>35 else 11.8)
+    n=max(1,math.ceil(length/1.8))
+    for j in range(1,n):
+        x,z=a[0]+dx*j/n,a[1]+dz*j/n
+        if window_bay:
+            lo,hi=(5.5,9.35) if curved else (5.9,8.05)
+            box('UpperWindowDivision',(x,(lo+hi)/2,z),(.055,hi-lo,.35),'Frame','FacadeDetails',angle,False)
+        if not entrance and window_bay:
+            lo,hi=(.85,4.45) if curved else ((1.1,4.25) if tall_bay else (1.5,3.55))
+            box('LowerWindowDivision',(x,(lo+hi)/2,z),(.055,hi-lo,.35),'Frame','FacadeDetails',angle,False)
+        lo=9.35 if curved else 5.5
+        box('CladdingVerticalJoint',(x,(lo+top)/2,z),(.018,top-lo,.325),'Frame','FacadeDetails',angle,False)
+        if not curved:
+            box('CreamVerticalJoint',(x,2.2,z),(.015,4.35,.325),'Frame','FacadeDetails',angle,False)
+    for y in (6.8,8.2,9.6,11.0,12.4):
+        if y<top and not (window_bay and y<9.35):
+            box('PanelHorizontalJoint',(cx,y,cz),(length,.016,.325),'Frame','FacadeDetails',angle,False)
+    for y,material in [(top,'Frame'),(4.48,'Concrete')]+([(7.45,'Frame')] if curved else []):
+        box('FacadeContinuousTrim',(cx,y,cz),(length,.035,.34),material,'FacadeDetails',angle,False)
+
+# Visible floor/roof beams and column capitals express the mall's structural grid.
+for x in (-36,-24,-16,16,24,36):
+    for z in (-40,-28,-16,-4,8,20,32,44,56):
+        if x==-36 and z==44:continue
+        for y in (5.0,10.55):
+            box('ColumnCapital',(x,y,z),(1.05,.20,1.05),'Concrete','StructuralDetails')
+for z in (-40,-28,-16,-4,8,20,32,44,56):
+    for y in (4.92,10.45):
+        for x in (-31,31):
+            box('WingCeilingBeam',(x,y,z),(30.3,.40,.38),'Concrete','StructuralDetails')
+        if z==-40 or z>=20:
+            box('CrossCeilingBeam',(0,y,z),(32.2,.40,.38),'Concrete','StructuralDetails')
+for x in (-15.35,15.35):
+    box('GalleryEdgeFascia',(x,4.92,-7),(.72,.52,50),'Concrete','AtriumDetails')
+    box('GalleryEdgeTrim',(x,5.46,-7),(.77,.065,50),'Frame','AtriumDetails',collide=False)
+for z in (-32,18):
+    box('GalleryEndFascia',(0,4.92,z),(30.7,.52,.65),'Concrete','AtriumDetails')
+
+# Replace solid stair side panels with low kickplates + open posts. Full-height
+# invisible collision proxies keep the original fall protection contract.
+for obj in list(objects):
+    if not (obj.name.startswith('StairGuard') or obj.name.startswith('RoofStairGuard')):continue
+    verts=[(v.co.x,v.co.z,v.co.y) for v in obj.data.vertices]
+    faces=[tuple(p.vertices) for p in obj.data.polygons]
+    mesh('StairSafetyProxy',verts,faces,'Frame','CollisionProxy',True,True)
+    # Original box order: side, then bottom-start/top-start/top-end/bottom-end.
+    for offset in (0,4):
+        obj.data.vertices[offset+1].co.z=obj.data.vertices[offset].co.z+.18
+        obj.data.vertices[offset+2].co.z=obj.data.vertices[offset+3].co.z+.18
+    obj.data.update()
+for x in (-10,10):
+    for side in (-2,2):
+        for i in range(0,31,3):
+            z=8+i/3;y=i*5.5/30
+            beam('StairRailPost',(x+side,y+.18,z),(x+side,y+1.12,z),.065,group='StairDetails')
+        beam('StairMidRail',(x+side,.64,8),(x+side,6.14,18),.055,group='StairDetails')
+    for i in range(30):
+        box('MainStairNosing',(x,(i+1)*5.5/30+.003,8+i/3+.045),(3.82,.006,.055),
+            'Safety','StairDetails',collide=False)
+for x,ya,yb,za,zb in [(-40.9,5.5,8.25,38,42.5),(-38.1,5.5,8.25,38,42.5),
+                      (-37.9,8.25,11,42.5,38),(-35.1,8.25,11,42.5,38)]:
+    for i in range(0,16,3):
+        t=i/15;y=ya+(yb-ya)*t;z=za+(zb-za)*t
+        beam('RoofRailPost',(x,y+.18,z),(x,y+1.1,z),.065,group='StairDetails')
+
+# Skylight kerb and longitudinal glazing divisions, all below existing guards.
+for x in (-15,15):
+    box('SkylightKerb',(x,11.08,-7),(.32,.30,50.2),'Concrete','SkylightDetails')
+for z in (-32,18):
+    box('SkylightKerb',(0,11.08,z),(30,.30,.32),'Concrete','SkylightDetails')
+for x in (-10,-5,5,10):
+    t=1-abs(x)/15
+    beam('SkylightPurlin',(x,11+.55*t+.05,-32+8*t),(x,11+.55*t+.05,18-8*t),.065,group='SkylightDetails')
+
+# Reference-led exterior massing, dome and signs are kept separate for authoring.
+import runpy
+runpy.run_path(str(pathlib.Path(__file__).with_name('stage3_exterior.py')),init_globals=globals())
 
 # Validate source solids before saving; individual parts remain available for editing.
 metrics=[]
 for obj in objects:
     bm=bmesh.new();bm.from_mesh(obj.data)
     # Text has intentional open outlines after font conversion; structural solids do not.
-    if obj.name!='KursSign':
+    if not obj.get('is_text',False):
         assert all(e.is_manifold for e in bm.edges),obj.name
         assert bm.calc_volume(signed=True)>0,obj.name
+    # Planar metre-based UVs keep stage-3 material work independent of the mesh exporter.
+    if not obj.data.uv_layers:
+        uv=obj.data.uv_layers.new(name='MetreUV')
+        for face in obj.data.polygons:
+            axis=max(range(3),key=lambda j:abs(face.normal[j]))
+            axes=[j for j in range(3) if j!=axis]
+            for loop in face.loop_indices:
+                p=obj.data.vertices[obj.data.loops[loop].vertex_index].co
+                uv.data[loop].uv=(p[axes[0]]/2,p[axes[1]]/2)
     metrics.append(dict(name=obj.name,vertices=len(obj.data.vertices),faces=len(obj.data.polygons)))
     bm.free()
 
-scene['KursHubStage']='1: empty two-storey shell; no NPC/service/safe-zone logic'
+scene['KursHubStage']='3: reference-led opaque blue wings, rotunda, dome and roof sign; empty playable shell'
 scene['Dimensions']='93 m X x 130 m Z external walls; floors Y=0/5.5, roof Y=11'
 scene['Atrium']='30 x 50 m; X=-15..15, Z=-32..18'
 scene['UnityOrigin']='ground centre of rectangular envelope; entrance -Z'
@@ -333,27 +521,34 @@ for area in bpy.context.screen.areas:
     if area.type=='VIEW_3D':
         area.spaces.active.region_3d.view_distance=170
         area.spaces.active.clip_end=1500
+bpy.ops.file.pack_all()
 bpy.ops.wm.save_as_mainfile(filepath=str(SOURCE/'KursHub.blend'))
 
 # Export combined spatial chunks, keeping individual authoring objects in the .blend.
 export_collection=collection('EXPORT_TEMP')
 exports=[]
 chunks=[]
-for index,(key,items) in enumerate(sorted(chunk_objects.items())):
+next_index=max([len(legacy_names)-1]+[int(re.search(r'_(\d+)(?:_NC)?$',name)[1]) for name in previous_chunks.values()])+1
+for key,items in sorted(chunk_objects.items()):
     if not items: continue
-    group,material,zx,zz,collide=key
+    group,material,zx,zz,collide,hidden=key
     bpy.ops.object.select_all(action='DESELECT')
     copies=[]
     for obj in items:
         copy=obj.copy();copy.data=obj.data.copy();export_collection.objects.link(copy)
+        copy.hide_render=False
         copy.select_set(True);copies.append(copy)
     bpy.context.view_layer.objects.active=copies[0]
-    bpy.ops.object.join()
+    if len(copies)>1:bpy.ops.object.join()
     obj=bpy.context.object
-    obj.name=f'{group}_{material}_{index:03}'+('_NC' if not collide else '')
+    name=previous_chunks.get(key,legacy_names.get(key))
+    if name is None:
+        name=f'{group}_{material}_{next_index:03}'+('_NC' if not collide else '')
+        next_index+=1
+    obj.name=name
     obj.data.name=obj.name
     exports.append(obj)
-    chunks.append(dict(name=obj.name,material=material,collider=collide))
+    chunks.append(dict(name=obj.name,group=group,region=[zx,zz],material=material,collider=collide,hidden=hidden))
 bpy.ops.object.select_all(action='DESELECT')
 for obj in exports:obj.select_set(True)
 bpy.context.view_layer.objects.active=exports[0]
@@ -362,7 +557,7 @@ bpy.ops.export_scene.fbx(filepath=str(OUT/'Models/KursHubShell.fbx'),use_selecti
                         apply_unit_scale=True,bake_space_transform=False,
                         use_mesh_modifiers=True,add_leaf_bones=False,bake_anim=False,
                         path_mode='AUTO')
-manifest=dict(stage=1,width=93,depth=130,floorHeight=5.5,atrium=[30,50],
+manifest=dict(stage=3,width=93,depth=130,floorHeight=5.5,atrium=[30,50],
               chunks=chunks,guardColliders=collision_boxes,
               palette=[dict(name=n,rgba=list(c)) for n,c in palette.items()])
 (OUT/'KursHubManifest.json').write_text(json.dumps(manifest,indent=2),encoding='utf-8')

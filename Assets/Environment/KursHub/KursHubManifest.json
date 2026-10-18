@@ -1,5 +1,5 @@
 {
-  "stage": 1,
+  "stage": 3,
   "width": 93,
   "depth": 130,
   "floorHeight": 5.5,
@@ -10,748 +10,3369 @@
   "chunks": [
     {
       "name": "Approach_Floor_000",
+      "group": "Approach",
+      "region": [
+        0,
+        -3
+      ],
       "material": "Floor",
-      "collider": true
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "AtriumDetails_Concrete_152",
+      "group": "AtriumDetails",
+      "region": [
+        -1,
+        -1
+      ],
+      "material": "Concrete",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "AtriumDetails_Concrete_153",
+      "group": "AtriumDetails",
+      "region": [
+        0,
+        -2
+      ],
+      "material": "Concrete",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "AtriumDetails_Concrete_154",
+      "group": "AtriumDetails",
+      "region": [
+        0,
+        -1
+      ],
+      "material": "Concrete",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "AtriumDetails_Concrete_155",
+      "group": "AtriumDetails",
+      "region": [
+        0,
+        0
+      ],
+      "material": "Concrete",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "AtriumDetails_Frame_156_NC",
+      "group": "AtriumDetails",
+      "region": [
+        -1,
+        -1
+      ],
+      "material": "Frame",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "AtriumDetails_Frame_157_NC",
+      "group": "AtriumDetails",
+      "region": [
+        0,
+        -1
+      ],
+      "material": "Frame",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "Canopy_BlueCladding_158",
+      "group": "Canopy",
+      "region": [
+        -1,
+        -3
+      ],
+      "material": "BlueCladding",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "Canopy_BlueCladding_159",
+      "group": "Canopy",
+      "region": [
+        0,
+        -3
+      ],
+      "material": "BlueCladding",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "Canopy_Frame_160",
+      "group": "Canopy",
+      "region": [
+        -1,
+        -3
+      ],
+      "material": "Frame",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "Canopy_Frame_161",
+      "group": "Canopy",
+      "region": [
+        0,
+        -3
+      ],
+      "material": "Frame",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "Canopy_Roof_162",
+      "group": "Canopy",
+      "region": [
+        0,
+        -3
+      ],
+      "material": "Roof",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "CanopyDetails_Frame_163_NC",
+      "group": "CanopyDetails",
+      "region": [
+        -1,
+        -3
+      ],
+      "material": "Frame",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "CanopyDetails_Frame_164_NC",
+      "group": "CanopyDetails",
+      "region": [
+        0,
+        -3
+      ],
+      "material": "Frame",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "CollisionProxy_Frame_165",
+      "group": "CollisionProxy",
+      "region": [
+        -2,
+        1
+      ],
+      "material": "Frame",
+      "collider": true,
+      "hidden": true
+    },
+    {
+      "name": "CollisionProxy_Frame_166",
+      "group": "CollisionProxy",
+      "region": [
+        -1,
+        0
+      ],
+      "material": "Frame",
+      "collider": true,
+      "hidden": true
+    },
+    {
+      "name": "CollisionProxy_Frame_167",
+      "group": "CollisionProxy",
+      "region": [
+        0,
+        0
+      ],
+      "material": "Frame",
+      "collider": true,
+      "hidden": true
+    },
+    {
+      "name": "DomeDetails_CreamPanel_300_NC",
+      "group": "DomeDetails",
+      "region": [
+        -1,
+        -3
+      ],
+      "material": "CreamPanel",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "DomeDetails_CreamPanel_243_NC",
+      "group": "DomeDetails",
+      "region": [
+        -1,
+        -2
+      ],
+      "material": "CreamPanel",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "DomeDetails_CreamPanel_301_NC",
+      "group": "DomeDetails",
+      "region": [
+        0,
+        -3
+      ],
+      "material": "CreamPanel",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "DomeDetails_CreamPanel_244_NC",
+      "group": "DomeDetails",
+      "region": [
+        0,
+        -2
+      ],
+      "material": "CreamPanel",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "DomeGuards_Frame_302_NC",
+      "group": "DomeGuards",
+      "region": [
+        -1,
+        -3
+      ],
+      "material": "Frame",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "DomeGuards_Frame_245_NC",
+      "group": "DomeGuards",
+      "region": [
+        -1,
+        -2
+      ],
+      "material": "Frame",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "DomeGuards_Frame_303_NC",
+      "group": "DomeGuards",
+      "region": [
+        0,
+        -3
+      ],
+      "material": "Frame",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "DomeGuards_Frame_246_NC",
+      "group": "DomeGuards",
+      "region": [
+        0,
+        -2
+      ],
+      "material": "Frame",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "ExteriorDetails_Frame_247_NC",
+      "group": "ExteriorDetails",
+      "region": [
+        -2,
+        -2
+      ],
+      "material": "Frame",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "ExteriorDetails_Frame_248_NC",
+      "group": "ExteriorDetails",
+      "region": [
+        -2,
+        0
+      ],
+      "material": "Frame",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "ExteriorDetails_Frame_249_NC",
+      "group": "ExteriorDetails",
+      "region": [
+        -2,
+        1
+      ],
+      "material": "Frame",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "ExteriorDetails_Frame_250_NC",
+      "group": "ExteriorDetails",
+      "region": [
+        -1,
+        1
+      ],
+      "material": "Frame",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "ExteriorDetails_Frame_251_NC",
+      "group": "ExteriorDetails",
+      "region": [
+        0,
+        1
+      ],
+      "material": "Frame",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "ExteriorDetails_Frame_304_NC",
+      "group": "ExteriorDetails",
+      "region": [
+        0,
+        2
+      ],
+      "material": "Frame",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "ExteriorDetails_Frame_252_NC",
+      "group": "ExteriorDetails",
+      "region": [
+        1,
+        -2
+      ],
+      "material": "Frame",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "ExteriorDetails_Frame_253_NC",
+      "group": "ExteriorDetails",
+      "region": [
+        1,
+        0
+      ],
+      "material": "Frame",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "ExteriorDetails_Frame_305_NC",
+      "group": "ExteriorDetails",
+      "region": [
+        1,
+        2
+      ],
+      "material": "Frame",
+      "collider": false,
+      "hidden": false
     },
     {
       "name": "Facade_BlueCladding_001",
+      "group": "Facade",
+      "region": [
+        -2,
+        -2
+      ],
       "material": "BlueCladding",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Facade_BlueCladding_002",
+      "group": "Facade",
+      "region": [
+        -2,
+        -1
+      ],
       "material": "BlueCladding",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Facade_BlueCladding_003",
+      "group": "Facade",
+      "region": [
+        -2,
+        0
+      ],
       "material": "BlueCladding",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Facade_BlueCladding_004",
+      "group": "Facade",
+      "region": [
+        -2,
+        1
+      ],
       "material": "BlueCladding",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Facade_BlueCladding_005",
+      "group": "Facade",
+      "region": [
+        -2,
+        2
+      ],
       "material": "BlueCladding",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Facade_BlueCladding_006",
+      "group": "Facade",
+      "region": [
+        -1,
+        -3
+      ],
       "material": "BlueCladding",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Facade_BlueCladding_007",
+      "group": "Facade",
+      "region": [
+        -1,
+        -2
+      ],
       "material": "BlueCladding",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Facade_BlueCladding_008",
+      "group": "Facade",
+      "region": [
+        -1,
+        2
+      ],
       "material": "BlueCladding",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Facade_BlueCladding_009",
+      "group": "Facade",
+      "region": [
+        0,
+        -3
+      ],
       "material": "BlueCladding",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Facade_BlueCladding_010",
+      "group": "Facade",
+      "region": [
+        0,
+        -2
+      ],
       "material": "BlueCladding",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Facade_BlueCladding_011",
+      "group": "Facade",
+      "region": [
+        0,
+        2
+      ],
       "material": "BlueCladding",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Facade_BlueCladding_012",
+      "group": "Facade",
+      "region": [
+        1,
+        -2
+      ],
       "material": "BlueCladding",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Facade_BlueCladding_013",
+      "group": "Facade",
+      "region": [
+        1,
+        -1
+      ],
       "material": "BlueCladding",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Facade_BlueCladding_014",
+      "group": "Facade",
+      "region": [
+        1,
+        0
+      ],
       "material": "BlueCladding",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Facade_BlueCladding_015",
+      "group": "Facade",
+      "region": [
+        1,
+        1
+      ],
       "material": "BlueCladding",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Facade_BlueCladding_016",
+      "group": "Facade",
+      "region": [
+        1,
+        2
+      ],
       "material": "BlueCladding",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
-      "name": "Facade_Concrete_017",
-      "material": "Concrete",
-      "collider": true
+      "name": "Facade_CreamPanel_017",
+      "group": "Facade",
+      "region": [
+        -2,
+        -2
+      ],
+      "material": "CreamPanel",
+      "collider": true,
+      "hidden": false
     },
     {
-      "name": "Facade_Concrete_018",
-      "material": "Concrete",
-      "collider": true
+      "name": "Facade_CreamPanel_018",
+      "group": "Facade",
+      "region": [
+        -2,
+        -1
+      ],
+      "material": "CreamPanel",
+      "collider": true,
+      "hidden": false
     },
     {
-      "name": "Facade_Concrete_019",
-      "material": "Concrete",
-      "collider": true
+      "name": "Facade_CreamPanel_019",
+      "group": "Facade",
+      "region": [
+        -2,
+        0
+      ],
+      "material": "CreamPanel",
+      "collider": true,
+      "hidden": false
     },
     {
-      "name": "Facade_Concrete_020",
-      "material": "Concrete",
-      "collider": true
+      "name": "Facade_CreamPanel_020",
+      "group": "Facade",
+      "region": [
+        -2,
+        1
+      ],
+      "material": "CreamPanel",
+      "collider": true,
+      "hidden": false
     },
     {
-      "name": "Facade_Concrete_021",
-      "material": "Concrete",
-      "collider": true
+      "name": "Facade_CreamPanel_021",
+      "group": "Facade",
+      "region": [
+        -2,
+        2
+      ],
+      "material": "CreamPanel",
+      "collider": true,
+      "hidden": false
     },
     {
-      "name": "Facade_Concrete_022",
-      "material": "Concrete",
-      "collider": true
+      "name": "Facade_CreamPanel_022",
+      "group": "Facade",
+      "region": [
+        -1,
+        -3
+      ],
+      "material": "CreamPanel",
+      "collider": true,
+      "hidden": false
     },
     {
-      "name": "Facade_Concrete_023",
-      "material": "Concrete",
-      "collider": true
+      "name": "Facade_CreamPanel_023",
+      "group": "Facade",
+      "region": [
+        -1,
+        -2
+      ],
+      "material": "CreamPanel",
+      "collider": true,
+      "hidden": false
     },
     {
-      "name": "Facade_Concrete_024",
-      "material": "Concrete",
-      "collider": true
+      "name": "Facade_CreamPanel_024",
+      "group": "Facade",
+      "region": [
+        -1,
+        2
+      ],
+      "material": "CreamPanel",
+      "collider": true,
+      "hidden": false
     },
     {
-      "name": "Facade_Concrete_025",
-      "material": "Concrete",
-      "collider": true
+      "name": "Facade_CreamPanel_025",
+      "group": "Facade",
+      "region": [
+        0,
+        -3
+      ],
+      "material": "CreamPanel",
+      "collider": true,
+      "hidden": false
     },
     {
-      "name": "Facade_Concrete_026",
-      "material": "Concrete",
-      "collider": true
+      "name": "Facade_CreamPanel_026",
+      "group": "Facade",
+      "region": [
+        0,
+        -2
+      ],
+      "material": "CreamPanel",
+      "collider": true,
+      "hidden": false
     },
     {
-      "name": "Facade_Concrete_027",
-      "material": "Concrete",
-      "collider": true
+      "name": "Facade_CreamPanel_027",
+      "group": "Facade",
+      "region": [
+        0,
+        2
+      ],
+      "material": "CreamPanel",
+      "collider": true,
+      "hidden": false
     },
     {
-      "name": "Facade_Concrete_028",
-      "material": "Concrete",
-      "collider": true
+      "name": "Facade_CreamPanel_028",
+      "group": "Facade",
+      "region": [
+        1,
+        -2
+      ],
+      "material": "CreamPanel",
+      "collider": true,
+      "hidden": false
     },
     {
-      "name": "Facade_Concrete_029",
-      "material": "Concrete",
-      "collider": true
+      "name": "Facade_CreamPanel_029",
+      "group": "Facade",
+      "region": [
+        1,
+        -1
+      ],
+      "material": "CreamPanel",
+      "collider": true,
+      "hidden": false
     },
     {
-      "name": "Facade_Concrete_030",
-      "material": "Concrete",
-      "collider": true
+      "name": "Facade_CreamPanel_030",
+      "group": "Facade",
+      "region": [
+        1,
+        0
+      ],
+      "material": "CreamPanel",
+      "collider": true,
+      "hidden": false
     },
     {
-      "name": "Facade_Concrete_031",
-      "material": "Concrete",
-      "collider": true
+      "name": "Facade_CreamPanel_031",
+      "group": "Facade",
+      "region": [
+        1,
+        1
+      ],
+      "material": "CreamPanel",
+      "collider": true,
+      "hidden": false
     },
     {
-      "name": "Facade_Concrete_032",
-      "material": "Concrete",
-      "collider": true
+      "name": "Facade_CreamPanel_032",
+      "group": "Facade",
+      "region": [
+        1,
+        2
+      ],
+      "material": "CreamPanel",
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Facade_Frame_033_NC",
+      "group": "Facade",
+      "region": [
+        -2,
+        -2
+      ],
       "material": "Frame",
-      "collider": false
+      "collider": false,
+      "hidden": false
     },
     {
       "name": "Facade_Frame_034",
+      "group": "Facade",
+      "region": [
+        -2,
+        -2
+      ],
       "material": "Frame",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Facade_Frame_035_NC",
+      "group": "Facade",
+      "region": [
+        -2,
+        -1
+      ],
       "material": "Frame",
-      "collider": false
+      "collider": false,
+      "hidden": false
     },
     {
       "name": "Facade_Frame_036",
+      "group": "Facade",
+      "region": [
+        -2,
+        -1
+      ],
       "material": "Frame",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Facade_Frame_037_NC",
+      "group": "Facade",
+      "region": [
+        -2,
+        0
+      ],
       "material": "Frame",
-      "collider": false
+      "collider": false,
+      "hidden": false
     },
     {
       "name": "Facade_Frame_038",
+      "group": "Facade",
+      "region": [
+        -2,
+        0
+      ],
       "material": "Frame",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Facade_Frame_039_NC",
+      "group": "Facade",
+      "region": [
+        -2,
+        1
+      ],
       "material": "Frame",
-      "collider": false
+      "collider": false,
+      "hidden": false
     },
     {
       "name": "Facade_Frame_040",
+      "group": "Facade",
+      "region": [
+        -2,
+        1
+      ],
       "material": "Frame",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Facade_Frame_041_NC",
+      "group": "Facade",
+      "region": [
+        -2,
+        2
+      ],
       "material": "Frame",
-      "collider": false
-    },
-    {
-      "name": "Facade_Frame_042",
-      "material": "Frame",
-      "collider": true
+      "collider": false,
+      "hidden": false
     },
     {
       "name": "Facade_Frame_043_NC",
+      "group": "Facade",
+      "region": [
+        -1,
+        -3
+      ],
       "material": "Frame",
-      "collider": false
+      "collider": false,
+      "hidden": false
     },
     {
       "name": "Facade_Frame_044",
+      "group": "Facade",
+      "region": [
+        -1,
+        -3
+      ],
       "material": "Frame",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Facade_Frame_045_NC",
+      "group": "Facade",
+      "region": [
+        -1,
+        -2
+      ],
       "material": "Frame",
-      "collider": false
+      "collider": false,
+      "hidden": false
     },
     {
       "name": "Facade_Frame_046",
+      "group": "Facade",
+      "region": [
+        -1,
+        -2
+      ],
       "material": "Frame",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Facade_Frame_047_NC",
+      "group": "Facade",
+      "region": [
+        -1,
+        2
+      ],
       "material": "Frame",
-      "collider": false
+      "collider": false,
+      "hidden": false
     },
     {
       "name": "Facade_Frame_048",
+      "group": "Facade",
+      "region": [
+        -1,
+        2
+      ],
       "material": "Frame",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Facade_Frame_049_NC",
+      "group": "Facade",
+      "region": [
+        0,
+        -3
+      ],
       "material": "Frame",
-      "collider": false
+      "collider": false,
+      "hidden": false
     },
     {
       "name": "Facade_Frame_050",
+      "group": "Facade",
+      "region": [
+        0,
+        -3
+      ],
       "material": "Frame",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Facade_Frame_051_NC",
+      "group": "Facade",
+      "region": [
+        0,
+        -2
+      ],
       "material": "Frame",
-      "collider": false
+      "collider": false,
+      "hidden": false
     },
     {
       "name": "Facade_Frame_052",
+      "group": "Facade",
+      "region": [
+        0,
+        -2
+      ],
       "material": "Frame",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Facade_Frame_053_NC",
+      "group": "Facade",
+      "region": [
+        0,
+        2
+      ],
       "material": "Frame",
-      "collider": false
+      "collider": false,
+      "hidden": false
     },
     {
       "name": "Facade_Frame_054",
+      "group": "Facade",
+      "region": [
+        0,
+        2
+      ],
       "material": "Frame",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Facade_Frame_055_NC",
+      "group": "Facade",
+      "region": [
+        1,
+        -2
+      ],
       "material": "Frame",
-      "collider": false
+      "collider": false,
+      "hidden": false
     },
     {
       "name": "Facade_Frame_056",
+      "group": "Facade",
+      "region": [
+        1,
+        -2
+      ],
       "material": "Frame",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Facade_Frame_057_NC",
+      "group": "Facade",
+      "region": [
+        1,
+        -1
+      ],
       "material": "Frame",
-      "collider": false
+      "collider": false,
+      "hidden": false
     },
     {
       "name": "Facade_Frame_058",
+      "group": "Facade",
+      "region": [
+        1,
+        -1
+      ],
       "material": "Frame",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Facade_Frame_059_NC",
+      "group": "Facade",
+      "region": [
+        1,
+        0
+      ],
       "material": "Frame",
-      "collider": false
+      "collider": false,
+      "hidden": false
     },
     {
       "name": "Facade_Frame_060",
+      "group": "Facade",
+      "region": [
+        1,
+        0
+      ],
       "material": "Frame",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Facade_Frame_061_NC",
+      "group": "Facade",
+      "region": [
+        1,
+        1
+      ],
       "material": "Frame",
-      "collider": false
+      "collider": false,
+      "hidden": false
     },
     {
       "name": "Facade_Frame_062",
+      "group": "Facade",
+      "region": [
+        1,
+        1
+      ],
       "material": "Frame",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Facade_Frame_063_NC",
+      "group": "Facade",
+      "region": [
+        1,
+        2
+      ],
       "material": "Frame",
-      "collider": false
-    },
-    {
-      "name": "Facade_Frame_064",
-      "material": "Frame",
-      "collider": true
+      "collider": false,
+      "hidden": false
     },
     {
       "name": "Facade_Glass_065",
+      "group": "Facade",
+      "region": [
+        -2,
+        -2
+      ],
       "material": "Glass",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Facade_Glass_066",
+      "group": "Facade",
+      "region": [
+        -2,
+        -1
+      ],
       "material": "Glass",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Facade_Glass_067",
+      "group": "Facade",
+      "region": [
+        -2,
+        0
+      ],
       "material": "Glass",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Facade_Glass_068",
+      "group": "Facade",
+      "region": [
+        -2,
+        1
+      ],
       "material": "Glass",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Facade_Glass_069",
+      "group": "Facade",
+      "region": [
+        -2,
+        2
+      ],
       "material": "Glass",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Facade_Glass_070",
+      "group": "Facade",
+      "region": [
+        -1,
+        -3
+      ],
       "material": "Glass",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Facade_Glass_071",
+      "group": "Facade",
+      "region": [
+        -1,
+        -2
+      ],
       "material": "Glass",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Facade_Glass_072",
+      "group": "Facade",
+      "region": [
+        -1,
+        2
+      ],
       "material": "Glass",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Facade_Glass_073",
+      "group": "Facade",
+      "region": [
+        0,
+        -3
+      ],
       "material": "Glass",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Facade_Glass_074",
+      "group": "Facade",
+      "region": [
+        0,
+        -2
+      ],
       "material": "Glass",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Facade_Glass_075",
+      "group": "Facade",
+      "region": [
+        0,
+        2
+      ],
       "material": "Glass",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Facade_Glass_076",
+      "group": "Facade",
+      "region": [
+        1,
+        -2
+      ],
       "material": "Glass",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Facade_Glass_077",
+      "group": "Facade",
+      "region": [
+        1,
+        -1
+      ],
       "material": "Glass",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Facade_Glass_078",
+      "group": "Facade",
+      "region": [
+        1,
+        0
+      ],
       "material": "Glass",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Facade_Glass_079",
+      "group": "Facade",
+      "region": [
+        1,
+        1
+      ],
       "material": "Glass",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Facade_Glass_080",
+      "group": "Facade",
+      "region": [
+        1,
+        2
+      ],
       "material": "Glass",
-      "collider": true
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "FacadeDetails_Concrete_168_NC",
+      "group": "FacadeDetails",
+      "region": [
+        -2,
+        -2
+      ],
+      "material": "Concrete",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "FacadeDetails_Concrete_169_NC",
+      "group": "FacadeDetails",
+      "region": [
+        -2,
+        -1
+      ],
+      "material": "Concrete",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "FacadeDetails_Concrete_170_NC",
+      "group": "FacadeDetails",
+      "region": [
+        -2,
+        0
+      ],
+      "material": "Concrete",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "FacadeDetails_Concrete_171_NC",
+      "group": "FacadeDetails",
+      "region": [
+        -2,
+        1
+      ],
+      "material": "Concrete",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "FacadeDetails_Concrete_172_NC",
+      "group": "FacadeDetails",
+      "region": [
+        -2,
+        2
+      ],
+      "material": "Concrete",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "FacadeDetails_Concrete_173_NC",
+      "group": "FacadeDetails",
+      "region": [
+        -1,
+        -3
+      ],
+      "material": "Concrete",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "FacadeDetails_Concrete_174_NC",
+      "group": "FacadeDetails",
+      "region": [
+        -1,
+        -2
+      ],
+      "material": "Concrete",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "FacadeDetails_Concrete_175_NC",
+      "group": "FacadeDetails",
+      "region": [
+        -1,
+        2
+      ],
+      "material": "Concrete",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "FacadeDetails_Concrete_176_NC",
+      "group": "FacadeDetails",
+      "region": [
+        0,
+        -3
+      ],
+      "material": "Concrete",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "FacadeDetails_Concrete_177_NC",
+      "group": "FacadeDetails",
+      "region": [
+        0,
+        -2
+      ],
+      "material": "Concrete",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "FacadeDetails_Concrete_178_NC",
+      "group": "FacadeDetails",
+      "region": [
+        0,
+        2
+      ],
+      "material": "Concrete",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "FacadeDetails_Concrete_179_NC",
+      "group": "FacadeDetails",
+      "region": [
+        1,
+        -2
+      ],
+      "material": "Concrete",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "FacadeDetails_Concrete_180_NC",
+      "group": "FacadeDetails",
+      "region": [
+        1,
+        -1
+      ],
+      "material": "Concrete",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "FacadeDetails_Concrete_181_NC",
+      "group": "FacadeDetails",
+      "region": [
+        1,
+        0
+      ],
+      "material": "Concrete",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "FacadeDetails_Concrete_182_NC",
+      "group": "FacadeDetails",
+      "region": [
+        1,
+        1
+      ],
+      "material": "Concrete",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "FacadeDetails_Concrete_183_NC",
+      "group": "FacadeDetails",
+      "region": [
+        1,
+        2
+      ],
+      "material": "Concrete",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "FacadeDetails_Frame_184_NC",
+      "group": "FacadeDetails",
+      "region": [
+        -2,
+        -2
+      ],
+      "material": "Frame",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "FacadeDetails_Frame_185_NC",
+      "group": "FacadeDetails",
+      "region": [
+        -2,
+        -1
+      ],
+      "material": "Frame",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "FacadeDetails_Frame_186_NC",
+      "group": "FacadeDetails",
+      "region": [
+        -2,
+        0
+      ],
+      "material": "Frame",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "FacadeDetails_Frame_187_NC",
+      "group": "FacadeDetails",
+      "region": [
+        -2,
+        1
+      ],
+      "material": "Frame",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "FacadeDetails_Frame_188_NC",
+      "group": "FacadeDetails",
+      "region": [
+        -2,
+        2
+      ],
+      "material": "Frame",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "FacadeDetails_Frame_189_NC",
+      "group": "FacadeDetails",
+      "region": [
+        -1,
+        -3
+      ],
+      "material": "Frame",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "FacadeDetails_Frame_190_NC",
+      "group": "FacadeDetails",
+      "region": [
+        -1,
+        -2
+      ],
+      "material": "Frame",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "FacadeDetails_Frame_191_NC",
+      "group": "FacadeDetails",
+      "region": [
+        -1,
+        2
+      ],
+      "material": "Frame",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "FacadeDetails_Frame_192_NC",
+      "group": "FacadeDetails",
+      "region": [
+        0,
+        -3
+      ],
+      "material": "Frame",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "FacadeDetails_Frame_193_NC",
+      "group": "FacadeDetails",
+      "region": [
+        0,
+        -2
+      ],
+      "material": "Frame",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "FacadeDetails_Frame_194_NC",
+      "group": "FacadeDetails",
+      "region": [
+        0,
+        2
+      ],
+      "material": "Frame",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "FacadeDetails_Frame_195_NC",
+      "group": "FacadeDetails",
+      "region": [
+        1,
+        -2
+      ],
+      "material": "Frame",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "FacadeDetails_Frame_196_NC",
+      "group": "FacadeDetails",
+      "region": [
+        1,
+        -1
+      ],
+      "material": "Frame",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "FacadeDetails_Frame_197_NC",
+      "group": "FacadeDetails",
+      "region": [
+        1,
+        0
+      ],
+      "material": "Frame",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "FacadeDetails_Frame_198_NC",
+      "group": "FacadeDetails",
+      "region": [
+        1,
+        1
+      ],
+      "material": "Frame",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "FacadeDetails_Frame_199_NC",
+      "group": "FacadeDetails",
+      "region": [
+        1,
+        2
+      ],
+      "material": "Frame",
+      "collider": false,
+      "hidden": false
     },
     {
       "name": "Floors_Floor_081",
+      "group": "Floors",
+      "region": [
+        -2,
+        0
+      ],
       "material": "Floor",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Floors_Floor_082",
+      "group": "Floors",
+      "region": [
+        0,
+        -2
+      ],
       "material": "Floor",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Floors_Floor_083",
+      "group": "Floors",
+      "region": [
+        0,
+        0
+      ],
       "material": "Floor",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Floors_Floor_084",
+      "group": "Floors",
+      "region": [
+        0,
+        1
+      ],
       "material": "Floor",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Floors_Floor_085",
+      "group": "Floors",
+      "region": [
+        1,
+        0
+      ],
       "material": "Floor",
-      "collider": true
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "FrontDome_CreamPanel_306",
+      "group": "FrontDome",
+      "region": [
+        -1,
+        -3
+      ],
+      "material": "CreamPanel",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "FrontDome_CreamPanel_254",
+      "group": "FrontDome",
+      "region": [
+        -1,
+        -2
+      ],
+      "material": "CreamPanel",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "FrontDome_CreamPanel_307",
+      "group": "FrontDome",
+      "region": [
+        0,
+        -3
+      ],
+      "material": "CreamPanel",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "FrontDome_CreamPanel_255",
+      "group": "FrontDome",
+      "region": [
+        0,
+        -2
+      ],
+      "material": "CreamPanel",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "FrontDome_Glass_256",
+      "group": "FrontDome",
+      "region": [
+        -1,
+        -2
+      ],
+      "material": "Glass",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "FrontDome_Glass_257",
+      "group": "FrontDome",
+      "region": [
+        0,
+        -2
+      ],
+      "material": "Glass",
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "MainStairs_Concrete_086",
+      "group": "MainStairs",
+      "region": [
+        -1,
+        0
+      ],
       "material": "Concrete",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "MainStairs_Concrete_087",
+      "group": "MainStairs",
+      "region": [
+        0,
+        0
+      ],
       "material": "Concrete",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "MainStairs_Frame_088_NC",
+      "group": "MainStairs",
+      "region": [
+        -1,
+        0
+      ],
       "material": "Frame",
-      "collider": false
+      "collider": false,
+      "hidden": false
     },
     {
       "name": "MainStairs_Frame_089",
+      "group": "MainStairs",
+      "region": [
+        -1,
+        0
+      ],
       "material": "Frame",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "MainStairs_Frame_090_NC",
+      "group": "MainStairs",
+      "region": [
+        0,
+        0
+      ],
       "material": "Frame",
-      "collider": false
+      "collider": false,
+      "hidden": false
     },
     {
       "name": "MainStairs_Frame_091",
+      "group": "MainStairs",
+      "region": [
+        0,
+        0
+      ],
       "material": "Frame",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Rails_Frame_092_NC",
+      "group": "Rails",
+      "region": [
+        -1,
+        -2
+      ],
       "material": "Frame",
-      "collider": false
+      "collider": false,
+      "hidden": false
     },
     {
       "name": "Rails_Frame_093_NC",
+      "group": "Rails",
+      "region": [
+        -1,
+        -1
+      ],
       "material": "Frame",
-      "collider": false
+      "collider": false,
+      "hidden": false
     },
     {
       "name": "Rails_Frame_094_NC",
+      "group": "Rails",
+      "region": [
+        -1,
+        0
+      ],
       "material": "Frame",
-      "collider": false
+      "collider": false,
+      "hidden": false
     },
     {
       "name": "Rails_Frame_095_NC",
+      "group": "Rails",
+      "region": [
+        0,
+        -2
+      ],
       "material": "Frame",
-      "collider": false
+      "collider": false,
+      "hidden": false
     },
     {
       "name": "Rails_Frame_096_NC",
+      "group": "Rails",
+      "region": [
+        0,
+        -1
+      ],
       "material": "Frame",
-      "collider": false
+      "collider": false,
+      "hidden": false
     },
     {
       "name": "Rails_Frame_097_NC",
+      "group": "Rails",
+      "region": [
+        0,
+        0
+      ],
       "material": "Frame",
-      "collider": false
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "RaisedWings_MallBlue_258",
+      "group": "RaisedWings",
+      "region": [
+        -2,
+        -2
+      ],
+      "material": "MallBlue",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "RaisedWings_MallBlue_259",
+      "group": "RaisedWings",
+      "region": [
+        -2,
+        -1
+      ],
+      "material": "MallBlue",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "RaisedWings_MallBlue_260",
+      "group": "RaisedWings",
+      "region": [
+        -2,
+        1
+      ],
+      "material": "MallBlue",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "RaisedWings_MallBlue_261",
+      "group": "RaisedWings",
+      "region": [
+        -1,
+        1
+      ],
+      "material": "MallBlue",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "RaisedWings_MallBlue_262",
+      "group": "RaisedWings",
+      "region": [
+        -1,
+        2
+      ],
+      "material": "MallBlue",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "RaisedWings_MallBlue_263",
+      "group": "RaisedWings",
+      "region": [
+        1,
+        -2
+      ],
+      "material": "MallBlue",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "RaisedWings_Roof_264",
+      "group": "RaisedWings",
+      "region": [
+        -2,
+        -2
+      ],
+      "material": "Roof",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "RaisedWings_Roof_265",
+      "group": "RaisedWings",
+      "region": [
+        -1,
+        1
+      ],
+      "material": "Roof",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "RaisedWings_Roof_266",
+      "group": "RaisedWings",
+      "region": [
+        1,
+        -2
+      ],
+      "material": "Roof",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "RearSign_Lettering_308_NC",
+      "group": "RearSign",
+      "region": [
+        -1,
+        2
+      ],
+      "material": "Lettering",
+      "collider": false,
+      "hidden": false
     },
     {
       "name": "RoofAccess_Concrete_098",
+      "group": "RoofAccess",
+      "region": [
+        -2,
+        1
+      ],
       "material": "Concrete",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
-      "name": "RoofAccess_Roof_099",
+      "name": "RoofAccess_Frame_099_NC",
+      "group": "RoofAccess",
+      "region": [
+        -2,
+        1
+      ],
+      "material": "Frame",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "RoofAccess_Roof_100",
+      "group": "RoofAccess",
+      "region": [
+        -2,
+        1
+      ],
       "material": "Roof",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
-      "name": "RoofDeck_Concrete_100",
-      "material": "Concrete",
-      "collider": true
+      "name": "RoofDeck_MallBlue_099",
+      "group": "RoofDeck",
+      "region": [
+        -2,
+        -2
+      ],
+      "material": "MallBlue",
+      "collider": true,
+      "hidden": false
     },
     {
-      "name": "RoofDeck_Concrete_101",
-      "material": "Concrete",
-      "collider": true
+      "name": "RoofDeck_MallBlue_100",
+      "group": "RoofDeck",
+      "region": [
+        -2,
+        -1
+      ],
+      "material": "MallBlue",
+      "collider": true,
+      "hidden": false
     },
     {
-      "name": "RoofDeck_Concrete_102",
-      "material": "Concrete",
-      "collider": true
+      "name": "RoofDeck_MallBlue_101",
+      "group": "RoofDeck",
+      "region": [
+        -2,
+        0
+      ],
+      "material": "MallBlue",
+      "collider": true,
+      "hidden": false
     },
     {
-      "name": "RoofDeck_Concrete_103",
-      "material": "Concrete",
-      "collider": true
+      "name": "RoofDeck_MallBlue_102",
+      "group": "RoofDeck",
+      "region": [
+        -2,
+        1
+      ],
+      "material": "MallBlue",
+      "collider": true,
+      "hidden": false
     },
     {
-      "name": "RoofDeck_Concrete_104",
-      "material": "Concrete",
-      "collider": true
+      "name": "RoofDeck_MallBlue_103",
+      "group": "RoofDeck",
+      "region": [
+        -2,
+        2
+      ],
+      "material": "MallBlue",
+      "collider": true,
+      "hidden": false
     },
     {
-      "name": "RoofDeck_Concrete_105",
-      "material": "Concrete",
-      "collider": true
+      "name": "RoofDeck_MallBlue_104",
+      "group": "RoofDeck",
+      "region": [
+        -1,
+        -3
+      ],
+      "material": "MallBlue",
+      "collider": true,
+      "hidden": false
     },
     {
-      "name": "RoofDeck_Concrete_106",
-      "material": "Concrete",
-      "collider": true
+      "name": "RoofDeck_MallBlue_105",
+      "group": "RoofDeck",
+      "region": [
+        -1,
+        -2
+      ],
+      "material": "MallBlue",
+      "collider": true,
+      "hidden": false
     },
     {
-      "name": "RoofDeck_Concrete_107",
-      "material": "Concrete",
-      "collider": true
+      "name": "RoofDeck_MallBlue_106",
+      "group": "RoofDeck",
+      "region": [
+        -1,
+        2
+      ],
+      "material": "MallBlue",
+      "collider": true,
+      "hidden": false
     },
     {
-      "name": "RoofDeck_Concrete_108",
-      "material": "Concrete",
-      "collider": true
+      "name": "RoofDeck_MallBlue_107",
+      "group": "RoofDeck",
+      "region": [
+        0,
+        -3
+      ],
+      "material": "MallBlue",
+      "collider": true,
+      "hidden": false
     },
     {
-      "name": "RoofDeck_Concrete_109",
-      "material": "Concrete",
-      "collider": true
+      "name": "RoofDeck_MallBlue_108",
+      "group": "RoofDeck",
+      "region": [
+        0,
+        -2
+      ],
+      "material": "MallBlue",
+      "collider": true,
+      "hidden": false
     },
     {
-      "name": "RoofDeck_Concrete_110",
-      "material": "Concrete",
-      "collider": true
+      "name": "RoofDeck_MallBlue_109",
+      "group": "RoofDeck",
+      "region": [
+        0,
+        2
+      ],
+      "material": "MallBlue",
+      "collider": true,
+      "hidden": false
     },
     {
-      "name": "RoofDeck_Concrete_111",
-      "material": "Concrete",
-      "collider": true
+      "name": "RoofDeck_MallBlue_110",
+      "group": "RoofDeck",
+      "region": [
+        1,
+        -2
+      ],
+      "material": "MallBlue",
+      "collider": true,
+      "hidden": false
     },
     {
-      "name": "RoofDeck_Concrete_112",
-      "material": "Concrete",
-      "collider": true
+      "name": "RoofDeck_MallBlue_111",
+      "group": "RoofDeck",
+      "region": [
+        1,
+        -1
+      ],
+      "material": "MallBlue",
+      "collider": true,
+      "hidden": false
     },
     {
-      "name": "RoofDeck_Concrete_113",
-      "material": "Concrete",
-      "collider": true
+      "name": "RoofDeck_MallBlue_112",
+      "group": "RoofDeck",
+      "region": [
+        1,
+        0
+      ],
+      "material": "MallBlue",
+      "collider": true,
+      "hidden": false
     },
     {
-      "name": "RoofDeck_Concrete_114",
-      "material": "Concrete",
-      "collider": true
+      "name": "RoofDeck_MallBlue_113",
+      "group": "RoofDeck",
+      "region": [
+        1,
+        1
+      ],
+      "material": "MallBlue",
+      "collider": true,
+      "hidden": false
     },
     {
-      "name": "RoofDeck_Concrete_115",
-      "material": "Concrete",
-      "collider": true
+      "name": "RoofDeck_MallBlue_114",
+      "group": "RoofDeck",
+      "region": [
+        1,
+        2
+      ],
+      "material": "MallBlue",
+      "collider": true,
+      "hidden": false
     },
     {
-      "name": "RoofDeck_Roof_116",
+      "name": "RoofDeck_Roof_267",
+      "group": "RoofDeck",
+      "region": [
+        -2,
+        -2
+      ],
       "material": "Roof",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
-      "name": "RoofDeck_Roof_118",
+      "name": "RoofDeck_Roof_117",
+      "group": "RoofDeck",
+      "region": [
+        -2,
+        -1
+      ],
       "material": "Roof",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "RoofDeck_Roof_119",
+      "group": "RoofDeck",
+      "region": [
+        -2,
+        1
+      ],
       "material": "Roof",
-      "collider": true
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "RoofDeck_Roof_268",
+      "group": "RoofDeck",
+      "region": [
+        -1,
+        -3
+      ],
+      "material": "Roof",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "RoofDeck_Roof_269",
+      "group": "RoofDeck",
+      "region": [
+        -1,
+        -2
+      ],
+      "material": "Roof",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "RoofDeck_Roof_270",
+      "group": "RoofDeck",
+      "region": [
+        0,
+        -3
+      ],
+      "material": "Roof",
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "RoofDeck_Roof_120",
+      "group": "RoofDeck",
+      "region": [
+        0,
+        -2
+      ],
       "material": "Roof",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "RoofDeck_Roof_121",
+      "group": "RoofDeck",
+      "region": [
+        0,
+        1
+      ],
       "material": "Roof",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
-      "name": "RoofStairs_Concrete_122",
+      "name": "RoofDeck_Roof_122",
+      "group": "RoofDeck",
+      "region": [
+        1,
+        0
+      ],
+      "material": "Roof",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "RoofPlant_Concrete_271_NC",
+      "group": "RoofPlant",
+      "region": [
+        -2,
+        -1
+      ],
       "material": "Concrete",
-      "collider": true
+      "collider": false,
+      "hidden": false
     },
     {
-      "name": "RoofStairs_Frame_123_NC",
+      "name": "RoofPlant_Concrete_272",
+      "group": "RoofPlant",
+      "region": [
+        -2,
+        0
+      ],
+      "material": "Concrete",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "RoofPlant_Concrete_273",
+      "group": "RoofPlant",
+      "region": [
+        0,
+        1
+      ],
+      "material": "Concrete",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "RoofPlant_Concrete_274_NC",
+      "group": "RoofPlant",
+      "region": [
+        1,
+        -1
+      ],
+      "material": "Concrete",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "RoofPlant_Concrete_275",
+      "group": "RoofPlant",
+      "region": [
+        1,
+        1
+      ],
+      "material": "Concrete",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "RoofPlant_CreamPanel_276",
+      "group": "RoofPlant",
+      "region": [
+        -2,
+        0
+      ],
+      "material": "CreamPanel",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "RoofPlant_CreamPanel_277",
+      "group": "RoofPlant",
+      "region": [
+        0,
+        1
+      ],
+      "material": "CreamPanel",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "RoofPlant_CreamPanel_278",
+      "group": "RoofPlant",
+      "region": [
+        1,
+        1
+      ],
+      "material": "CreamPanel",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "RoofPlant_Frame_279_NC",
+      "group": "RoofPlant",
+      "region": [
+        -2,
+        -1
+      ],
       "material": "Frame",
-      "collider": false
+      "collider": false,
+      "hidden": false
     },
     {
-      "name": "Sign_Lettering_124_NC",
-      "material": "Lettering",
-      "collider": false
-    },
-    {
-      "name": "Skylight_Frame_125_NC",
+      "name": "RoofPlant_Frame_280_NC",
+      "group": "RoofPlant",
+      "region": [
+        1,
+        -1
+      ],
       "material": "Frame",
-      "collider": false
+      "collider": false,
+      "hidden": false
     },
     {
-      "name": "Skylight_Frame_126_NC",
+      "name": "RoofSign_SteelOxide_281_NC",
+      "group": "RoofSign",
+      "region": [
+        -1,
+        -2
+      ],
+      "material": "SteelOxide",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "RoofSign_SteelOxide_282",
+      "group": "RoofSign",
+      "region": [
+        -1,
+        -2
+      ],
+      "material": "SteelOxide",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "RoofSign_SteelOxide_283_NC",
+      "group": "RoofSign",
+      "region": [
+        0,
+        -2
+      ],
+      "material": "SteelOxide",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "RoofSign_SteelOxide_284",
+      "group": "RoofSign",
+      "region": [
+        0,
+        -2
+      ],
+      "material": "SteelOxide",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "RoofSignText_CreamPanel_285_NC",
+      "group": "RoofSignText",
+      "region": [
+        0,
+        -2
+      ],
+      "material": "CreamPanel",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "RoofSignText_MallBlue_286_NC",
+      "group": "RoofSignText",
+      "region": [
+        -1,
+        -2
+      ],
+      "material": "MallBlue",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "RoofSignText_MallBlue_287_NC",
+      "group": "RoofSignText",
+      "region": [
+        0,
+        -2
+      ],
+      "material": "MallBlue",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "RoofSignText_SailOrange_288_NC",
+      "group": "RoofSignText",
+      "region": [
+        0,
+        -2
+      ],
+      "material": "SailOrange",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "RoofSignText_SignRed_289_NC",
+      "group": "RoofSignText",
+      "region": [
+        -1,
+        -2
+      ],
+      "material": "SignRed",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "RoofStairs_Concrete_123",
+      "group": "RoofStairs",
+      "region": [
+        -2,
+        1
+      ],
+      "material": "Concrete",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "RoofStairs_Frame_124_NC",
+      "group": "RoofStairs",
+      "region": [
+        -2,
+        1
+      ],
       "material": "Frame",
-      "collider": false
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "RoofStairs_Frame_125",
+      "group": "RoofStairs",
+      "region": [
+        -2,
+        1
+      ],
+      "material": "Frame",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "ServiceRisers_Concrete_309",
+      "group": "ServiceRisers",
+      "region": [
+        0,
+        2
+      ],
+      "material": "Concrete",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "ServiceRisers_Concrete_310",
+      "group": "ServiceRisers",
+      "region": [
+        1,
+        2
+      ],
+      "material": "Concrete",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "ServiceRisers_CreamPanel_311",
+      "group": "ServiceRisers",
+      "region": [
+        0,
+        2
+      ],
+      "material": "CreamPanel",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "ServiceRisers_CreamPanel_312",
+      "group": "ServiceRisers",
+      "region": [
+        1,
+        2
+      ],
+      "material": "CreamPanel",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "ServiceRisers_Frame_313",
+      "group": "ServiceRisers",
+      "region": [
+        0,
+        2
+      ],
+      "material": "Frame",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "ServiceRisers_Frame_314",
+      "group": "ServiceRisers",
+      "region": [
+        1,
+        2
+      ],
+      "material": "Frame",
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Skylight_Frame_127_NC",
+      "group": "Skylight",
+      "region": [
+        -1,
+        -2
+      ],
       "material": "Frame",
-      "collider": false
+      "collider": false,
+      "hidden": false
     },
     {
       "name": "Skylight_Frame_128_NC",
+      "group": "Skylight",
+      "region": [
+        -1,
+        -1
+      ],
       "material": "Frame",
-      "collider": false
+      "collider": false,
+      "hidden": false
     },
     {
       "name": "Skylight_Frame_129_NC",
+      "group": "Skylight",
+      "region": [
+        -1,
+        0
+      ],
       "material": "Frame",
-      "collider": false
+      "collider": false,
+      "hidden": false
     },
     {
       "name": "Skylight_Frame_130_NC",
+      "group": "Skylight",
+      "region": [
+        0,
+        -2
+      ],
       "material": "Frame",
-      "collider": false
+      "collider": false,
+      "hidden": false
     },
     {
-      "name": "Skylight_Glass_131",
-      "material": "Glass",
-      "collider": true
+      "name": "Skylight_Frame_131_NC",
+      "group": "Skylight",
+      "region": [
+        0,
+        -1
+      ],
+      "material": "Frame",
+      "collider": false,
+      "hidden": false
     },
     {
-      "name": "Skylight_Glass_132",
-      "material": "Glass",
-      "collider": true
+      "name": "Skylight_Frame_132_NC",
+      "group": "Skylight",
+      "region": [
+        0,
+        0
+      ],
+      "material": "Frame",
+      "collider": false,
+      "hidden": false
     },
     {
       "name": "Skylight_Glass_133",
+      "group": "Skylight",
+      "region": [
+        -1,
+        -1
+      ],
       "material": "Glass",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
-      "name": "Structure_Concrete_134",
-      "material": "Concrete",
-      "collider": true
+      "name": "Skylight_Glass_134",
+      "group": "Skylight",
+      "region": [
+        0,
+        -1
+      ],
+      "material": "Glass",
+      "collider": true,
+      "hidden": false
     },
     {
-      "name": "Structure_Concrete_135",
+      "name": "Skylight_Glass_135",
+      "group": "Skylight",
+      "region": [
+        0,
+        0
+      ],
+      "material": "Glass",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "SkylightDetails_Concrete_204",
+      "group": "SkylightDetails",
+      "region": [
+        -1,
+        -1
+      ],
       "material": "Concrete",
-      "collider": true
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "SkylightDetails_Concrete_205",
+      "group": "SkylightDetails",
+      "region": [
+        0,
+        -2
+      ],
+      "material": "Concrete",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "SkylightDetails_Concrete_206",
+      "group": "SkylightDetails",
+      "region": [
+        0,
+        -1
+      ],
+      "material": "Concrete",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "SkylightDetails_Concrete_207",
+      "group": "SkylightDetails",
+      "region": [
+        0,
+        0
+      ],
+      "material": "Concrete",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "SkylightDetails_Frame_208_NC",
+      "group": "SkylightDetails",
+      "region": [
+        -1,
+        -1
+      ],
+      "material": "Frame",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "SkylightDetails_Frame_209_NC",
+      "group": "SkylightDetails",
+      "region": [
+        0,
+        -1
+      ],
+      "material": "Frame",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "StairDetails_Frame_210_NC",
+      "group": "StairDetails",
+      "region": [
+        -2,
+        1
+      ],
+      "material": "Frame",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "StairDetails_Frame_211_NC",
+      "group": "StairDetails",
+      "region": [
+        -1,
+        0
+      ],
+      "material": "Frame",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "StairDetails_Frame_212_NC",
+      "group": "StairDetails",
+      "region": [
+        0,
+        0
+      ],
+      "material": "Frame",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "StairDetails_Safety_213_NC",
+      "group": "StairDetails",
+      "region": [
+        -1,
+        0
+      ],
+      "material": "Safety",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "StairDetails_Safety_214_NC",
+      "group": "StairDetails",
+      "region": [
+        0,
+        0
+      ],
+      "material": "Safety",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "StructuralDetails_Concrete_215",
+      "group": "StructuralDetails",
+      "region": [
+        -2,
+        -2
+      ],
+      "material": "Concrete",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "StructuralDetails_Concrete_216",
+      "group": "StructuralDetails",
+      "region": [
+        -2,
+        -1
+      ],
+      "material": "Concrete",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "StructuralDetails_Concrete_217",
+      "group": "StructuralDetails",
+      "region": [
+        -2,
+        0
+      ],
+      "material": "Concrete",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "StructuralDetails_Concrete_218",
+      "group": "StructuralDetails",
+      "region": [
+        -2,
+        1
+      ],
+      "material": "Concrete",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "StructuralDetails_Concrete_219",
+      "group": "StructuralDetails",
+      "region": [
+        -1,
+        -2
+      ],
+      "material": "Concrete",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "StructuralDetails_Concrete_220",
+      "group": "StructuralDetails",
+      "region": [
+        -1,
+        -1
+      ],
+      "material": "Concrete",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "StructuralDetails_Concrete_221",
+      "group": "StructuralDetails",
+      "region": [
+        -1,
+        0
+      ],
+      "material": "Concrete",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "StructuralDetails_Concrete_222",
+      "group": "StructuralDetails",
+      "region": [
+        -1,
+        1
+      ],
+      "material": "Concrete",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "StructuralDetails_Concrete_223",
+      "group": "StructuralDetails",
+      "region": [
+        0,
+        -2
+      ],
+      "material": "Concrete",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "StructuralDetails_Concrete_224",
+      "group": "StructuralDetails",
+      "region": [
+        0,
+        -1
+      ],
+      "material": "Concrete",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "StructuralDetails_Concrete_225",
+      "group": "StructuralDetails",
+      "region": [
+        0,
+        0
+      ],
+      "material": "Concrete",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "StructuralDetails_Concrete_226",
+      "group": "StructuralDetails",
+      "region": [
+        0,
+        1
+      ],
+      "material": "Concrete",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "StructuralDetails_Concrete_227",
+      "group": "StructuralDetails",
+      "region": [
+        1,
+        -2
+      ],
+      "material": "Concrete",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "StructuralDetails_Concrete_228",
+      "group": "StructuralDetails",
+      "region": [
+        1,
+        -1
+      ],
+      "material": "Concrete",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "StructuralDetails_Concrete_229",
+      "group": "StructuralDetails",
+      "region": [
+        1,
+        0
+      ],
+      "material": "Concrete",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "StructuralDetails_Concrete_230",
+      "group": "StructuralDetails",
+      "region": [
+        1,
+        1
+      ],
+      "material": "Concrete",
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Structure_Concrete_136",
+      "group": "Structure",
+      "region": [
+        -2,
+        -2
+      ],
       "material": "Concrete",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Structure_Concrete_137",
+      "group": "Structure",
+      "region": [
+        -2,
+        -1
+      ],
       "material": "Concrete",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Structure_Concrete_138",
+      "group": "Structure",
+      "region": [
+        -2,
+        0
+      ],
       "material": "Concrete",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Structure_Concrete_139",
+      "group": "Structure",
+      "region": [
+        -2,
+        1
+      ],
       "material": "Concrete",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Structure_Concrete_140",
+      "group": "Structure",
+      "region": [
+        -1,
+        -2
+      ],
       "material": "Concrete",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Structure_Concrete_141",
+      "group": "Structure",
+      "region": [
+        -1,
+        -1
+      ],
       "material": "Concrete",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Structure_Concrete_142",
+      "group": "Structure",
+      "region": [
+        -1,
+        0
+      ],
       "material": "Concrete",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Structure_Concrete_143",
+      "group": "Structure",
+      "region": [
+        -1,
+        1
+      ],
       "material": "Concrete",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Structure_Concrete_144",
+      "group": "Structure",
+      "region": [
+        0,
+        -2
+      ],
       "material": "Concrete",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Structure_Concrete_145",
+      "group": "Structure",
+      "region": [
+        0,
+        -1
+      ],
       "material": "Concrete",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Structure_Concrete_146",
+      "group": "Structure",
+      "region": [
+        0,
+        0
+      ],
       "material": "Concrete",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Structure_Concrete_147",
+      "group": "Structure",
+      "region": [
+        0,
+        1
+      ],
       "material": "Concrete",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Structure_Concrete_148",
+      "group": "Structure",
+      "region": [
+        1,
+        -2
+      ],
       "material": "Concrete",
-      "collider": true
+      "collider": true,
+      "hidden": false
     },
     {
       "name": "Structure_Concrete_149",
+      "group": "Structure",
+      "region": [
+        1,
+        -1
+      ],
       "material": "Concrete",
-      "collider": true
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "Structure_Concrete_150",
+      "group": "Structure",
+      "region": [
+        1,
+        0
+      ],
+      "material": "Concrete",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "Structure_Concrete_151",
+      "group": "Structure",
+      "region": [
+        1,
+        1
+      ],
+      "material": "Concrete",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "TenantSigns_Lettering_290_NC",
+      "group": "TenantSigns",
+      "region": [
+        -2,
+        -2
+      ],
+      "material": "Lettering",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "TenantSigns_Lettering_291_NC",
+      "group": "TenantSigns",
+      "region": [
+        -1,
+        -3
+      ],
+      "material": "Lettering",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "TenantSigns_Lettering_292_NC",
+      "group": "TenantSigns",
+      "region": [
+        0,
+        -3
+      ],
+      "material": "Lettering",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "TenantSigns_Lettering_294_NC",
+      "group": "TenantSigns",
+      "region": [
+        0,
+        0
+      ],
+      "material": "Lettering",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "TenantSigns_Lettering_295_NC",
+      "group": "TenantSigns",
+      "region": [
+        1,
+        -2
+      ],
+      "material": "Lettering",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "TenantSigns_TenantGreen_296_NC",
+      "group": "TenantSigns",
+      "region": [
+        -1,
+        -3
+      ],
+      "material": "TenantGreen",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "TenantSigns_TenantGreen_297_NC",
+      "group": "TenantSigns",
+      "region": [
+        0,
+        -3
+      ],
+      "material": "TenantGreen",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "TerraceRails_Frame_298_NC",
+      "group": "TerraceRails",
+      "region": [
+        -2,
+        -2
+      ],
+      "material": "Frame",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "Terraces_CreamPanel_299",
+      "group": "Terraces",
+      "region": [
+        -2,
+        -2
+      ],
+      "material": "CreamPanel",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "Vestibule_Concrete_231",
+      "group": "Vestibule",
+      "region": [
+        0,
+        -3
+      ],
+      "material": "Concrete",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "Vestibule_Frame_232",
+      "group": "Vestibule",
+      "region": [
+        -1,
+        -3
+      ],
+      "material": "Frame",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "Vestibule_Frame_233",
+      "group": "Vestibule",
+      "region": [
+        -1,
+        -2
+      ],
+      "material": "Frame",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "Vestibule_Frame_234",
+      "group": "Vestibule",
+      "region": [
+        0,
+        -3
+      ],
+      "material": "Frame",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "Vestibule_Frame_235",
+      "group": "Vestibule",
+      "region": [
+        0,
+        -2
+      ],
+      "material": "Frame",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "Vestibule_Glass_236",
+      "group": "Vestibule",
+      "region": [
+        -1,
+        -3
+      ],
+      "material": "Glass",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "Vestibule_Glass_237",
+      "group": "Vestibule",
+      "region": [
+        -1,
+        -2
+      ],
+      "material": "Glass",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "Vestibule_Glass_238",
+      "group": "Vestibule",
+      "region": [
+        0,
+        -3
+      ],
+      "material": "Glass",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "Vestibule_Glass_239",
+      "group": "Vestibule",
+      "region": [
+        0,
+        -2
+      ],
+      "material": "Glass",
+      "collider": true,
+      "hidden": false
+    },
+    {
+      "name": "VestibuleDetails_Lettering_240_NC",
+      "group": "VestibuleDetails",
+      "region": [
+        0,
+        -3
+      ],
+      "material": "Lettering",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "VestibuleDetails_Safety_241_NC",
+      "group": "VestibuleDetails",
+      "region": [
+        0,
+        -3
+      ],
+      "material": "Safety",
+      "collider": false,
+      "hidden": false
+    },
+    {
+      "name": "VestibuleDetails_Safety_242_NC",
+      "group": "VestibuleDetails",
+      "region": [
+        0,
+        -2
+      ],
+      "material": "Safety",
+      "collider": false,
+      "hidden": false
     }
   ],
   "guardColliders": [
@@ -882,6 +3503,76 @@
       "angle": -90.0
     },
     {
+      "name": "RoofOpeningGuard",
+      "center": [
+        -39.95000076293945,
+        11.574999809265137,
+        38.0
+      ],
+      "size": [
+        4.099998539249811,
+        1.15,
+        0.11
+      ],
+      "angle": -0.0
+    },
+    {
+      "name": "RoofOpeningGuard",
+      "center": [
+        -34.54999923706055,
+        11.574999809265137,
+        38.0
+      ],
+      "size": [
+        1.0999985001293708,
+        1.15,
+        0.11
+      ],
+      "angle": -0.0
+    },
+    {
+      "name": "RoofOpeningGuard",
+      "center": [
+        -38.0,
+        11.574999809265137,
+        45.0
+      ],
+      "size": [
+        8.0,
+        1.15,
+        0.11
+      ],
+      "angle": -0.0
+    },
+    {
+      "name": "RoofOpeningGuard",
+      "center": [
+        -42.0,
+        11.574999809265137,
+        41.5
+      ],
+      "size": [
+        7.0,
+        1.15,
+        0.11
+      ],
+      "angle": -90.0
+    },
+    {
+      "name": "RoofOpeningGuard",
+      "center": [
+        -34.0,
+        11.574999809265137,
+        41.5
+      ],
+      "size": [
+        7.0,
+        1.15,
+        0.11
+      ],
+      "angle": -90.0
+    },
+    {
       "name": "SkylightGuard",
       "center": [
         0.0,
@@ -936,6 +3627,384 @@
         0.11
       ],
       "angle": -90.0
+    },
+    {
+      "name": "FrontDomeGuard",
+      "center": [
+        11.353221893310547,
+        11.550000190734863,
+        -48.50531768798828
+      ],
+      "size": [
+        3.0151559064617515,
+        1.1,
+        0.11
+      ],
+      "angle": -97.49999581960542
+    },
+    {
+      "name": "FrontDomeGuard",
+      "center": [
+        10.57951831817627,
+        11.550000190734863,
+        -45.617820739746094
+      ],
+      "size": [
+        3.015155933643227,
+        1.1,
+        0.11
+      ],
+      "angle": -112.5000068596109
+    },
+    {
+      "name": "FrontDomeGuard",
+      "center": [
+        9.0848388671875,
+        11.550000190734863,
+        -43.02895736694336
+      ],
+      "size": [
+        3.0151536800509775,
+        1.1,
+        0.11
+      ],
+      "angle": -127.50000089991124
+    },
+    {
+      "name": "FrontDomeGuard",
+      "center": [
+        6.971041679382324,
+        11.550000190734863,
+        -40.9151611328125
+      ],
+      "size": [
+        3.0151553801294972,
+        1.1,
+        0.11
+      ],
+      "angle": -142.50000127093642
+    },
+    {
+      "name": "FrontDomeGuard",
+      "center": [
+        4.382180213928223,
+        11.550000190734863,
+        -39.42047882080078
+      ],
+      "size": [
+        3.0151554592028935,
+        1.1,
+        0.11
+      ],
+      "angle": -157.49998967283858
+    },
+    {
+      "name": "FrontDomeGuard",
+      "center": [
+        1.4946799278259277,
+        11.550000190734863,
+        -38.64677810668945
+      ],
+      "size": [
+        3.0151547080055456,
+        1.1,
+        0.11
+      ],
+      "angle": -172.50003774946913
+    },
+    {
+      "name": "FrontDomeGuard",
+      "center": [
+        -1.4946799278259277,
+        11.550000190734863,
+        -38.64677810668945
+      ],
+      "size": [
+        3.0151547080055456,
+        1.1,
+        0.11
+      ],
+      "angle": 172.50003774946913
+    },
+    {
+      "name": "FrontDomeGuard",
+      "center": [
+        -4.382180213928223,
+        11.550000190734863,
+        -39.42047882080078
+      ],
+      "size": [
+        3.0151554592028935,
+        1.1,
+        0.11
+      ],
+      "angle": 157.49998967283858
+    },
+    {
+      "name": "FrontDomeGuard",
+      "center": [
+        -6.971041679382324,
+        11.550000190734863,
+        -40.9151611328125
+      ],
+      "size": [
+        3.0151553801294972,
+        1.1,
+        0.11
+      ],
+      "angle": 142.50000127093642
+    },
+    {
+      "name": "FrontDomeGuard",
+      "center": [
+        -9.0848388671875,
+        11.550000190734863,
+        -43.02895736694336
+      ],
+      "size": [
+        3.0151536800509775,
+        1.1,
+        0.11
+      ],
+      "angle": 127.50000089991124
+    },
+    {
+      "name": "FrontDomeGuard",
+      "center": [
+        -10.57951831817627,
+        11.550000190734863,
+        -45.617820739746094
+      ],
+      "size": [
+        3.015155933643227,
+        1.1,
+        0.11
+      ],
+      "angle": 112.5000068596109
+    },
+    {
+      "name": "FrontDomeGuard",
+      "center": [
+        -11.353221893310547,
+        11.550000190734863,
+        -48.50531768798828
+      ],
+      "size": [
+        3.0151559064617515,
+        1.1,
+        0.11
+      ],
+      "angle": 97.49999581960542
+    },
+    {
+      "name": "FrontDomeGuard",
+      "center": [
+        -11.353221893310547,
+        11.550000190734863,
+        -51.49468231201172
+      ],
+      "size": [
+        3.0151559064617515,
+        1.1,
+        0.11
+      ],
+      "angle": 82.5000041803946
+    },
+    {
+      "name": "FrontDomeGuard",
+      "center": [
+        -10.57951831817627,
+        11.550000190734863,
+        -54.382179260253906
+      ],
+      "size": [
+        3.015155933643227,
+        1.1,
+        0.11
+      ],
+      "angle": 67.49999314038911
+    },
+    {
+      "name": "FrontDomeGuard",
+      "center": [
+        -9.0848388671875,
+        11.550000190734863,
+        -56.97104263305664
+      ],
+      "size": [
+        3.0151536800509775,
+        1.1,
+        0.11
+      ],
+      "angle": 52.499999100088765
+    },
+    {
+      "name": "FrontDomeGuard",
+      "center": [
+        -6.971041679382324,
+        11.550000190734863,
+        -59.0848388671875
+      ],
+      "size": [
+        3.0151553801294972,
+        1.1,
+        0.11
+      ],
+      "angle": 37.49999872906358
+    },
+    {
+      "name": "FrontDomeGuard",
+      "center": [
+        -4.382180213928223,
+        11.550000190734863,
+        -60.57952117919922
+      ],
+      "size": [
+        3.0151554592028935,
+        1.1,
+        0.11
+      ],
+      "angle": 22.50001032716141
+    },
+    {
+      "name": "FrontDomeGuard",
+      "center": [
+        -1.4946799278259277,
+        11.550000190734863,
+        -61.35322189331055
+      ],
+      "size": [
+        3.0151547080055456,
+        1.1,
+        0.11
+      ],
+      "angle": 7.499962250530875
+    },
+    {
+      "name": "FrontDomeGuard",
+      "center": [
+        1.4946799278259277,
+        11.550000190734863,
+        -61.35322189331055
+      ],
+      "size": [
+        3.0151547080055456,
+        1.1,
+        0.11
+      ],
+      "angle": -7.499962250530875
+    },
+    {
+      "name": "FrontDomeGuard",
+      "center": [
+        4.382180213928223,
+        11.550000190734863,
+        -60.57952117919922
+      ],
+      "size": [
+        3.0151554592028935,
+        1.1,
+        0.11
+      ],
+      "angle": -22.50001032716141
+    },
+    {
+      "name": "FrontDomeGuard",
+      "center": [
+        6.971041679382324,
+        11.550000190734863,
+        -59.0848388671875
+      ],
+      "size": [
+        3.0151553801294972,
+        1.1,
+        0.11
+      ],
+      "angle": -37.49999872906358
+    },
+    {
+      "name": "FrontDomeGuard",
+      "center": [
+        9.0848388671875,
+        11.550000190734863,
+        -56.97104263305664
+      ],
+      "size": [
+        3.0151536800509775,
+        1.1,
+        0.11
+      ],
+      "angle": -52.499999100088765
+    },
+    {
+      "name": "FrontDomeGuard",
+      "center": [
+        10.57951831817627,
+        11.550000190734863,
+        -54.382179260253906
+      ],
+      "size": [
+        3.015155933643227,
+        1.1,
+        0.11
+      ],
+      "angle": -67.49999314038911
+    },
+    {
+      "name": "FrontDomeGuard",
+      "center": [
+        11.353221893310547,
+        11.550000190734863,
+        -51.49468231201172
+      ],
+      "size": [
+        3.0151559064617515,
+        1.1,
+        0.11
+      ],
+      "angle": -82.5000041803946
+    },
+    {
+      "name": "TerraceFront",
+      "center": [
+        -36.79999923706055,
+        4.974999904632568,
+        -55.849998474121094
+      ],
+      "size": [
+        14.39999949137369,
+        1.15,
+        0.11
+      ],
+      "angle": -0.0
+    },
+    {
+      "name": "TerraceSide",
+      "center": [
+        -44.0,
+        4.974999904632568,
+        -52.67499923706055
+      ],
+      "size": [
+        6.349998365987733,
+        1.15,
+        0.11
+      ],
+      "angle": -90.0
+    },
+    {
+      "name": "TerraceSide",
+      "center": [
+        -29.600000381469727,
+        4.974999904632568,
+        -52.67499923706055
+      ],
+      "size": [
+        6.349998365987733,
+        1.15,
+        0.11
+      ],
+      "angle": -90.0
     }
   ],
   "palette": [
@@ -960,9 +4029,9 @@
     {
       "name": "BlueCladding",
       "rgba": [
-        0.035,
-        0.16,
-        0.27,
+        0.055,
+        0.26,
+        0.46,
         1
       ]
     },
@@ -1008,6 +4077,60 @@
         0.8,
         0.79,
         0.7,
+        1
+      ]
+    },
+    {
+      "name": "MallBlue",
+      "rgba": [
+        0.055,
+        0.26,
+        0.46,
+        1
+      ]
+    },
+    {
+      "name": "CreamPanel",
+      "rgba": [
+        0.64,
+        0.62,
+        0.53,
+        1
+      ]
+    },
+    {
+      "name": "SteelOxide",
+      "rgba": [
+        0.26,
+        0.15,
+        0.09,
+        1
+      ]
+    },
+    {
+      "name": "TenantGreen",
+      "rgba": [
+        0.22,
+        0.42,
+        0.09,
+        1
+      ]
+    },
+    {
+      "name": "SignRed",
+      "rgba": [
+        0.35,
+        0.08,
+        0.065,
+        1
+      ]
+    },
+    {
+      "name": "SailOrange",
+      "rgba": [
+        0.73,
+        0.29,
+        0.13,
         1
       ]
     }

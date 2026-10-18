@@ -66,7 +66,6 @@ namespace ZombieSurvival.Persistence
         {
             if(!isActiveAndEnabled || !Application.isPlaying)throw new InvalidOperationException("Сохранение работает только в Play.");
             if(string.IsNullOrWhiteSpace(fileName) || Path.GetFileName(fileName)!=fileName)throw new InvalidOperationException("В имени сохранения запрещены пути.");
-<<<<<<< HEAD
             Registry().ValidateCoverage();
         }
         private WorldSaveRegistry Registry()
@@ -76,12 +75,6 @@ namespace ZombieSurvival.Persistence
             var registries=FindObjectsByType<WorldSaveRegistry>(FindObjectsInactive.Include).Where(r=>r.gameObject.scene==gameObject.scene).ToArray();
             if(registries.Length!=1)throw new InvalidOperationException("В сцене нужен один WorldSaveRegistry. См. Docs/WorldSaving.md.");
             return registries[0];
-=======
-            // Intentional integration boundary: item rollback with a live unsaved wallet enables duplication.
-            // The economy developer must add an atomic wallet/trader block + schema migration before enabling this.
-            if(GetComponents<MonoBehaviour>().Any(c=>c!=null && c.GetType().FullName=="ZombieSurvival.Economy.Wallet"))
-                throw new InvalidOperationException("Сохранение экономики пока не подключено. Сохранение и загрузка временно недоступны.");
->>>>>>> 99fe3c77d47bd64e4421bf1b1063dba798624283
         }
         private Dictionary<string,ItemDefinition> Catalog()
         {
