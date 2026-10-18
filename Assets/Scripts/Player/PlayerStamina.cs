@@ -1,4 +1,5 @@
 using UnityEngine;
+using ZombieSurvival.Progression;
 
 namespace ZombieSurvival.Player
 {
@@ -33,8 +34,12 @@ namespace ZombieSurvival.Player
 
         private float current, recoveryWait;
         private bool exhausted;
+        private PlayerStatModifiers statModifiers;
         public float Current => current;
-        public float Capacity => Mathf.Max(1f, capacity);
+        public float BaseCapacity => Mathf.Max(1f, capacity);
+        public float BaseRecoveryPerSecond => Mathf.Max(0f, recoveryPerSecond);
+        public float Capacity => Mathf.Max(1f, Evaluate(StatId.StaminaCapacity, BaseCapacity));
+        public float RecoveryPerSecond => Evaluate(StatId.StaminaRecovery, BaseRecoveryPerSecond);
         public float Normalized => Mathf.Clamp01(current / Capacity);
         public bool IsExhausted => staminaEnabled && exhausted;
         public bool CanSprint => !isActiveAndEnabled || !staminaEnabled || !exhausted && current > 0f;
@@ -43,6 +48,25 @@ namespace ZombieSurvival.Player
         public float VaultCost => vaultCost;
         public float RollCost => rollCost;
 
+        private float Evaluate(StatId stat, float baseline)
+        {
+            if (statModifiers == null) statModifiers = GetComponent<PlayerStatModifiers>();
+            return statModifiers != null ? statModifiers.Evaluate(stat, baseline) : baseline;
+        }
+        /// <summary>Абсолютный остаток сохраняется; увеличение ёмкости не заполняет новую часть автоматически.</summary>
+        public void RefreshDerivedCapacity()
+        {
+            current = Mathf.Clamp(current, 0f, Capacity);
+            if (current <= .0001f) exhausted = true;
+            else if (exhausted && Normalized >= sprintResumeFraction) exhausted = false;
+        }
+
+        internal float RecoveryWait => recoveryWait;
+        internal void RestoreReserve(float value, bool wasExhausted, float wait)
+        {
+            current = Mathf.Clamp(value, 0, Capacity); recoveryWait = Mathf.Max(0, wait);
+            exhausted = current <= .0001f || wasExhausted && Normalized < sprintResumeFraction;
+        }
         private void Awake() => ResetReserve();
 
         public void ResetReserve()
@@ -76,7 +100,7 @@ namespace ZombieSurvival.Player
             current = Mathf.Clamp(current, 0f, Capacity);
             float remaining = Mathf.Max(0f, deltaTime - recoveryWait);
             recoveryWait = Mathf.Max(0f, recoveryWait - deltaTime);
-            current = Mathf.Min(Capacity, current + recoveryPerSecond * remaining);
+            current = Mathf.Min(Capacity, current + RecoveryPerSecond * remaining);
             if (exhausted && Normalized >= sprintResumeFraction) exhausted = false;
         }
 

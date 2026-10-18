@@ -4,6 +4,7 @@ using ZombieSurvival.Combat;
 using ZombieSurvival.Inventory;
 using ZombieSurvival.Player;
 using ZombieSurvival.AI;
+using ZombieSurvival.Progression;
 
 namespace ZombieSurvival.Weapons
 {
@@ -28,6 +29,8 @@ namespace ZombieSurvival.Weapons
         private FirstPersonController motor;
         private ItemStorage storage;
         private PlayerNoiseEmitter noise;
+        private PlayerHotbar hotbar;
+        private PlayerStatModifiers modifiers;
         private InputAction attack, reload, aim, previous, next;
         private ItemStack equipped, pending;
         private GameObject view;
@@ -40,11 +43,13 @@ namespace ZombieSurvival.Weapons
         public bool IsAiming { get; private set; }
         public string Status { get; private set; } = "";
         private bool CanAct => motor != null && motor.AcceptingGameplayInput && viewCamera != null
-            && (motor.Parkour == null || !motor.Parkour.OwnsMovement) && !motor.IsSprinting;
+            && (motor.Parkour == null || !motor.Parkour.OwnsMovement) && !motor.IsSprinting
+            && (hotbar == null || !hotbar.isActiveAndEnabled || equipped == hotbar.ActiveStack);
         private void OnEnable() => Initialize();
         private void Initialize()
         {
             motor=GetComponent<FirstPersonController>(); storage=GetComponent<ItemStorage>(); noise=GetComponent<PlayerNoiseEmitter>();
+            hotbar=GetComponent<PlayerHotbar>(); modifiers=GetComponent<PlayerStatModifiers>();
             if(viewCamera==null) viewCamera=GetComponentInChildren<Camera>(true);
             if(storage!=null) { storage.Changed-=OnStorageChanged; storage.Changed+=OnStorageChanged; }
             if(audioSource==null)
@@ -64,6 +69,12 @@ namespace ZombieSurvival.Weapons
         private void Cancel() { pending=null; swingStarted=-100; attackAt=reloadAt=0; IsAiming=false; if(audioSource!=null) audioSource.Stop(); }
         public void Unequip() { Cancel(); equipped=null; armed=false; if(view!=null) Destroy(view); view=null; }
         public bool Equip(int slot)
+        {
+            if (hotbar == null) hotbar = GetComponent<PlayerHotbar>();
+            return hotbar != null && hotbar.isActiveAndEnabled ? hotbar.EquipInventorySlot(slot) : EquipFromHotbar(slot);
+        }
+        // Хотбар уже проверил владение/выбор. Публичный Equip не должен обходить текущий быстрый слот.
+        internal bool EquipFromHotbar(int slot)
         {
             var item=storage.GetSlot(slot);
             if(!motor.IsAlive || item==null || item.IsEmpty || item.Definition.Weapon==null) return false;
@@ -91,8 +102,10 @@ namespace ZombieSurvival.Weapons
             var current=motor.FindGameplayAction("Attack");
             if(current!=attack) { Cancel(); armed=false; attack=current; reload=motor.FindGameplayAction("Reload"); aim=motor.FindGameplayAction("Aim"); previous=motor.FindGameplayAction("Previous"); next=motor.FindGameplayAction("Next"); }
             if(!CanAct) { Cancel(); armed=false; if(view!=null) view.SetActive(false); return; }
-            if(previous!=null && previous.WasPressedThisFrame()) Cycle(-1);
-            if(next!=null && next.WasPressedThisFrame()) Cycle(1);
+            bool hotbarOwnsInput=hotbar!=null && hotbar.isActiveAndEnabled;
+            if(hotbarOwnsInput && equipped!=hotbar.ActiveStack) { if(equipped!=null) Unequip(); }
+            if(!hotbarOwnsInput && previous!=null && previous.WasPressedThisFrame()) Cycle(-1);
+            if(!hotbarOwnsInput && next!=null && next.WasPressedThisFrame()) Cycle(1);
             if(equipped==null) { if(attack==null || !attack.IsPressed()) armed=true; return; }
             var data=equipped.Definition.Weapon;
             recoilAngle=Mathf.MoveTowards(recoilAngle,0,data.recoilRecovery*Time.deltaTime);
@@ -105,7 +118,8 @@ namespace ZombieSurvival.Weapons
                 var strike=pending; pending=null;
                 if(strike==equipped && storage.Contains(strike)) MeleeImpact(data);
             }
-            if(armed && attack!=null && (data.automatic && data.kind==WeaponKind.Firearm ? attack.IsPressed() : attack.WasPressedThisFrame())) TryAttack();
+            // При хотбаре Attack обрабатывает один маршрутизатор. Aim/reload и таймер попадания остаются здесь.
+            if(!hotbarOwnsInput && armed && attack!=null && (data.automatic && data.kind==WeaponKind.Firearm ? attack.IsPressed() : attack.WasPressedThisFrame())) TryAttack();
         }
         public bool TryReload()
         {
@@ -118,6 +132,12 @@ namespace ZombieSurvival.Weapons
         {
             if(!CanAct || equipped==null || !storage.Contains(equipped) || IsReloading || pending!=null || Time.time<readyAt) return false;
             var data=equipped.Definition.Weapon;
+            // Хотбар вызывает команду до Update оружия. При одновременных R/ЛКМ сохраняем приоритет reload,
+            // а Aim читаем сейчас, чтобы первый выстрел с ПКМ не использовал разброс прошлого кадра.
+            var reloadNow=motor.FindGameplayAction("Reload");
+            if(reloadNow!=null && reloadNow.WasPressedThisFrame() && TryReload()) return false;
+            var aimNow=motor.FindGameplayAction("Aim");
+            IsAiming=data.kind==WeaponKind.Firearm && aimNow!=null && aimNow.IsPressed() && !IsReloading;
             if(data.kind==WeaponKind.Melee)
             {
                 if(motor.Stamina!=null && !motor.Stamina.TrySpend(data.staminaCost)) { Status="Мало выносливости"; return false; }
@@ -164,7 +184,8 @@ namespace ZombieSurvival.Weapons
         }
         private void Impact(RaycastHit hit,WeaponDefinition data)
         {
-            if(WeaponHitQuery.Damage(hit,transform,data.damage)) hitUntil=Time.time+hitMarkerSeconds;
+            float damage=modifiers!=null ? modifiers.Evaluate(data.kind==WeaponKind.Firearm?StatId.FirearmDamage:StatId.MeleeDamage,data.damage) : data.damage;
+            if(WeaponHitQuery.Damage(hit,transform,damage)) hitUntil=Time.time+hitMarkerSeconds;
             if(data.impactSound!=null) audioSource.PlayOneShot(data.impactSound,data.volume);
         }
         private void Play(AudioClip clip,WeaponDefinition data) { if(clip!=null) { audioSource.transform.position=viewCamera.transform.position; audioSource.PlayOneShot(clip,data.volume); } }
@@ -191,13 +212,14 @@ namespace ZombieSurvival.Weapons
         private void OnGUI()
         {
             if(!showHud || motor==null || !motor.IsAlive || !motor.GameplayInputEnabled) return;
+            bool hasHotbar=hotbar!=null && hotbar.isActiveAndEnabled;
             float scale=Mathf.Min(Screen.width/1000f,Screen.height/700f); var old=GUI.matrix;
             GUI.matrix=Matrix4x4.Scale(Vector3.one*scale); float w=Screen.width/scale,h=Screen.height/scale;
-            if(showControls)
+            if(showControls && !hasHotbar)
             {
                 var oldColor=GUI.color; GUI.color=new Color(.055f,.075f,.095f,1);
                 GUI.DrawTexture(new Rect(w-330,15,315,100),Texture2D.whiteTexture); GUI.color=oldColor;
-                GUI.Label(new Rect(w-318,23,295,85),"ОРУЖИЕ\nE — взять · Tab — экипировать\n1/2 — смена · ЛКМ — атака\nПКМ — прицел · R — перезарядка",new GUIStyle(GUI.skin.label){fontSize=15});
+                GUI.Label(new Rect(w-318,23,295,85),"ОРУЖИЕ\nE — взять · Tab — назначить\n1–5 / колесо · ЛКМ — атака\nПКМ — прицел · R — перезарядка",new GUIStyle(GUI.skin.label){fontSize=15});
             }
             var style=new GUIStyle(GUI.skin.label){fontSize=17,alignment=TextAnchor.MiddleRight};
             string text="Оружие не выбрано\nTab — рюкзак / экипировка";
@@ -206,7 +228,12 @@ namespace ZombieSurvival.Weapons
                 var data=equipped.Definition.Weapon;
                 text=equipped.Definition.DisplayName+"\n"+(data.kind==WeaponKind.Firearm?$"{equipped.LoadedRounds} / {storage.Count(data.Ammo)}   [R] перезарядка":"ЛКМ — удар")+"\n"+Status;
             }
-            GUI.Box(new Rect(w-330,h-115,315,100),GUIContent.none); GUI.Label(new Rect(w-320,h-110,295,90),text,style);
+            // Хотбар уже показывает выбор и команды: пустой старый блок оружия больше не дублирует его.
+            if(!hasHotbar || equipped!=null)
+            {
+                float bottom=hasHotbar ? 205 : 115;
+                GUI.Box(new Rect(w-330,h-bottom,315,100),GUIContent.none); GUI.Label(new Rect(w-320,h-bottom+5,295,90),text,style);
+            }
             if(equipped!=null && CanAct)
             {
                 GUI.color=Time.time<hitUntil?Color.red:Color.white;

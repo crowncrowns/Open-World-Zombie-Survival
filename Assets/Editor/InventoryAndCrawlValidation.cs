@@ -18,8 +18,8 @@ public static class InventoryAndCrawlValidation
         {
             var item = AssetDatabase.LoadAssetAtPath<ItemDefinition>(AssetDatabase.GUIDToAssetPath(guid));
             if (string.IsNullOrWhiteSpace(item.Id) || !ids.Add(item.Id)) errors.Add(item.name + ": пустой или повторяющийся Item ID");
-            if (item.WorldPrefab == null || item.WorldPrefab.GetComponent<WorldItem>() == null || item.WorldPrefab.GetComponent<Collider>() == null)
-                errors.Add(item.name + ": нужен мировой префаб с WorldItem и Collider");
+            if (item.WorldPrefab == null || item.WorldPrefab.GetComponent<WorldItem>() == null || item.WorldPrefab.GetComponentInChildren<Collider>(true) == null)
+                errors.Add(item.name + ": нужен WorldItem на корне мирового префаба и Collider в его иерархии");
         }
         foreach (var world in UnityEngine.Object.FindObjectsByType<WorldItem>(FindObjectsSortMode.None))
             if (world.Item == null || world.Quantity <= 0) errors.Add(world.name + ": не назначен предмет или количество");

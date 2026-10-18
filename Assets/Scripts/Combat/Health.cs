@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.Events;
+using ZombieSurvival.Progression;
 
 namespace ZombieSurvival.Combat
 {
@@ -22,8 +23,17 @@ namespace ZombieSurvival.Combat
         [Tooltip("Событие явного возрождения актёра.")]
         [SerializeField] private UnityEvent onRevived = new UnityEvent();
         private float current, protectedUntil = float.NegativeInfinity;
+        private PlayerStatModifiers statModifiers;
         public float Current => current;
-        public float Maximum => Mathf.Max(1f, maximum);
+        public float BaseMaximum => Mathf.Max(1f, maximum);
+        public float Maximum
+        {
+            get
+            {
+                if (statModifiers == null) statModifiers = GetComponent<PlayerStatModifiers>();
+                return Mathf.Max(1f, statModifiers != null ? statModifiers.Evaluate(StatId.HealthMaximum, BaseMaximum) : BaseMaximum);
+            }
+        }
         public float Normalized => Mathf.Clamp01(current / Maximum);
         public bool IsDead { get; private set; }
         public bool IsProtected => invincible || Time.time < protectedUntil;
@@ -32,6 +42,12 @@ namespace ZombieSurvival.Combat
         public event Action<DamageInfo> Damaged;
         public event Action Died;
         public event Action Revived;
+        // Общее событие канонического Health: награда привязана к источнику последнего смертельного удара,
+        // а не к имени модели, конкретному EnemyBrain или опросу всех NPC каждый кадр.
+        public static event Action<Health, DamageInfo> ActorKilled;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetEvents() => ActorKilled = null;
 
         private void Awake() { current = Maximum * startingFraction; }
 
@@ -44,7 +60,7 @@ namespace ZombieSurvival.Combat
             // Mark dead before notifying listeners, so overlapping hits cannot kill twice.
             if (lethal) IsDead = true;
             Changed?.Invoke(); onHealthChanged.Invoke(current); Damaged?.Invoke(damage);
-            if (lethal) { Died?.Invoke(); onDied.Invoke(); }
+            if (lethal) { Died?.Invoke(); onDied.Invoke(); ActorKilled?.Invoke(this, damage); }
             return true;
         }
 
@@ -68,6 +84,19 @@ namespace ZombieSurvival.Combat
             Changed?.Invoke(); onHealthChanged.Invoke(current); Revived?.Invoke(); onRevived.Invoke();
         }
 
+        // Player-only alive snapshot restore; unlike Revive's fraction this preserves sub-1 HP exactly.
+        internal void RestoreAlive(float value)
+        {
+            current = Mathf.Clamp(value, .0001f, Maximum); IsDead = false;
+            protectedUntil = float.NegativeInfinity; LastDamage = default;
+            Changed?.Invoke(); onHealthChanged.Invoke(current); Revived?.Invoke(); onRevived.Invoke();
+        }
+        /// <summary>Смена максимума сохраняет абсолютное HP: покупка/повторная загрузка не лечит бесплатно.</summary>
+        public void RefreshDerivedMaximum()
+        {
+            current = Mathf.Clamp(current, 0f, Maximum);
+            Changed?.Invoke(); onHealthChanged.Invoke(current);
+        }
         private static bool ValidAmount(float amount) => amount > 0f && !float.IsNaN(amount) && !float.IsInfinity(amount);
     }
 }

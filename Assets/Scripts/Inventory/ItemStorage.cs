@@ -46,6 +46,18 @@ namespace ZombieSurvival.Inventory
             }
             if (migrated) Debug.LogWarning("ItemStorage: старые стопки разделены/ID исправлены без потери количества; дополнительные слоты сохранены. Магазин старой пачки остаётся только у первого оружия.", this);
         }
+        // Stage 11 restore is a world transaction. No events until EVERY participating storage is replaced.
+        // Future trade/repair must not call this API; use the normal transfer/transaction contracts.
+        internal void ReplaceSavedSlots(List<ItemStack> restored)
+        {
+            EnsureSlots();
+            // Retire stale live handles so old UI/NPC references cannot reinsert a pre-load item.
+            foreach (var stack in slots) if (stack != null) { stack.Owner = null; stack.SetQuantity(0); }
+            slots = restored;
+            foreach (var stack in slots) if (stack != null) stack.Owner = this;
+            EnsureSlots();
+        }
+        internal void NotifySavedRestore() => Changed?.Invoke();
         public int FreeCapacity(ItemDefinition item)
         {
             if (item == null) return 0;

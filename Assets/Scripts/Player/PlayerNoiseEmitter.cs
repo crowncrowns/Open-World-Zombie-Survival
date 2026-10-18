@@ -85,6 +85,8 @@ namespace ZombieSurvival.Player
             previousPosition = transform.position; travelled = 0f; previousGait = -1;
             previousTraversal = PlayerParkour.TraversalState.None;
         }
+        // Загрузка/телепорт не являются шагом: сбрасываем накопленный путь и старую подсказку HUD.
+        internal void ResetAfterTeleport() => Initialize();
         private void OnDisable()
         {
             if (movement != null) { movement.Jumped -= OnJumped; movement.Landed -= OnLanded; }

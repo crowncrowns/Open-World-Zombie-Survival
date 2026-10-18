@@ -14,7 +14,7 @@ public sealed class ActorSettingsWindow : EditorWindow
     private ZombieSurvival.Inventory.ItemDefinition itemType;
     private Vector2 scroll;
     private readonly Dictionary<EntityId, Editor> editors = new Dictionary<EntityId, Editor>();
-    private readonly string[] tabs = { "Общие", "Движение", "Паркур", "Скрытность / ИИ", "Внешность", "Инвентарь", "Звук", "Бой / оружие", "Деньги / бюджет" };
+    private readonly string[] tabs = { "Общие", "Движение", "Паркур", "Скрытность / ИИ", "Внешность", "Инвентарь", "Звук", "Бой / оружие", "Деньги / бюджет", "Потребности / сохранение", "Развитие / хотбар" };
     [MenuItem("Tools/Zombie Survival/Настройки персонажа и зомби")]
     public static void Open() { var window = GetWindow<ActorSettingsWindow>("Настройки актёра"); window.minSize = new Vector2(650,450); window.ReadSelection(); }
     private void OnEnable() { Selection.selectionChanged += ReadSelection; ReadSelection(); }
@@ -79,9 +79,11 @@ public sealed class ActorSettingsWindow : EditorWindow
             case "FirstPersonController": return 1;
             case "PlayerParkour": return 2;
             case "PlayerNoiseEmitter": case "PlayerInteractor": case "EnemyBrain": case "EnemyCrawlPursuit": case "MeleeAttack": case "NoiseEmitter": return 3;
-            case "PlayerVisual": case "PlayerModelDefinition": case "PlayerCrawlAnimation": case "HumanoidCrawlPose": case "HumanoidGrounding": case "EnemyAnimationBridge": return 4;
+            case "PlayerCameraMotion": case "PlayerVisual": case "PlayerModelDefinition": case "PlayerCrawlAnimation": case "HumanoidCrawlPose": case "HumanoidGrounding": case "EnemyAnimationBridge": return 4;
             case "ItemStorage": case "PlayerInventory": return 5;
+            case "PlayerProgression": case "PlayerStatModifiers": case "PlayerProgressionMenu": case "PlayerHotbar": return 10;
             case "Wallet": case "TraderBudget": return 8;
+            case "PlayerNeeds": case "PlayerSaveSystem": case "SaveIdentity": return 9;
             case "ActorAudioEmitter": case "PlayerMovementAudio": case "NavMeshActorAudio": return 6;
             case "PlayerWeapons": case "WeaponPracticeTarget": return 7;
             default: return -1;
@@ -101,6 +103,10 @@ public sealed class ActorSettingsWindow : EditorWindow
             case "PlayerNoiseEmitter": return "Шум игрока";
             case "ItemStorage": return "Слоты предметов";
             case "PlayerInventory": return "Окно рюкзака и выбрасывание";
+            case "PlayerProgression": return "Опыт, уровни и дерево развития";
+            case "PlayerStatModifiers": return "Расчёт бонусов характеристик";
+            case "PlayerProgressionMenu": return "Окно дерева развития";
+            case "PlayerHotbar": return "Быстрые предметы и использование";
             default: return ObjectNames.NicifyVariableName(type);
         }
     }

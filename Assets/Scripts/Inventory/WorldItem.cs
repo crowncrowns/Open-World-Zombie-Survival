@@ -20,6 +20,14 @@ namespace ZombieSurvival.Inventory
             if (stack == null || stack.IsEmpty || stack.IsSnapshot || stack.Owner != null) throw new System.ArgumentException("World item requires an extracted original, not a snapshot or owned slot.");
             Initialize(stack.Definition, stack.Quantity); instance = stack;
         }
+        // Lazily assign an identity to authored pickups before serializing the whole scene's item set.
+        internal ItemStack StateForSave()
+        {
+            if (instance == null || instance.IsEmpty) instance = new ItemStack(item, quantity);
+            return instance;
+        }
+        // Exclude replaced objects immediately, even before Unity's end-of-frame Destroy.
+        internal void RetireForRestore() { quantity = 0; collecting = true; instance = null; }
         public override bool CanInteract(PlayerInteractor actor) => base.CanInteract(actor) && !collecting && quantity > 0 && item != null && actor.GetComponent<ItemStorage>() != null;
         public override string GetPrompt(PlayerInteractor actor) => item != null ? $"Взять: {item.DisplayName} ×{quantity}" : "Не назначен тип предмета";
         protected override bool PerformInteraction(PlayerInteractor actor)

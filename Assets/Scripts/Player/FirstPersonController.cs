@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using ZombieSurvival.Progression;
 
 namespace ZombieSurvival.Player
 {
@@ -147,6 +148,7 @@ namespace ZombieSurvival.Player
         private InputAction rollAction;
         private InputAction proneAction;
         private PlayerStamina stamina;
+        private PlayerStatModifiers statModifiers;
         private bool proneRequested, proneToggleArmed;
         private PlayerParkour parkour;
         private Vector3 planarVelocity;
@@ -195,6 +197,17 @@ namespace ZombieSurvival.Player
         public Vector3 FeetPosition => transform.position + transform.up * BottomOffset;
         public Vector3 PlanarVelocity => planarVelocity;
         public PlayerParkour Parkour => parkour;
+        public float BaseWalkSpeed => walkSpeed;
+        public float BaseRunSpeed => runSpeed;
+        public float BaseJumpHeight => jumpHeight;
+        public float EffectiveWalkSpeed => EvaluateStat(StatId.WalkSpeed, walkSpeed);
+        public float EffectiveRunSpeed => EvaluateStat(StatId.RunSpeed, runSpeed);
+        public float EffectiveJumpHeight => Mathf.Max(.1f, EvaluateStat(StatId.JumpHeight, jumpHeight));
+        private float EvaluateStat(StatId stat, float baseline)
+        {
+            if (statModifiers == null) statModifiers = GetComponent<PlayerStatModifiers>();
+            return statModifiers != null ? statModifiers.Evaluate(stat, baseline) : baseline;
+        }
         internal float GravityAcceleration => gravity;
         internal float TerminalFallSpeed => terminalFallSpeed;
         internal float GroundStickSpeed => groundStickSpeed;
@@ -221,7 +234,7 @@ namespace ZombieSurvival.Player
             standingCenter = controller.center;
             standingStepOffset = controller.stepOffset;
             standingCameraPosition = transform.InverseTransformPoint(playerCamera.position);
-            airborneMoveSpeed = walkSpeed;
+            airborneMoveSpeed = EffectiveWalkSpeed;
 
             // Never enable/disable the shared asset: the UI and other players may use it.
             InputActionAsset source = inputActions != null ? inputActions : InputSystem.actions;
@@ -356,7 +369,7 @@ namespace ZombieSurvival.Player
             skipLook = false;
 
             Vector3 desiredVelocity = (transform.right * movement.x + transform.forward * movement.y)
-                * (IsProne ? crawlSpeed : IsCrouching ? crouchSpeed : running ? runSpeed : IsSlowWalking ? slowWalkSpeed : walkSpeed);
+                * (IsProne ? crawlSpeed : IsCrouching ? crouchSpeed : running ? EffectiveRunSpeed : IsSlowWalking ? slowWalkSpeed : EffectiveWalkSpeed);
             if (parkour != null && parkour.Tick(Time.deltaTime, acceptingInput, movement, desiredVelocity,
                 jumpPressed, crouchPressed, rollPressed))
             {
@@ -374,8 +387,8 @@ namespace ZombieSurvival.Player
             {
                 // Use real take-off momentum: pressing Sprint after leaving the floor cannot create a running jump.
                 if (grounded) planarVelocity = Vector3.ProjectOnPlane(controller.velocity, Vector3.up);
-                airborneMoveSpeed = Mathf.Clamp(Mathf.Max(walkSpeed, planarVelocity.magnitude), 0f, maxAirSpeed);
-                verticalVelocity = Mathf.Sqrt(2f * gravity * jumpHeight);
+                airborneMoveSpeed = Mathf.Clamp(Mathf.Max(EffectiveWalkSpeed, planarVelocity.magnitude), 0f, maxAirSpeed);
+                verticalVelocity = Mathf.Sqrt(2f * gravity * EffectiveJumpHeight);
                 lastJumpTime = Time.time;
                 lastJumpPress = float.NegativeInfinity;
                 lastGroundedTime = float.NegativeInfinity;
@@ -385,7 +398,7 @@ namespace ZombieSurvival.Player
             if (grounded)
             {
                 planarVelocity = desiredVelocity;
-                airborneMoveSpeed = Mathf.Clamp(Mathf.Max(walkSpeed, planarVelocity.magnitude), 0f, maxAirSpeed);
+                airborneMoveSpeed = Mathf.Clamp(Mathf.Max(EffectiveWalkSpeed, planarVelocity.magnitude), 0f, maxAirSpeed);
             }
             else if (acceptingInput)
             {
@@ -444,6 +457,17 @@ namespace ZombieSurvival.Player
             Physics.SyncTransforms();
         }
 
+        internal float SavedViewPitch => pitch;
+        internal float SavedPoseHeight(bool prone, bool crouched) => prone ? Mathf.Clamp(proneHeight, controller.radius*2f, CrouchHeight) : crouched ? CrouchHeight : StandingHeight;
+        internal void RestoreSavedPose(Vector3 position, Quaternion rotation, float savedPitch, bool prone, bool crouched)
+        {
+            ResetForRespawn(position, rotation);
+            proneRequested = prone; crouchRequested = crouched && !prone;
+            SetParkourPosture(SavedPoseHeight(prone, crouched), prone ? proneCameraDrop : crouched ? crouchCameraDrop : 0);
+            pitch = Mathf.Clamp(savedPitch, -verticalLookLimit, verticalLookLimit);
+            playerCamera.localRotation = Quaternion.Euler(pitch, 0, 0);
+            SetAlive(true); Physics.SyncTransforms();
+        }
         private void UpdateCrouch(bool acceptingInput)
         {
             // Menus/focus loss must not unexpectedly change the player's posture.
@@ -516,7 +540,7 @@ namespace ZombieSurvival.Player
         internal void ReleaseParkour(Vector3 horizontalVelocity, float fallSpeed = 0f)
         {
             planarVelocity = Vector3.ProjectOnPlane(horizontalVelocity, Vector3.up);
-            airborneMoveSpeed = Mathf.Max(walkSpeed, planarVelocity.magnitude);
+            airborneMoveSpeed = Mathf.Max(EffectiveWalkSpeed, planarVelocity.magnitude);
             verticalVelocity = fallSpeed;
             lastJumpPress = lastGroundedTime = float.NegativeInfinity;
             wasGrounded = false;

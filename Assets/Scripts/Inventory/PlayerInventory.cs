@@ -59,26 +59,13 @@ namespace ZombieSurvival.Inventory
         }
         public bool Drop(int index, int amount)
         {
-            if (!motor.IsAlive) return false;
-            var stack = Storage.GetSlot(index);
-            if (stack == null || stack.IsEmpty || amount <= 0 || amount > stack.Quantity || stack.Definition.WorldPrefab == null) return false;
-            Vector3 origin = motor.FeetPosition + Vector3.up * .35f;
-            Vector3 destination = origin + transform.forward * dropDistance;
-            // Не выбрасываем сквозь стену, под карту или внутрь другого актёра.
-            foreach (var hit in Physics.SphereCastAll(origin, .19f, transform.forward, dropDistance, dropMask, QueryTriggerInteraction.Ignore))
-                if (!hit.transform.IsChildOf(transform)) return false;
-            if (!Physics.Raycast(destination + Vector3.up, Vector3.down, out var ground, 3f, dropMask, QueryTriggerInteraction.Ignore)
-                || ground.normal.y < .6f || ground.transform.IsChildOf(transform)) return false;
-            destination = ground.point + Vector3.up * .22f;
-            foreach (var hit in Physics.OverlapSphere(destination, .18f, dropMask, QueryTriggerInteraction.Ignore))
-                if (!hit.transform.IsChildOf(transform)) return false;
-            var obj = Instantiate(stack.Definition.WorldPrefab, destination, Quaternion.identity);
-            obj.SetActive(false); var world = obj.GetComponent<WorldItem>();
-            if (world == null) { Destroy(obj); return false; }
-            if (!Storage.TryExtract(index, amount, out var extracted)) { Destroy(obj); return false; }
-            try { world.Initialize(extracted); }
-            catch (System.Exception exception) { Storage.RestoreExtracted(index, extracted); Destroy(obj); Debug.LogException(exception, this); return false; }
-            obj.SetActive(true); return true;
+            if (motor == null || !motor.IsAlive) return false;
+            var hotbar = GetComponent<PlayerHotbar>();
+            string[] before = hotbar != null ? hotbar.CaptureAssignments() : null;
+            bool dropped = WorldItemDropService.TryDrop(transform, motor.FeetPosition, Storage, index, amount, dropDistance, dropMask);
+            // Changed может временно очистить назначение целой стопки до отката неудачного Initialize.
+            if (!dropped && hotbar != null) hotbar.RestoreAssignments(before, hotbar.SelectedIndex);
+            return dropped;
         }
         private void OnGUI()
         {
@@ -86,16 +73,20 @@ namespace ZombieSurvival.Inventory
             float scale = Mathf.Min(Screen.width / 1000f, Screen.height / 700f);
             Matrix4x4 old = GUI.matrix; GUI.matrix = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, Vector3.one * scale);
             float width = Screen.width / scale, height = Screen.height / scale;
+            var quickSlots = GetComponent<PlayerHotbar>();
+            float panelHeight = quickSlots != null && quickSlots.SlotCount > 5 ? 680 : 620;
             Color oldColor = GUI.color;
             GUI.color = new Color(0, 0, 0, .55f);
             GUI.DrawTexture(new Rect(0, 0, width, height), Texture2D.whiteTexture);
             GUI.color = new Color(.055f, .075f, .095f, 1f);
-            GUI.DrawTexture(new Rect((width - 900) / 2, (height - 620) / 2, 900, 620), Texture2D.whiteTexture);
+            GUI.DrawTexture(new Rect((width - 900) / 2, (height - panelHeight) / 2, 900, panelHeight), Texture2D.whiteTexture);
             GUI.color = oldColor;
-            GUILayout.BeginArea(new Rect((width - 900) / 2, (height - 620) / 2, 900, 620), GUI.skin.box);
+            GUILayout.BeginArea(new Rect((width - 900) / 2, (height - panelHeight) / 2, 900, panelHeight), GUI.skin.box);
             GUILayout.BeginHorizontal(); GUILayout.Label("РЮКЗАК" + (hadContainer ? "  /  ЯЩИК" : "") + (GetComponent<ZombieSurvival.Economy.Wallet>() != null ? "    " + GetComponent<ZombieSurvival.Economy.Wallet>().FormattedBalance : ""));
             if (GUILayout.Button("Закрыть [Tab / Esc]", GUILayout.Width(190))) Close(); GUILayout.EndHorizontal();
             GUILayout.Label("Мир продолжает жить. Выбери слот, затем перенеси или выброси стопку.");
+            var playerNeeds = GetComponent<ZombieSurvival.Player.PlayerNeeds>();
+            if (playerNeeds != null) GUILayout.Label($"Сытость: {playerNeeds.Food:0} / {playerNeeds.FoodCapacity:0}    Вода: {playerNeeds.Water:0} / {playerNeeds.WaterCapacity:0}");
             GUILayout.BeginHorizontal(); DrawStorage(storage, false, ref leftScroll);
             if (hadContainer && container != null) DrawStorage(container, true, ref rightScroll); GUILayout.EndHorizontal();
             var source = selectedContainer ? container : storage; var stack = source != null ? source.GetSlot(selected) : null;
@@ -103,6 +94,9 @@ namespace ZombieSurvival.Inventory
             {
                 GUILayout.Label(stack.Definition.DisplayName + " ×" + stack.Quantity + "\n" + stack.Definition.Description);
                 GUILayout.BeginHorizontal();
+                var needs = GetComponent<ZombieSurvival.Player.PlayerNeeds>();
+                if (!selectedContainer && needs != null && needs.CanConsume(stack.Definition) && GUILayout.Button("Употребить 1"))
+                    feedback = needs.TryConsume(selected) ? "Предмет употреблён" : "Показатели полные или предмет недоступен";
                 if (!selectedContainer && stack.Definition.Weapon != null && GUILayout.Button("Экипировать"))
                 { var weapons = GetComponent<ZombieSurvival.Weapons.PlayerWeapons>(); if (weapons != null) { weapons.Equip(selected); feedback = "Оружие выбрано. Закрой рюкзак для атаки."; } }
                 if (hadContainer && container != null)
@@ -115,7 +109,11 @@ namespace ZombieSurvival.Inventory
                 if (!selectedContainer && GUILayout.Button("Выбросить 1")) feedback = Drop(selected, 1) ? "Предмет на земле" : "Нельзя выбросить: нет свободного места перед игроком";
                 GUILayout.EndHorizontal();
             }
-            GUILayout.Label(feedback); GUILayout.EndArea(); GUI.matrix = old;
+            DrawHotbarAssignments(stack);
+            GUILayout.Label(feedback);
+            var saveStatus = GetComponent<ZombieSurvival.Persistence.PlayerSaveSystem>();
+            if (saveStatus != null) GUILayout.Label(saveStatus.Status);
+            GUILayout.EndArea(); GUI.matrix = old;
         }
         private void Transfer(ItemStorage source, ItemStorage destination, int amount)
         {
@@ -126,7 +124,7 @@ namespace ZombieSurvival.Inventory
         {
             GUILayout.BeginVertical(GUILayout.Width(hadContainer ? 430 : 870));
             GUILayout.Label(isContainer ? "ЯЩИК" : "ТВОИ ПРЕДМЕТЫ");
-            scroll = GUILayout.BeginScrollView(scroll, GUILayout.Height(380));
+            scroll = GUILayout.BeginScrollView(scroll, GUILayout.Height(290));
             for (int i = 0; i < target.SlotCount; i++)
             {
                 var slot = target.GetSlot(i); bool active = selected == i && selectedContainer == isContainer;
@@ -140,6 +138,30 @@ namespace ZombieSurvival.Inventory
                 if (GUILayout.Toggle(active, title, GUI.skin.button, GUILayout.Height(35)) && !active) { selected = i; selectedContainer = isContainer; feedback = ""; }
             }
             GUILayout.EndScrollView(); GUILayout.EndVertical();
+        }
+        private void DrawHotbarAssignments(ItemStack selectedStack)
+        {
+            var hotbar = GetComponent<PlayerHotbar>(); if (hotbar == null || !hotbar.isActiveAndEnabled) return;
+            GUILayout.Label("БЫСТРЫЕ СЛОТЫ — назначение предмета из своего рюкзака / очистка");
+            for (int row = 0; row < hotbar.SlotCount; row += 5)
+            {
+                GUILayout.BeginHorizontal();
+                for (int slot = row; slot < Mathf.Min(row + 5, hotbar.SlotCount); slot++)
+                {
+                    GUILayout.BeginVertical(GUILayout.Width(840f / Mathf.Min(5, hotbar.SlotCount)));
+                    var assigned = hotbar.GetAssignedItem(slot);
+                    string title = (slot + 1) + (hotbar.SelectedIndex == slot ? " ★" : "") + "  " + (assigned != null ? assigned.Definition.DisplayName : "Пусто");
+                    if (GUILayout.Button(title, GUILayout.Height(24))) hotbar.Select(slot);
+                    GUILayout.BeginHorizontal();
+                    bool enabled = GUI.enabled;
+                    GUI.enabled = enabled && !selectedContainer && selectedStack != null && !selectedStack.IsEmpty;
+                    if (GUILayout.Button("Назначить")) feedback = hotbar.Assign(slot, selected) ? "Предмет назначен в быстрый слот " + (slot + 1) : "Назначить можно только предмет из своего рюкзака";
+                    GUI.enabled = enabled;
+                    if (GUILayout.Button("×", GUILayout.Width(24))) { hotbar.Clear(slot); feedback = "Назначение очищено; предмет остался в рюкзаке"; }
+                    GUILayout.EndHorizontal(); GUILayout.EndVertical();
+                }
+                GUILayout.EndHorizontal();
+            }
         }
     }
 }

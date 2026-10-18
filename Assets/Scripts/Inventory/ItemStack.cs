@@ -34,6 +34,12 @@ namespace ZombieSurvival.Inventory
             definition = item; quantity = amount; instanceId = Guid.NewGuid().ToString("N"); stateVersion = 1;
             durability = initialDurability ?? item.MaximumDurability; Normalize();
         }
+        // Stage 11: validated save data only. This is rehydration, NOT Copy/import of an owned object.
+        internal static ItemStack RestoreSaved(ItemDefinition type, int amount, string id, float condition, int rounds)
+        {
+            var result = new ItemStack(type, amount, condition);
+            result.instanceId = id; result.loadedRounds = rounds; return result;
+        }
         internal void Normalize()
         {
             if (string.IsNullOrEmpty(instanceId)) instanceId = Guid.NewGuid().ToString("N");

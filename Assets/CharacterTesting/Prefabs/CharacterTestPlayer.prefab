@@ -1296,6 +1296,14 @@ GameObject:
   - component: {fileID: 4283090543730592629}
   - component: {fileID: 7954846869688609503}
   - component: {fileID: 1048737016656579182}
+  - component: {fileID: 4575592233516515862}
+  - component: {fileID: 5564248028063103429}
+  - component: {fileID: 1425353677027370626}
+  - component: {fileID: 200350453911160929}
+  - component: {fileID: 668210534034134593}
+  - component: {fileID: 6869138765847868801}
+  - component: {fileID: 1582641862744016322}
+  - component: {fileID: 7819511705963125339}
   m_Layer: 0
   m_Name: CharacterTestPlayer
   m_TagString: Untagged
@@ -1923,6 +1931,234 @@ MonoBehaviour:
   showControls: 1
   aimSpeed: 12
   hitMarkerSeconds: 0.2
+--- !u!114 &4575592233516515862
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4323131168981000575}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a4bb72951b52a2e46b67ece67f8381ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ZombieSurvival.Player.PlayerNeeds
+  needsEnabled: 1
+  foodCapacity: 100
+  waterCapacity: 100
+  startingFood: 1
+  startingWater: 1
+  foodPerMinute: 0.8
+  waterPerMinute: 1.4
+  sprintMultiplier: 1.6
+  emptyDamagePerSecond: 1
+  resetOnRespawn: 1
+  consumables:
+  - {fileID: 11400000, guid: cf12e147b2d1f3247aaf108e15f17558, type: 2}
+  - {fileID: 11400000, guid: 12c0a91fddc96b441878d741571cb9f0, type: 2}
+  - {fileID: 11400000, guid: e5373b83a218a184c8ef14538753a22a, type: 2}
+  showHud: 1
+--- !u!114 &5564248028063103429
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4323131168981000575}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 63df9bc0a662dcc4388305ece8645124, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ZombieSurvival.Persistence.PlayerSaveSystem
+  fileName: character-stage11.json
+  itemCatalog:
+  - {fileID: 11400000, guid: 865b5b10ba29d454093514537f248dc6, type: 2}
+  - {fileID: 11400000, guid: 5713974f15dbc5e4caf149c857250c83, type: 2}
+  - {fileID: 11400000, guid: b0257ee993c8a82418ce35dd2472b8bb, type: 2}
+  - {fileID: 11400000, guid: 40df12a0ae648704caaff89be4ff2011, type: 2}
+  - {fileID: 11400000, guid: 5561eb70840354d4582175abaaeaa1b6, type: 2}
+  - {fileID: 11400000, guid: 23dfcf55581926746b089899c771f34a, type: 2}
+  - {fileID: 11400000, guid: b875b2d812222964bbe603d95f07c210, type: 2}
+  - {fileID: 11400000, guid: faa892afc318fad4e9850451e7f59094, type: 2}
+  saveInput:
+    m_Name: QuickSave
+    m_Type: 1
+    m_ExpectedControlType: 
+    m_Id: df23ec8d-02dc-4f8e-9ecd-3da036dfde7c
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: c87a4551-c4f7-49d4-91c8-b189e6bdf087
+      m_Path: <Keyboard>/f5
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: QuickSave
+      m_Flags: 0
+    m_Flags: 0
+    m_Priority: 0
+  loadInput:
+    m_Name: QuickLoad
+    m_Type: 1
+    m_ExpectedControlType: 
+    m_Id: a71c8d9f-2657-4db5-bad2-a12fb7e33a4d
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: 7d406c0c-bd16-40d5-91c9-573d3eb6a8aa
+      m_Path: <Keyboard>/f9
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: QuickLoad
+      m_Flags: 0
+    m_Flags: 0
+    m_Priority: 0
+  requireApplicationFocus: 1
+  obstructionMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  supportDistance: 0.35
+  showHud: 1
+--- !u!114 &1425353677027370626
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4323131168981000575}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a75a81612a85fe449790a046e558e49, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ZombieSurvival.Persistence.SaveIdentity
+  persistentId: player
+--- !u!114 &200350453911160929
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4323131168981000575}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 66a3ef140c0d35d4e97d4230eb180ea4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ZombieSurvival.Player.PlayerCameraMotion
+  motionEnabled: 0
+  viewCamera: {fileID: 8057366926157456088}
+  amplitude: {x: 0.008, y: 0.012, z: 0}
+  walkFrequency: 1.7
+  runFrequency: 2.4
+  runAmplitude: 1.3
+  blendSpeed: 0.12
+--- !u!114 &668210534034134593
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4323131168981000575}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 060c9730d17c48ea9d7bc97d4687efd7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ZombieSurvival.Progression.PlayerStatModifiers
+--- !u!114 &6869138765847868801
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4323131168981000575}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dafc1420b82548adbd4017fbd851a8af, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ZombieSurvival.Progression.PlayerProgression
+  tree: {fileID: 11400000, guid: b7962b89e0273194e953ae10b6ffe850, type: 2}
+  startingPoints: 3
+  experiencePerLevel: 100
+  levelCostGrowth: 1.25
+  pointsPerLevel: 1
+  maxLevel: 100
+  hostileKillExperience: 25
+--- !u!114 &1582641862744016322
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4323131168981000575}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 168690c046ab43ab82e21732b7b0d547, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ZombieSurvival.Inventory.PlayerHotbar
+  slotCount: 5
+  assignments:
+  - 
+  - 
+  - 
+  - 
+  - 
+  selectedIndex: 0
+  showHud: 1
+  consumeCooldown: 0.25
+  scrollStep: 1
+  invertScroll: 0
+--- !u!114 &7819511705963125339
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4323131168981000575}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f80057a0527f4e55ac35fc7777a17768, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ZombieSurvival.Player.PlayerProgressionMenu
+  toggleInput:
+    m_Name: Skills
+    m_Type: 1
+    m_ExpectedControlType: 
+    m_Id: f6c8fe9d-6524-431b-80c5-8c1957af62a9
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: 7f5a805a-93a4-4bc9-b033-5fea64382b5c
+      m_Path: <Keyboard>/k
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Skills
+      m_Flags: 0
+    m_Flags: 0
+    m_Priority: 0
+  closeInput:
+    m_Name: CloseSkills
+    m_Type: 1
+    m_ExpectedControlType: 
+    m_Id: 42bcbfb6-6650-404b-9543-9f01c87efbe7
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: eb2751f6-231c-4e3b-8589-3603fe70e34e
+      m_Path: <Keyboard>/escape
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: CloseSkills
+      m_Flags: 0
+    m_Flags: 0
+    m_Priority: 0
+  background: {fileID: 2800000, guid: e33bbdf73beb9b444a8736174269f8cf, type: 3}
+  requireApplicationFocus: 1
 --- !u!1 &4411578025396193111
 GameObject:
   m_ObjectHideFlags: 0

@@ -37,6 +37,7 @@ namespace ZombieSurvival.Player
         private float canRespawnAt;
         private bool armed;
         private readonly Collider[] overlaps = new Collider[32];
+        public event System.Action Respawned;
         public bool IsDead => health != null && health.IsDead;
         public float RespawnWait => Mathf.Max(0f, canRespawnAt - Time.time);
         public string RespawnError { get; private set; }
@@ -83,7 +84,7 @@ namespace ZombieSurvival.Player
             if (resetStaminaOnRespawn && motor.Stamina != null) motor.Stamina.ResetReserve();
             health.Revive(respawnHealthFraction, spawnProtectionSeconds);
             motor.SetAlive(true);
-            RespawnError = ""; armed = false; onRespawned.Invoke();
+            RespawnError = ""; armed = false; onRespawned.Invoke(); Respawned?.Invoke();
             return true;
         }
         private bool SpawnIsFree(Vector3 position)
