@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using ZombieSurvival.Progression;
@@ -164,6 +165,8 @@ namespace ZombieSurvival.Player
         private float pitch;
         private bool skipLook;
         private bool gameplayInputEnabled = true;
+        private readonly HashSet<UnityEngine.Object> gameplayInputLocks = new HashSet<UnityEngine.Object>();
+        private bool waitingForGameplayRelease;
         private bool crouchRequested;
         private bool crouchToggleArmed;
         private bool skipCrouchInput;
@@ -173,11 +176,20 @@ namespace ZombieSurvival.Player
         private Vector3 standingCameraPosition;
         private readonly Collider[] standingOverlaps = new Collider[32];
 
-        public bool GameplayInputEnabled => gameplayInputEnabled;
+        private bool GameplayInputRequested
+        {
+            get
+            {
+                if (!gameplayInputEnabled) return false;
+                foreach (var owner in gameplayInputLocks) if (owner != null) return false;
+                return true;
+            }
+        }
+        public bool GameplayInputEnabled => GameplayInputRequested && !waitingForGameplayRelease;
         public bool IsAlive { get; private set; } = true;
         public event Action<float> Landed;
         public event Action Jumped;
-        public bool AcceptingGameplayInput => IsAlive && isActiveAndEnabled && gameplayInputEnabled && HasFocus
+        public bool AcceptingGameplayInput => IsAlive && isActiveAndEnabled && GameplayInputEnabled && HasFocus
             && (!requireCursorCapture || Cursor.lockState == CursorLockMode.Locked)
             && gameplayMap != null && gameplayMap.enabled && Time.deltaTime > 0f;
         /// <summary>Other player systems share this player's runtime actions and input gate.</summary>
@@ -274,7 +286,7 @@ namespace ZombieSurvival.Player
             if (gameplayMap == null) return;
             releaseCursorAction.Enable();
             captureCursorAction.Enable();
-            SetCursorCaptured(captureCursorOnEnable && HasFocus);
+            SetCursorCaptured(GameplayInputRequested && captureCursorOnEnable && HasFocus);
         }
 
         private void OnDisable()
@@ -300,17 +312,53 @@ namespace ZombieSurvival.Player
             if (!focused) SetCursorCaptured(false);
         }
 
-        /// <summary>Menus disable gameplay input here while keeping UI actions available.</summary>
+        /// <summary>Legacy/external base gate. Menus use their own SetGameplayInputLock owner instead.</summary>
         public void SetGameplayInputEnabled(bool value)
         {
             gameplayInputEnabled = value;
-            if (!value) lastJumpPress = float.NegativeInfinity;
-            if (!isActiveAndEnabled) return;
-            SetCursorCaptured(value && captureCursorOnEnable && HasFocus);
+            ApplyGameplayInputGate();
+        }
+
+        /// <summary>One owner releases only its own block; independent UI actions remain available.</summary>
+        public void SetGameplayInputLock(UnityEngine.Object owner, bool locked)
+        {
+            if (ReferenceEquals(owner, null)) throw new ArgumentNullException(nameof(owner));
+            bool changed = locked ? owner != null && gameplayInputLocks.Add(owner) : gameplayInputLocks.Remove(owner);
+            if (changed) ApplyGameplayInputGate();
+        }
+
+        private void ApplyGameplayInputGate()
+        {
+            if (!GameplayInputRequested)
+            {
+                waitingForGameplayRelease = true;
+                lastJumpPress = float.NegativeInfinity;
+            }
+            else if (!HasHeldGameplayButton()) waitingForGameplayRelease = false;
+            if (isActiveAndEnabled)
+                SetCursorCaptured(GameplayInputRequested && captureCursorOnEnable && HasFocus);
+        }
+
+        private bool HasHeldGameplayButton()
+        {
+            if (gameplayMap == null) return false;
+            // Read the actual device controls while the map is disabled. IsPressed on a disabled
+            // action is false even when the physical key that closed the menu is still held.
+            foreach (var action in gameplayMap.actions)
+            {
+                if (action.type != InputActionType.Button) continue;
+                foreach (var control in action.controls)
+                    if (control is UnityEngine.InputSystem.Controls.AxisControl axis
+                        && axis.ReadValue() >= InputSystem.settings.defaultButtonPressPoint) return true;
+            }
+            return false;
         }
 
         private void Update()
         {
+            bool removedOwner = gameplayInputLocks.RemoveWhere(owner => owner == null) > 0;
+            if (removedOwner || waitingForGameplayRelease && GameplayInputRequested && !HasHeldGameplayButton())
+                ApplyGameplayInputGate();
             if (!IsAlive)
             {
                 IsSprinting = false; IsSlowWalking = false;
@@ -324,10 +372,10 @@ namespace ZombieSurvival.Player
             }
             if (releaseCursorAction.WasPressedThisFrame())
                 SetCursorCaptured(false);
-            else if (gameplayInputEnabled && HasFocus && captureCursorAction.WasPressedThisFrame())
+            else if (GameplayInputEnabled && HasFocus && captureCursorAction.WasPressedThisFrame())
                 SetCursorCaptured(true);
 
-            bool acceptingInput = gameplayInputEnabled && HasFocus
+            bool acceptingInput = GameplayInputEnabled && HasFocus
                 && (!requireCursorCapture || Cursor.lockState == CursorLockMode.Locked);
             if (!acceptingInput) lastJumpPress = float.NegativeInfinity;
             IsSprinting = false; IsSlowWalking = false;
@@ -436,7 +484,7 @@ namespace ZombieSurvival.Player
                 ReleaseParkour(Vector3.zero);
                 IsSprinting = false; IsSlowWalking = false;
             }
-            SetCursorCaptured(alive && gameplayInputEnabled && captureCursorOnEnable && HasFocus);
+            SetCursorCaptured(alive && GameplayInputRequested && captureCursorOnEnable && HasFocus);
         }
 
         public void ResetForRespawn(Vector3 position, Quaternion rotation)
@@ -581,7 +629,7 @@ namespace ZombieSurvival.Player
             Cursor.visible = !captured;
             skipLook = true;
             if (gameplayMap == null) return;
-            if (IsAlive && isActiveAndEnabled && gameplayInputEnabled && HasFocus && (!requireCursorCapture || captured))
+            if (IsAlive && isActiveAndEnabled && GameplayInputEnabled && HasFocus && (!requireCursorCapture || captured))
                 EnableGameplayMap();
             else gameplayMap.Disable();
         }

@@ -24,7 +24,7 @@ public static class WalletT3Setup
             var budgetObject=new GameObject("Тестовый бюджет (не торговец)");budgetObject.transform.SetParent(root.transform,false);
             var funds=budgetObject.AddComponent<Wallet>();Set(funds,"startingBalance",500);
             var budget=budgetObject.AddComponent<TraderBudget>();
-            string[] labels={"Начислить 250 ₽","Списать 100 ₽","Отказ: списать 10 000 ₽","Игрок → бюджет 100 ₽","Бюджет → игрок 100 ₽","Режим бюджета finite / infinite"};
+            string[] labels={"Начислить 250 руб.","Списать 100 руб.","Отказ: списать 10 000 руб.","Игрок → бюджет 100 руб.","Бюджет → игрок 100 руб.","Режим бюджета finite / infinite"};
             var actions=new[]{WalletTestAction.Credit,WalletTestAction.Debit,WalletTestAction.Debit,WalletTestAction.PlayerPaysBudget,WalletTestAction.BudgetPaysPlayer,WalletTestAction.ToggleBudgetMode};
             long[] amounts={250,100,10000,100,100,100};
             for(int i=0;i<actions.Length;i++)
@@ -35,7 +35,7 @@ public static class WalletT3Setup
                 var console=obj.AddComponent<WalletTestTerminal>();var so=new SerializedObject(console);
                 so.FindProperty("action").intValue=(int)actions[i];so.FindProperty("amount").longValue=amounts[i];so.FindProperty("budget").objectReferenceValue=budget;so.ApplyModifiedPropertiesWithoutUndo();
                 var sign=new GameObject("Т3 / "+labels[i]);sign.transform.SetParent(root.transform,false);sign.transform.position=new Vector3(-3+i*3,2,-28.4f);
-                var source=sign.AddComponent<TextMesh>();source.text="Т3 / РУБЛИ\nE: "+labels[i]+"\nТест, не торговля | Старт игрока: 0 ₽";
+                var source=sign.AddComponent<TextMesh>();source.text="Т3 / РУБЛИ\nE: "+labels[i]+"\nТест, не торговля | Старт игрока: 0 руб.";
                 WorldSpacePresentationSetup.ConfigurePlaque(source);
                 var plaque=sign.GetComponentInChildren<Canvas>().transform;
                 plaque.SetPositionAndRotation(new Vector3(-3+i*3,.035f,-27.4f),Quaternion.Euler(90,180,0));
@@ -44,5 +44,3 @@ public static class WalletT3Setup
         EditorSceneManager.MarkSceneDirty(scene);EditorSceneManager.SaveScene(scene);AssetDatabase.SaveAssets();
     }
 }
-
-
