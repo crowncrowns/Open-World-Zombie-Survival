@@ -7,6 +7,8 @@ using UnityEditor;
 public static class WalletT3Checks
 {
     [MenuItem("Tools/Character Lab/Check T3 Wallet Contracts")]
+    private static void RunFromMenu() => Debug.Log(Run());
+
     public static string Run()
     {
         var root=new GameObject("T3 checks (temporary)");var passed=new List<string>();
@@ -50,4 +52,3 @@ public static class WalletT3Checks
         finally{UnityEngine.Object.DestroyImmediate(root);}
     }
 }
-

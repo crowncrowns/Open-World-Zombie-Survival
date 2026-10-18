@@ -25,7 +25,7 @@ namespace ZombieSurvival.Inventory
         private InputAction toggle, close;
         private FirstPersonController motor;
         private ItemStorage storage, container;
-        private bool hadContainer, restoreInput;
+        private bool hadContainer;
         private int selected = -1;
         private bool selectedContainer;
         private Vector2 leftScroll, rightScroll;
@@ -49,13 +49,13 @@ namespace ZombieSurvival.Inventory
             if (IsOpen || !motor.AcceptingGameplayInput || motor.Parkour != null && motor.Parkour.OwnsMovement
                 || other == storage || other != null && Vector3.Distance(transform.position, other.transform.position) > containerDistance) return false;
             container = other; hadContainer = other != null; selected = -1; feedback = "";
-            restoreInput = motor.GameplayInputEnabled; motor.SetGameplayInputEnabled(false); IsOpen = true; return true;
+            motor.SetGameplayInputLock(this, true); IsOpen = true; return true;
         }
         public void Close()
         {
             if (!IsOpen) return;
             IsOpen = false; container = null; hadContainer = false;
-            if (motor != null && restoreInput) motor.SetGameplayInputEnabled(true);
+            if (motor != null) motor.SetGameplayInputLock(this, false);
         }
         public bool Drop(int index, int amount)
         {

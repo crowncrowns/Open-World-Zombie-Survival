@@ -64,7 +64,7 @@ namespace ZombieSurvival.Persistence
             // Intentional integration boundary: item rollback with a live unsaved wallet enables duplication.
             // The economy developer must add an atomic wallet/trader block + schema migration before enabling this.
             if(GetComponents<MonoBehaviour>().Any(c=>c!=null && c.GetType().FullName=="ZombieSurvival.Economy.Wallet"))
-                throw new InvalidOperationException("Нужна интеграция Wallet в общий формат сохранения. См. Docs/CharacterSurvivalAndSaving.md.");
+                throw new InvalidOperationException("Сохранение экономики пока не подключено. Сохранение и загрузка временно недоступны.");
         }
         private Dictionary<string,ItemDefinition> Catalog()
         {

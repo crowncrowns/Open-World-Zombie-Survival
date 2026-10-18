@@ -1,0 +1,202 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1156572531761480397
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8013609131301320009}
+  m_Layer: 0
+  m_Name: Service visual (managed)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8013609131301320009
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1156572531761480397}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 3695294284001104079}
+  m_Father: {fileID: 1651496025321015435}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &2389546584105152206
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1651496025321015435}
+  - component: {fileID: 8829231952138377646}
+  - component: {fileID: 3336168148787779795}
+  - component: {fileID: 8292123724560041183}
+  m_Layer: 0
+  m_Name: T4TraderSession
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1651496025321015435
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2389546584105152206}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 8013609131301320009}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &8829231952138377646
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2389546584105152206}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 2.6369872, y: 0.90166837, z: 1.366807}
+  m_Center: {x: 0, y: 0.45083413, z: -0.000000059604645}
+--- !u!114 &3336168148787779795
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2389546584105152206}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79ae304d93d408445851672ea21af0ac, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ZombieSurvival.Services.TraderServicePoint
+  interactionEnabled: 1
+  displayName: "\u04224 / \u0422\u0435\u0441\u0442 \u0442\u043E\u0440\u0433\u043E\u0432\u043E\u0439 \u0441\u0435\u0441\u0441\u0438\u0438"
+  onInteracted:
+    m_PersistentCalls:
+      m_Calls: []
+  accessDistance: 2.5
+  accessCollider: {fileID: 8829231952138377646}
+  obstructionMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+--- !u!114 &8292123724560041183
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2389546584105152206}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6593d8fa6dfa17b48af946799ca95c16, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ZombieSurvival.Services.ServiceVisual
+  visualPrefab: {fileID: 4223641114040188591, guid: ad0745fb056cf444f99b6a36a6c3a5a8, type: 3}
+  localPosition: {x: 0, y: 0, z: 0}
+  localEulerAngles: {x: 0, y: 0, z: 0}
+  localScale: {x: 1, y: 1, z: 1}
+  materialOverride: {fileID: 0}
+  fitAccessCollider: 1
+  rootCollider: {fileID: 8829231952138377646}
+  visualRoot: {fileID: 8013609131301320009}
+  instance: {fileID: 4036212894807526005}
+  appliedPrefab: {fileID: 4223641114040188591, guid: ad0745fb056cf444f99b6a36a6c3a5a8, type: 3}
+  appliedMaterial: {fileID: 0}
+--- !u!1001 &188835663666427098
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 8013609131301320009}
+    m_Modifications:
+    - target: {fileID: 3591255234391434261, guid: ad0745fb056cf444f99b6a36a6c3a5a8, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3591255234391434261, guid: ad0745fb056cf444f99b6a36a6c3a5a8, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3591255234391434261, guid: ad0745fb056cf444f99b6a36a6c3a5a8, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3591255234391434261, guid: ad0745fb056cf444f99b6a36a6c3a5a8, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: 3591255234391434261, guid: ad0745fb056cf444f99b6a36a6c3a5a8, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3591255234391434261, guid: ad0745fb056cf444f99b6a36a6c3a5a8, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: 3591255234391434261, guid: ad0745fb056cf444f99b6a36a6c3a5a8, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3591255234391434261, guid: ad0745fb056cf444f99b6a36a6c3a5a8, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3591255234391434261, guid: ad0745fb056cf444f99b6a36a6c3a5a8, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3591255234391434261, guid: ad0745fb056cf444f99b6a36a6c3a5a8, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4223641114040188591, guid: ad0745fb056cf444f99b6a36a6c3a5a8, type: 3}
+      propertyPath: m_Name
+      value: T4TraderTableVisual
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: ad0745fb056cf444f99b6a36a6c3a5a8, type: 3}
+--- !u!4 &3695294284001104079 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 3591255234391434261, guid: ad0745fb056cf444f99b6a36a6c3a5a8, type: 3}
+  m_PrefabInstance: {fileID: 188835663666427098}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &4036212894807526005 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4223641114040188591, guid: ad0745fb056cf444f99b6a36a6c3a5a8, type: 3}
+  m_PrefabInstance: {fileID: 188835663666427098}
+  m_PrefabAsset: {fileID: 0}

@@ -1305,6 +1305,7 @@ GameObject:
   - component: {fileID: 1582641862744016322}
   - component: {fileID: 7819511705963125339}
   - component: {fileID: 7597633315160807396}
+  - component: {fileID: 6689751815936926710}
   m_Layer: 0
   m_Name: CharacterTestPlayer
   m_TagString: Untagged
@@ -2173,6 +2174,37 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ZombieSurvival.Economy.Wallet
   startingBalance: 0
+--- !u!114 &6689751815936926710
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4323131168981000575}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e05c1777a2b590049953a088f5d1544a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ZombieSurvival.Services.PlayerServiceSession
+  closeInput:
+    m_Name: CloseService
+    m_Type: 1
+    m_ExpectedControlType: 
+    m_Id: 770d927f-abd3-4872-97a5-4b01bfa8c3ac
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: fa172d7a-32c2-4778-bc0f-88b9c5247be3
+      m_Path: <Keyboard>/escape
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: CloseService
+      m_Flags: 0
+    m_Flags: 0
+    m_Priority: 0
+  requireApplicationFocus: 1
 --- !u!1 &4411578025396193111
 GameObject:
   m_ObjectHideFlags: 0
