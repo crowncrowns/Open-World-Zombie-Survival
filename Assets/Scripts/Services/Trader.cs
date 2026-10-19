@@ -92,6 +92,8 @@ namespace ZombieSurvival.Services
         {
             try { ValidateConfiguration(); }
             catch (InvalidOperationException error) { reason = error.Message; return false; }
+            if (Application.isPlaying) foreach (var row in stocks)
+                if (!row.initialized) { reason = "Начальные запасы торговца ещё не готовы."; return false; }
             if (initializing || !isActiveAndEnabled || Profile != expectedProfile || catalogVersion != expectedVersion)
             { reason = "Ассортимент торговца изменился. Выберите товар заново."; return false; }
             reason = ""; return true;

@@ -17,8 +17,8 @@ namespace ZombieSurvival.Services
         [SerializeField, Tooltip("Постоянный ID профиля. Не менять после создания сохраняемого торговца.")] private string profileId;
         [SerializeField, Tooltip("Название специализации для интерфейса.")] private string displayName;
         [SerializeField, Tooltip("Общие начальные товары и базовые цены; это не текущие остатки NPC.")] private Entry[] catalog = Array.Empty<Entry>();
-        [SerializeField, Tooltip("Категории, разрешённые для будущего выкупа. Самой сделки на Т5 нет.")] private ItemCategory[] acceptedCategories = Array.Empty<ItemCategory>();
-        [SerializeField, Range(0, 10000), Tooltip("Цена продажи торговцем, процентов базовой. Расчёт котировки состояния появится на Т6.")] private int sellPercent = 100;
+        [SerializeField, Tooltip("Категории предметов для выкупа; каждому типу также нужна запись базовой цены.")] private ItemCategory[] acceptedCategories = Array.Empty<ItemCategory>();
+        [SerializeField, Range(0, 10000), Tooltip("Цена продажи торговцем, % базовой. Итог учитывает прочность и патроны магазина.")] private int sellPercent = 100;
         [SerializeField, Range(0, 10000), Tooltip("Цена выкупа торговцем, процентов базовой; не должна превышать продажу.")] private int buyPercent = 50;
         public string Id => profileId;
         public string DisplayName => displayName;

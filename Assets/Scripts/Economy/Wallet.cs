@@ -13,6 +13,33 @@ namespace ZombieSurvival.Economy
         private long balance;
         private bool initialized, infinite;
         public event Action Changed;
+        private bool tradeLocked;
+        internal bool TryLockTrade() { if (tradeLocked) return false; tradeLocked = true; return true; }
+        internal void UnlockTrade() => tradeLocked = false;
+        internal sealed class TradePayment
+        {
+            internal Wallet payer, recipient;
+            internal long debit, credit;
+            internal bool payerChanged, recipientChanged;
+            internal void Commit() { payer.balance = debit; recipient.balance = credit; }
+            internal void Publish() { if (payerChanged) payer.PublishTrade(); if (recipientChanged) recipient.PublishTrade(); }
+        }
+        internal bool TryPrepareTradePayment(Wallet recipient, long amount, out TradePayment payment)
+        {
+            payment = null; EnsureInitialized();
+            if (recipient == null || recipient == this || tradeLocked || recipient.tradeLocked || !isActiveAndEnabled || !recipient.isActiveAndEnabled || amount < 0) return false;
+            recipient.EnsureInitialized();
+            if (amount > 0 && (!CanDebit(amount) || !recipient.CanCredit(amount))) return false;
+            payment = new TradePayment { payer = this, recipient = recipient, debit = infinite ? balance : balance - amount,
+                credit = recipient.infinite ? recipient.balance : recipient.balance + amount, payerChanged = !infinite && amount > 0, recipientChanged = !recipient.infinite && amount > 0 };
+            return true;
+        }
+        private void PublishTrade()
+        {
+            var listeners = Changed; if (listeners == null) return;
+            foreach (Action listener in listeners.GetInvocationList())
+                try { listener(); } catch (Exception error) { Debug.LogException(error, this); }
+        }
         public long Balance { get { EnsureInitialized(); return balance; } }
         public bool IsInfinite { get { EnsureInitialized(); return infinite; } }
         public string FormattedBalance => IsInfinite ? "∞ ₽" : FormatRubles(Balance);
@@ -20,9 +47,9 @@ namespace ZombieSurvival.Economy
         private void Awake() => EnsureInitialized();
         private void OnEnable() => EnsureInitialized();
         private void EnsureInitialized() { if (!initialized) { balance = Math.Max(0L, startingBalance); initialized = true; } }
-        internal void SetInfiniteMode(bool value) { EnsureInitialized(); infinite = value; }
+        internal void SetInfiniteMode(bool value) { if (tradeLocked) throw new InvalidOperationException("Кошелёк завершает сделку."); EnsureInitialized(); infinite = value; }
         // Только проверенный общий снимок CM-04; торговля не должна вызывать этот обход начисления/списания.
-        internal void RestoreSavedState(long reserve, bool infiniteMode) { balance = reserve; infinite = infiniteMode; initialized = true; }
+        internal void RestoreSavedState(long reserve, bool infiniteMode) { if (tradeLocked) throw new InvalidOperationException("Кошелёк завершает сделку."); balance = reserve; infinite = infiniteMode; initialized = true; }
         internal void NotifySavedRestore() => Changed?.Invoke();
         internal void InitializeForNewPlay() { balance = Math.Max(0L, startingBalance); initialized = true; infinite = false; }
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -32,8 +59,8 @@ namespace ZombieSurvival.Economy
             foreach (var wallet in UnityEngine.Object.FindObjectsByType<Wallet>(FindObjectsInactive.Include)) wallet.InitializeForNewPlay();
             foreach (var budget in UnityEngine.Object.FindObjectsByType<TraderBudget>(FindObjectsInactive.Include)) budget.InitializeForNewPlay();
         }
-        public bool CanCredit(long amount) { EnsureInitialized(); return isActiveAndEnabled && amount > 0 && (infinite || amount <= long.MaxValue - balance); }
-        public bool CanDebit(long amount) { EnsureInitialized(); return isActiveAndEnabled && amount > 0 && (infinite || balance >= amount); }
+        public bool CanCredit(long amount) { EnsureInitialized(); return !tradeLocked && isActiveAndEnabled && amount > 0 && (infinite || amount <= long.MaxValue - balance); }
+        public bool CanDebit(long amount) { EnsureInitialized(); return !tradeLocked && isActiveAndEnabled && amount > 0 && (infinite || balance >= amount); }
         public bool TryCredit(long amount)
         {
             if (!CanCredit(amount)) return false;

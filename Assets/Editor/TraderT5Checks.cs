@@ -16,6 +16,9 @@ public static class TraderT5Checks
     public static string RunEdit()
     {
         var results = new List<string>();
+        var playerSource = PrefabUtility.LoadPrefabContents("Assets/CharacterTesting/Prefabs/CharacterTestPlayer.prefab");
+        try { Require(playerSource.GetComponents<PlayerServiceSession>().Length == 1 && playerSource.GetComponent<PlayerServiceSession>().enabled, "исходный игрок содержит одну включённую сессию сервиса", results); }
+        finally { PrefabUtility.UnloadPrefabContents(playerSource); }
         var root = PrefabUtility.LoadPrefabContents(TraderT5Setup.PrefabPath);
         try
         {
@@ -55,6 +58,13 @@ public static class TraderT5Checks
             Require(bag.TransferTo(weapons.storage, 0) == 1 && weapons.storage.Contains(pistol) && pistol.Durability == 47 && pistol.LoadedRounds == rounds, "возврат реального экземпляра сохраняет ID/прочность/магазин", results);
             a.TrySelectProfile(food.profile); a.TrySelectProfile(weapons.profile);
             Require(weapons.storage.Contains(pistol), "вернувшийся экземпляр переживает смену профиля", results);
+            var ammo = weapons.profile.Catalog.Single(e => e.item.Category == ItemCategory.Ammunition).item;
+            bag.TryAddAll(ammo, bag.FreeCapacity(ammo));
+            int ammoIndex = Enumerable.Range(0, weapons.storage.SlotCount).First(i => weapons.storage.GetSlot(i)?.Definition == ammo);
+            int total = weapons.storage.Count(ammo) + bag.Count(ammo);
+            Require(weapons.storage.TransferTo(bag, ammoIndex, 10) == 0 && total == weapons.storage.Count(ammo) + bag.Count(ammo), "полный запас отказывает без потери ресурсов", results);
+            bag.TryExtract(0, 1, out var loose);
+            Require(weapons.storage.TransferTo(bag, ammoIndex, 10) == 1 && total == weapons.storage.Count(ammo) + bag.Count(ammo) + loose.Quantity, "частичная вместимость сохраняет сумму split/merge", results);
             var gearItem = gear.storage.GetSlot(0); gear.storage.TrySetDurability(0, 35); gear.storage.TrySetDurability(1, 80);
             Require(gear.storage.GetSlot(0).Durability == 35 && gear.storage.GetSlot(1).Durability == 80 && gear.storage.GetSlot(0).InstanceId != gear.storage.GetSlot(1).InstanceId, "одинаковый тип с разной прочностью", results);
             var adapter = a.GetComponent<WorldTraderSaveAdapter>(); string saved = adapter.Capture(); adapter.Validate(saved, new SavedWorldObject { id = "test" });
@@ -75,6 +85,14 @@ public static class TraderT5Checks
         finally { UnityEngine.Object.Destroy(parent); }
         return string.Join("\n", results);
     }
+    public static string RunAuthoredPlayers(UnityEngine.SceneManagement.Scene scene)
+    {
+        if (Application.isPlaying || scene.path != "Assets/CharacterTesting/CharacterTest.unity") throw new InvalidOperationException("Проверка авторского игрока — в открытой CharacterTest вне Play.");
+        var players = UnityEngine.Object.FindObjectsByType<ZombieSurvival.Interaction.PlayerInteractor>(FindObjectsInactive.Include).Where(p => p.gameObject.scene == scene && p.GetComponent<ZombieSurvival.Player.FirstPersonController>() != null).ToArray();
+        var results = new List<string>();
+        Require(players.Length > 0 && players.All(p => p.GetComponents<PlayerServiceSession>().Length == 1 && p.GetComponent<PlayerServiceSession>().enabled), "каждый реальный сценовый игрок содержит одну включённую сессию сервиса", results);
+        return string.Join("\n", results);
+    }
     public static string RunWorld(Trader authored)
     {
         var results = new List<string>();
@@ -93,6 +111,52 @@ public static class TraderT5Checks
         created.GetComponent<ZombieSurvival.Economy.TraderBudget>().Funds.TryCredit(100);
         using (var restore = registry.PrepareRestore(state)) { restore.CommitSilent(); restore.Publish(); }
         Require(created.Profile == before && created.GetComponent<ZombieSurvival.Economy.TraderBudget>().Funds.Balance == 0, "общий WorldRestorePlan восстанавливает профиль и бюджет", results);
+        return string.Join("\n", results);
+    }
+    public static string RunSavedWorld(Trader trader, ZombieSurvival.Player.FirstPersonController motor)
+    {
+        if (!Application.isPlaying || Application.productName != "T5-Isolated-Checks") throw new InvalidOperationException("Только изолированная копия с отдельным persistentDataPath.");
+        var results = new List<string>(); var player = motor.gameObject;
+        var stamina = player.GetComponent<ZombieSurvival.Player.PlayerStamina>() ?? player.AddComponent<ZombieSurvival.Player.PlayerStamina>();
+        typeof(ZombieSurvival.Player.FirstPersonController).GetField("stamina", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).SetValue(motor, stamina);
+        var save = player.GetComponent<PlayerSaveSystem>() ?? player.AddComponent<PlayerSaveSystem>();
+        var root = player.GetComponent<WorldSaveObject>() ?? player.AddComponent<WorldSaveObject>();
+        if (player.GetComponent<ZombieSurvival.Progression.PlayerProgression>() == null)
+        {
+            var progression = player.AddComponent<ZombieSurvival.Progression.PlayerProgression>(); progression.enabled = false;
+            var progressionData = new SerializedObject(progression); progressionData.FindProperty("tree").objectReferenceValue = AssetDatabase.LoadAssetAtPath<ZombieSurvival.Progression.SkillTreeDefinition>("Assets/CharacterTesting/Progression/CharacterSkillTree.asset");
+            progressionData.ApplyModifiedPropertiesWithoutUndo(); progression.enabled = true;
+        }
+        var id = new SerializedObject(player.GetComponent<SaveIdentity>()); id.FindProperty("persistentId").stringValue = "player"; id.ApplyModifiedPropertiesWithoutUndo();
+        var registry = UnityEngine.Object.FindAnyObjectByType<WorldSaveRegistry>();
+        var registryData = new SerializedObject(registry); var objects = registryData.FindProperty("sceneObjects");
+        if (!Enumerable.Range(0, objects.arraySize).Any(i => objects.GetArrayElementAtIndex(i).objectReferenceValue == root))
+        { int added = objects.arraySize++; objects.GetArrayElementAtIndex(added).objectReferenceValue = root; registryData.ApplyModifiedPropertiesWithoutUndo(); }
+        string filename = "t5-check-" + Guid.NewGuid().ToString("N") + ".json";
+        var settings = new SerializedObject(save); settings.FindProperty("fileName").stringValue = filename;
+        var catalog = settings.FindProperty("itemCatalog"); var types = trader.Stocks.SelectMany(s => s.profile.Catalog).Select(e => e.item).Distinct().ToArray(); catalog.arraySize = types.Length;
+        for (int i = 0; i < types.Length; i++) catalog.GetArrayElementAtIndex(i).objectReferenceValue = types[i]; settings.ApplyModifiedPropertiesWithoutUndo();
+        var gear = trader.Stocks.Single(s => s.profile.Id == "equipment"); var guns = trader.Stocks.Single(s => s.profile.Id == "weapons_ammo");
+        gear.storage.TrySetDurability(0, 35); gear.storage.TrySetDurability(1, 80); guns.storage.TrySetDurability(0, 47); guns.storage.Reload(guns.storage.GetSlot(0));
+        string gearId = gear.storage.GetSlot(0).InstanceId, weaponId = guns.storage.GetSlot(0).InstanceId; int rounds = guns.storage.GetSlot(0).LoadedRounds;
+        trader.TrySelectProfile(gear.profile); var funds = trader.GetComponent<ZombieSurvival.Economy.TraderBudget>().Funds;
+        if (funds.Balance < 500) funds.TryCredit(500 - funds.Balance); else if (funds.Balance > 500) funds.TryDebit(funds.Balance - 500);
+        try
+        {
+            Require(save.TrySave(), "общий PlayerSaveSystem сохраняет Т5: " + save.Status, results);
+            Require(gear.storage.TransferTo(player.GetComponent<ItemStorage>(), 0) == 1, "тестовый перенос исходной вещи после Save", results);
+            trader.TrySelectProfile(trader.Stocks.Single(s => s.profile.Id == "food_medicine").profile); funds.TryDebit(100);
+            Require(save.TryLoad(), "общий PlayerSaveSystem загружает Т5: " + save.Status, results);
+            Require(trader.Profile == gear.profile && funds.Balance == 500 && gear.storage.GetSlot(0).InstanceId == gearId
+                && gear.storage.GetSlot(0).Durability == 35 && gear.storage.GetSlot(1).Durability == 80
+                && guns.storage.GetSlot(0).InstanceId == weaponId && guns.storage.GetSlot(0).Durability == 47 && guns.storage.GetSlot(0).LoadedRounds == rounds
+                && Enumerable.Range(0, player.GetComponent<ItemStorage>().SlotCount).All(i => player.GetComponent<ItemStorage>().GetSlot(i) == null || player.GetComponent<ItemStorage>().GetSlot(i).IsEmpty),
+                "единый commit возвращает профиль/рубли/ID/прочность/магазин/местонахождение без копии", results);
+        }
+        finally
+        {
+            foreach (var suffix in new[] { "", ".bak", ".tmp" }) if (System.IO.File.Exists(save.SavePath + suffix)) System.IO.File.Delete(save.SavePath + suffix);
+        }
         return string.Join("\n", results);
     }
 }

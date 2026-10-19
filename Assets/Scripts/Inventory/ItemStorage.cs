@@ -13,6 +13,59 @@ namespace ZombieSurvival.Inventory
         [Tooltip("Начальное содержимое. Не менять список вручную во время операций с предметами.")]
         [SerializeField] private List<ItemStack> slots = new List<ItemStack>();
         public event Action Changed;
+        private bool tradeLocked;
+        internal bool TryLockTrade() { if (tradeLocked) return false; tradeLocked = true; return true; }
+        internal void UnlockTrade() => tradeLocked = false;
+        internal void PublishTrade()
+        {
+            var listeners = Changed;
+            if (listeners == null) return;
+            foreach (Action listener in listeners.GetInvocationList())
+                try { listener(); } catch (Exception error) { Debug.LogException(error, this); }
+        }
+        internal sealed class TradeTransfer
+        {
+            internal ItemStorage source, destination;
+            internal ItemStack original, incoming;
+            internal int sourceIndex, amount, remaining, emptyIndex;
+            internal bool full;
+            internal readonly List<ItemStack> merged = new List<ItemStack>();
+            internal readonly List<int> quantities = new List<int>();
+            internal void Commit()
+            {
+                if (full) { source.slots[sourceIndex] = null; original.Owner = null; }
+                else original.SetQuantity(original.Quantity - amount);
+                for (int i = 0; i < merged.Count; i++) merged[i].SetQuantity(quantities[i]);
+                incoming.SetQuantity(remaining);
+                if (remaining > 0) { destination.slots[emptyIndex] = incoming; incoming.Owner = destination; }
+                else incoming.Owner = null;
+            }
+        }
+        internal bool TryPrepareTrade(ItemStorage destination, ItemStack item, int amount, out TradeTransfer plan)
+        {
+            plan = null;
+            if (tradeLocked || destination == null || destination.tradeLocked || destination == this || amount <= 0
+                || !Contains(item) || item.IsSnapshot || amount > item.Quantity || destination.FreeCapacity(item.Definition) < amount) return false;
+            foreach (var other in destination.slots) if (other != null && !other.IsEmpty && other.InstanceId == item.InstanceId) return false;
+            var prepared = new TradeTransfer { source = this, destination = destination, original = item, sourceIndex = slots.IndexOf(item), amount = amount,
+                full = amount == item.Quantity, remaining = amount, emptyIndex = -1 };
+            if (!item.Definition.IsIndividual)
+                foreach (var target in destination.slots)
+                {
+                    if (target == null || target.IsEmpty || target.Definition != item.Definition) continue;
+                    int moved = Math.Min(prepared.remaining, Math.Max(0, item.Definition.MaxStack - target.Quantity));
+                    if (moved == 0) continue;
+                    prepared.merged.Add(target); prepared.quantities.Add(target.Quantity + moved); prepared.remaining -= moved;
+                    if (prepared.remaining == 0) break;
+                }
+            if (prepared.remaining > 0)
+            {
+                prepared.emptyIndex = destination.slots.FindIndex(s => s == null || s.IsEmpty);
+                if (prepared.emptyIndex < 0) return false;
+            }
+            prepared.incoming = prepared.full ? item : item.SplitResource(amount);
+            plan = prepared; return true;
+        }
         public int SlotCount { get { EnsureSlots(); return slots.Count; } }
         public ItemStack GetSlot(int index) { EnsureSlots(); return index >= 0 && index < slots.Count ? slots[index] : null; }
         private void Awake() => EnsureSlots();
@@ -50,6 +103,7 @@ namespace ZombieSurvival.Inventory
         // Future trade/repair must not call this API; use the normal transfer/transaction contracts.
         internal void ReplaceSavedSlots(List<ItemStack> restored)
         {
+            if (tradeLocked) throw new InvalidOperationException("Хранилище участвует в завершении сделки.");
             EnsureSlots();
             // Retire stale live handles so old UI/NPC references cannot reinsert a pre-load item.
             foreach (var stack in slots) if (stack != null) { stack.Owner = null; stack.SetQuantity(0); }
@@ -62,11 +116,17 @@ namespace ZombieSurvival.Inventory
         {
             if (item == null) return 0;
             EnsureSlots(); int capacity = 0;
-            foreach (var slot in slots) capacity += slot == null || slot.IsEmpty ? item.MaxStack : slot.Definition == item ? Mathf.Max(0, item.MaxStack - slot.Quantity) : 0;
+            foreach (var slot in slots)
+            {
+                int available = slot == null || slot.IsEmpty ? item.MaxStack : slot.Definition == item ? Mathf.Max(0, item.MaxStack - slot.Quantity) : 0;
+                if (available > int.MaxValue - capacity) return int.MaxValue;
+                capacity += available;
+            }
             return capacity;
         }
         public bool TryAddAll(ItemDefinition item, int amount)
         {
+            if (tradeLocked) return false;
             if (item == null || amount <= 0 || FreeCapacity(item) < amount) return false;
             while (amount > 0) { int n = Mathf.Min(amount, item.MaxStack); AddIncoming(new ItemStack(item, n)); amount -= n; }
             Changed?.Invoke(); return true;
@@ -75,6 +135,7 @@ namespace ZombieSurvival.Inventory
         public bool Contains(ItemStack stack) { EnsureSlots(); return stack != null && stack.Owner == this && slots.Contains(stack) && !stack.IsEmpty; }
         public bool TryAddStack(ItemStack stack)
         {
+            if (tradeLocked) return false;
             if (stack == null || stack.IsEmpty || stack.IsSnapshot || stack.Owner != null || FreeCapacity(stack.Definition) < stack.Quantity) return false;
             foreach (var existing in slots) if (existing != null && !existing.IsEmpty && existing.InstanceId == stack.InstanceId) return false;
             stack.Normalize();
@@ -113,6 +174,7 @@ namespace ZombieSurvival.Inventory
         }
         public bool TrySetDurability(int index, float value)
         {
+            if (tradeLocked) return false;
             var stack = GetSlot(index);
             if (stack == null || stack.IsEmpty || !stack.Definition.HasDurability || float.IsNaN(value) || float.IsInfinity(value)) return false;
             float old = stack.Durability; stack.SetDurability(value);
@@ -120,6 +182,7 @@ namespace ZombieSurvival.Inventory
         }
         public int Reload(ItemStack weapon)
         {
+            if (tradeLocked) return 0;
             if (!Contains(weapon) || weapon.Definition.Weapon == null) return 0;
             var data = weapon.Definition.Weapon; if (data.Ammo == null) return 0;
             int amount = Mathf.Min(Mathf.Max(0, data.MagazineSize - weapon.LoadedRounds), Count(data.Ammo)), left = amount;
@@ -129,11 +192,13 @@ namespace ZombieSurvival.Inventory
         }
         public bool SpendRound(ItemStack weapon)
         {
+            if (tradeLocked) return false;
             if (!Contains(weapon) || weapon.Definition.Weapon == null || weapon.LoadedRounds <= 0) return false;
             weapon.SetLoadedRounds(weapon.LoadedRounds - 1); Changed?.Invoke(); return true;
         }
         public int TransferTo(ItemStorage destination, int index, int requested = int.MaxValue)
         {
+            if (tradeLocked || destination != null && destination.tradeLocked) return 0;
             var slot = GetSlot(index);
             if (destination == null || destination == this || slot == null || slot.IsEmpty || requested <= 0) return 0;
             int amount = Mathf.Min(requested, Mathf.Min(slot.Quantity, destination.FreeCapacity(slot.Definition)));
@@ -144,6 +209,7 @@ namespace ZombieSurvival.Inventory
         }
         public bool TryExtract(int index, int amount, out ItemStack extracted)
         {
+            if (tradeLocked) { extracted = null; return false; }
             extracted = null; var stack = GetSlot(index);
             if (stack == null || stack.IsEmpty || amount <= 0 || amount > stack.Quantity) return false;
             extracted = ExtractInternal(index, amount); Changed?.Invoke(); return true;
@@ -157,6 +223,7 @@ namespace ZombieSurvival.Inventory
         // Only for failed world initialization: return exactly what was extracted, never recreate a default item.
         internal void RestoreExtracted(int preferredIndex, ItemStack stack)
         {
+            if (tradeLocked) throw new InvalidOperationException("Хранилище участвует в завершении сделки.");
             EnsureSlots();
             if (stack == null || stack.IsEmpty || stack.Owner != null || stack.IsSnapshot) throw new InvalidOperationException("Invalid rollback payload.");
             if (preferredIndex >= 0 && preferredIndex < slots.Count && (slots[preferredIndex] == null || slots[preferredIndex].IsEmpty))
@@ -167,6 +234,7 @@ namespace ZombieSurvival.Inventory
         }
         internal bool Remove(int index, int amount)
         {
+            if (tradeLocked) return false;
             var slot = GetSlot(index); if (slot == null || slot.IsEmpty || amount <= 0 || amount > slot.Quantity) return false;
             RemoveInternal(index, amount); Changed?.Invoke(); return true;
         }

@@ -39,6 +39,7 @@ public static class TraderT5Setup
     public static void CreateAssets()
     {
         if (EditorApplication.isPlaying) throw new InvalidOperationException("Создавайте авторские ассеты вне Play.");
+        ServiceSessionsT4Setup.EnsurePlayerPrefab();
         FolderAt(Folder); FolderAt("Assets/Resources/Trading");
         Profile("weapons_ammo", "Оружие и патроны", new[] { ItemCategory.Weapon, ItemCategory.Ammunition },
             new[] { "Assets/Weapons/Definitions/ArmyPistolItem.asset", "Assets/Weapons/Definitions/CampingAxeItem.asset", "Assets/Weapons/Definitions/Ammo9mmItem.asset" }, new[] { 2, 1, 120 }, new long[] { 8000, 1500, 12 });
@@ -71,6 +72,7 @@ public static class TraderT5Setup
         var scene = Enumerable.Range(0, UnityEngine.SceneManagement.SceneManager.sceneCount).Select(UnityEngine.SceneManagement.SceneManager.GetSceneAt)
             .FirstOrDefault(s => s.path == "Assets/CharacterTesting/CharacterTest.unity");
         if (!scene.IsValid()) throw new InvalidOperationException("CharacterTest должна быть уже открыта; другие сцены команда не открывает.");
+        ServiceSessionsT4Setup.EnsurePlayerPrefab(); ServiceSessionsT4Setup.EnsureScenePlayers(scene);
         if (scene.GetRootGameObjects().Any(r => r.name == "T5 - Профили торговцев")) return;
         CreateAssets();
         var registry = UnityEngine.Object.FindObjectsByType<WorldSaveRegistry>(FindObjectsInactive.Include).Single(r => r.gameObject.scene == scene);

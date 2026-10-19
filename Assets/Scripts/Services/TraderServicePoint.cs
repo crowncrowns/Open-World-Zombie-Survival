@@ -4,7 +4,7 @@ namespace ZombieSurvival.Services
     public sealed class TraderServicePoint : ServicePoint
     {
         public override string SessionTitle => "Торговая сессия";
-        public override string SessionDescription => GetComponent<Trader>() != null ? "Просмотр личных остатков и профилей. Сделки пока недоступны (Т5)." : "Проверка доступа к сервису. Каталог подключается компонентом Trader.";
+        public override string SessionDescription => GetComponent<Trader>() != null ? "Выберите покупку или продажу, предмет и количество. Цена учитывает состояние вещи и патроны в магазине." : "Проверка доступа к сервису. Каталог подключается компонентом Trader.";
         public override bool CanAccess(ZombieSurvival.Interaction.PlayerInteractor actor, out string reason)
         {
             var trader = GetComponent<Trader>();
