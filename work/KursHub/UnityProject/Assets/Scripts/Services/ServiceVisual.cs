@@ -8,11 +8,11 @@ namespace ZombieSurvival.Services
     {
         [SerializeField, InspectorName("Префаб модели"), Tooltip("Готовый визуальный prefab из Project: Renderer, rig и Animator. Любые MonoBehaviour и NavMesh-компоненты отклоняются ДО создания; старый вид сохраняется. Полный NPC с AI нельзя использовать как декорацию.")]
         private GameObject visualPrefab;
-        [SerializeField, InspectorName("Смещение модели, м"), Tooltip("Локальное смещение модели относительно корня сервиса, м. Корень сессии и его состояние не перемещаются.")]
+        [SerializeField, InspectorName("Смещение модели, м"), Tooltip("Абсолютная localPosition управляемой модели относительно её родителя, м — как в Transform. Ручное перемещение модели синхронизируется с этим полем. Корень сервиса не перемещается.")]
         private Vector3 localPosition;
-        [SerializeField, InspectorName("Поворот модели, градусы"), Tooltip("Локальный поворот визуальной модели вокруг корня сервиса, градусы.")]
+        [SerializeField, InspectorName("Поворот модели, градусы"), Tooltip("Абсолютная localEulerAngles модели, как в Transform, градусы. Поворот prefab больше не умножается скрыто; ручной поворот сохраняется при повторном применении и смене модели.")]
         private Vector3 localEulerAngles;
-        [SerializeField, InspectorName("Масштаб модели"), Tooltip("Дополнительный масштаб к исходному масштабу prefab. Значения должны быть положительными. Исходный prefab не изменяется.")]
+        [SerializeField, InspectorName("Масштаб модели"), Tooltip("Абсолютная localScale модели, как в Transform. Значения должны быть положительными; без скрытого умножения масштаба prefab. Ручной масштаб подхватывается автоматически.")]
         private Vector3 localScale = Vector3.one;
         [SerializeField, InspectorName("Материал модели (необязательно)"), Tooltip("Если назначен, заменяет материалы только управляемого экземпляра. None сохраняет материалы исходного prefab; для персонажа выбирайте URP-версию модели.")]
         private Material materialOverride;
@@ -23,6 +23,8 @@ namespace ZombieSurvival.Services
         [SerializeField, HideInInspector] private Transform visualRoot;
         [SerializeField, HideInInspector] private GameObject instance, appliedPrefab;
         [SerializeField, HideInInspector] private Material appliedMaterial;
+        [SerializeField, HideInInspector] private bool poseInitialized;
+        [SerializeField, HideInInspector] private Vector3 appliedPosition, appliedEulerAngles, appliedScale;
         private string validationMessage;
         public GameObject VisualPrefab => visualPrefab;
         public GameObject Instance => instance;
@@ -30,6 +32,44 @@ namespace ZombieSurvival.Services
 
         private void OnEnable() => RequestRefresh();
         private void OnValidate() => RequestRefresh();
+        private void Reset() { poseInitialized = true; SnapshotPose(); }
+        private void Update()
+        {
+            if (!Application.isPlaying) CaptureManualPose();
+        }
+        /// <summary>Transform and settings are two views of one local pose; explicit settings edits take priority.</summary>
+        public void CaptureManualPose()
+        {
+#if UNITY_EDITOR
+            if (UnityEditor.EditorUtility.IsPersistent(this)) return;
+#endif
+            if (instance == null || !ValidScale(instance.transform.localScale) || !Finite(instance.transform.localPosition) || !Finite(instance.transform.localEulerAngles)
+                || visualRoot == null || visualRoot.parent != transform || instance.transform.parent != visualRoot
+                || poseInitialized && (SettingsChanged() || !InstancePoseChanged())) return;
+            Record(this); SynchronizePose(); SnapshotPose(); Mark(this); FitCollider();
+        }
+        private bool SettingsChanged() => localPosition != appliedPosition || localEulerAngles != appliedEulerAngles || localScale != appliedScale;
+        private bool InstancePoseChanged() => instance.transform.localPosition != localPosition || instance.transform.localScale != localScale
+            || Quaternion.Angle(instance.transform.localRotation, Quaternion.Euler(localEulerAngles)) > .001f;
+        private void SnapshotPose() { appliedPosition = localPosition; appliedEulerAngles = localEulerAngles; appliedScale = localScale; }
+        private bool SynchronizePose()
+        {
+            bool explicitSettings = poseInitialized && SettingsChanged();
+            if (!poseInitialized && instance == null)
+            {
+                // Old serialized offsets without an instance used prefab-relative rotation/scale.
+                localEulerAngles = (Quaternion.Euler(localEulerAngles) * (visualPrefab != null ? visualPrefab.transform.localRotation : Quaternion.identity)).eulerAngles;
+                localScale = Vector3.Scale(localScale, visualPrefab != null ? visualPrefab.transform.localScale : Vector3.one);
+            }
+            else if (!explicitSettings && instance != null)
+            {
+                // Migration and unchanged settings capture the authored child BEFORE any configuration.
+                localPosition = instance.transform.localPosition; localEulerAngles = instance.transform.localEulerAngles; localScale = instance.transform.localScale;
+            }
+            poseInitialized = true;
+            return explicitSettings;
+        }
+        private static bool ValidScale(Vector3 scale) => Finite(scale) && scale.x > 0 && scale.y > 0 && scale.z > 0;
         private void RequestRefresh()
         {
 #if UNITY_EDITOR
@@ -60,9 +100,10 @@ namespace ZombieSurvival.Services
             if (visualRoot != null && visualRoot.parent != transform
                 || instance != null && (visualRoot == null || instance.transform.parent != visualRoot))
             { validationMessage = "Управляемый узел модели перемещён за пределы владельца. Замена отменена, чужие объекты не удалены."; return false; }
-            if (localScale.x <= 0 || localScale.y <= 0 || localScale.z <= 0 || !Finite(localScale) || !Finite(localPosition) || !Finite(localEulerAngles))
-            { validationMessage = "Нужны конечные значения позиции/поворота и положительный масштаб."; return false; }
             Record(this);
+            bool applyPose = SynchronizePose();
+            if (!ValidScale(localScale) || !Finite(localPosition) || !Finite(localEulerAngles))
+            { validationMessage = "Нужны конечные значения позиции/поворота и положительный масштаб."; return false; }
             if (rootCollider == null) rootCollider = GetComponent<BoxCollider>();
             if (fitAccessCollider && rootCollider != null && rootCollider.transform != transform)
             { validationMessage = "BoxCollider доступа должен находиться на корне сервиса."; return false; }
@@ -91,7 +132,7 @@ namespace ZombieSurvival.Services
                         else
 #endif
                             replacement = Instantiate(visualPrefab, staging.transform);
-                        Configure(replacement);
+                        Configure(replacement, true);
                         replacement.transform.SetParent(visualRoot, false);
 #if UNITY_EDITOR
                         if (!Application.isPlaying) UnityEditor.Undo.RegisterCreatedObjectUndo(replacement, "Создать модель сервиса");
@@ -110,7 +151,8 @@ namespace ZombieSurvival.Services
                 // Validate/create first; only our previous managed child is removed.
                 Remove(instance); instance = replacement; appliedPrefab = visualPrefab; appliedMaterial = materialOverride;
             }
-            if (instance != null) { Configure(instance); FitCollider(); }
+            if (instance != null) { Configure(instance, applyPose); FitCollider(); }
+            SnapshotPose();
             validationMessage = null;
 #if UNITY_EDITOR
             if (!Application.isPlaying) { UnityEditor.EditorUtility.SetDirty(this); UnityEditor.PrefabUtility.RecordPrefabInstancePropertyModifications(this); }
@@ -131,12 +173,13 @@ namespace ZombieSurvival.Services
             if (prefab.GetComponentsInChildren<Renderer>(true).Length == 0) { reason = "В prefab нет Renderer модели."; return false; }
             return true;
         }
-        private void Configure(GameObject model)
+        private void Configure(GameObject model, bool applyPose)
         {
-            Record(model.transform);
-            model.transform.localPosition = localPosition;
-            model.transform.localRotation = Quaternion.Euler(localEulerAngles) * visualPrefab.transform.localRotation;
-            model.transform.localScale = Vector3.Scale(visualPrefab.transform.localScale, localScale); Mark(model.transform);
+            if (applyPose)
+            {
+                Record(model.transform); model.transform.localPosition = localPosition;
+                model.transform.localRotation = Quaternion.Euler(localEulerAngles); model.transform.localScale = localScale; Mark(model.transform);
+            }
             foreach (var c in model.GetComponentsInChildren<Collider>(true)) { Record(c); c.enabled = false; Mark(c); }
             foreach (var b in model.GetComponentsInChildren<Rigidbody>(true)) { Record(b); b.isKinematic = true; b.detectCollisions = false; Mark(b); }
             foreach (var c in model.GetComponentsInChildren<Camera>(true)) { Record(c); c.enabled = false; Mark(c); }
@@ -154,7 +197,7 @@ namespace ZombieSurvival.Services
         }
         private void FitCollider()
         {
-            if (!fitAccessCollider || rootCollider == null || instance == null) return;
+            if (!fitAccessCollider || rootCollider == null || rootCollider.transform != transform || instance == null) return;
             var renderers = instance.GetComponentsInChildren<Renderer>(true);
             bool first = true; Bounds bounds = default;
             foreach (var renderer in renderers)

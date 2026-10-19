@@ -1,4 +1,4 @@
-"""Blender 4.5+: editable stage-3 Kurs architecture, FBX chunks and manifest.
+"""Blender 4.5+: editable stage-6 Kurs architecture, FBX chunks and manifest.
 
 All construction coordinates below are Unity metres (X right, Y up, Z back).
 The entrance faces -Z; the building envelope, excluding the apron, is 93 x 130.
@@ -48,8 +48,15 @@ palette = {
     "TenantGreen": (0.22, 0.42, 0.09, 1),
     "SignRed": (0.35, 0.08, 0.065, 1),
     "SailOrange": (0.73, 0.29, 0.13, 1),
+    "TarpGreen": (.17,.21,.14,1),
+    "SandCanvas": (.46,.43,.30,1),
+    "WornWood": (.30,.24,.16,1),
+    "LampGlass": (1,.72,.35,1),
+    "DirtStain": (.25,.22,.17,.65),
 }
 materials = {}
+import runpy
+palette.update(runpy.run_path(str(pathlib.Path(__file__).with_name('stage6_palette.py')))['PALETTE6'])
 for name, color in palette.items():
     mat = bpy.data.materials.new(name)
     mat.diffuse_color = color
@@ -379,18 +386,7 @@ for z in (-64.4,-57):
 box('VestibuleCeiling',(0,3.98,-60.7),(12.3,.20,7.7),'Concrete','Vestibule')
 text_object('ГЛАВНЫЙ ВХОД',(0,3.17,-64.56),.38,'Lettering','EntranceLabel','VestibuleDetails')
 
-# Entrance canopy is an attachment, outside the 93 x 130 exterior wall envelope.
-box('EntranceCanopy',(0,4.12,-67.8),(17.6,.20,6.8),'Roof','Canopy')
-for z in (-71.1,-64.5):
-    box('CanopyFascia',(0,3.96,z),(17.6,.35,.16),'BlueCladding','Canopy')
-for x in (-8.65,8.65):
-    box('CanopySideFascia',(x,3.96,-67.8),(.16,.35,6.8),'BlueCladding','Canopy')
-for x in (-7.5,7.5):
-    for z in (-70.3,-65.3):
-        box('CanopyColumn',(x,1.94,z),(.25,3.88,.25),'Frame','Canopy')
-    box('CanopyRafter',(x,3.84,-67.8),(.16,.16,6.8),'Frame','Canopy')
-for x in (-5,-2.5,0,2.5,5):
-    box('CanopyRoofSeam',(x,4.23,-67.8),(.045,.025,6.8),'Frame','CanopyDetails',collide=False)
+# Stage 4: canopy, roof beams and all four posts removed at user request.
 
 # Fine facade framing and panel joints are visual only; the original closed
 # wall/glass meshes continue to define player collision.
@@ -480,6 +476,14 @@ for x in (-10,-5,5,10):
 import runpy
 runpy.run_path(str(pathlib.Path(__file__).with_name('stage3_exterior.py')),init_globals=globals())
 
+prop_instances=[]
+import runpy
+runpy.run_path(str(pathlib.Path(__file__).with_name('stage4_finish.py')),init_globals=globals())
+interior_layout=runpy.run_path(str(pathlib.Path(__file__).with_name('stage5_interior.py')))['layout']()
+runpy.run_path(str(pathlib.Path(__file__).with_name('build_stage5_interior.py')))['attach'](ROOT,interior_layout['interiorInstances'])
+settlement_layout=runpy.run_path(str(pathlib.Path(__file__).with_name('stage6_interior.py')))['layout6']()
+runpy.run_path(str(pathlib.Path(__file__).with_name('build_stage6_interior.py')))['finish6'](ROOT,settlement_layout['settlementInstances'],settlement_layout['settlementLights'])
+
 # Validate source solids before saving; individual parts remain available for editing.
 metrics=[]
 for obj in objects:
@@ -500,7 +504,7 @@ for obj in objects:
     metrics.append(dict(name=obj.name,vertices=len(obj.data.vertices),faces=len(obj.data.polygons)))
     bm.free()
 
-scene['KursHubStage']='3: reference-led opaque blue wings, rotunda, dome and roof sign; empty playable shell'
+scene['KursHubStage']='6: dense market, housing, checkpoint and ceramic floor; no entry canopy'
 scene['Dimensions']='93 m X x 130 m Z external walls; floors Y=0/5.5, roof Y=11'
 scene['Atrium']='30 x 50 m; X=-15..15, Z=-32..18'
 scene['UnityOrigin']='ground centre of rectangular envelope; entrance -Z'
@@ -557,9 +561,11 @@ bpy.ops.export_scene.fbx(filepath=str(OUT/'Models/KursHubShell.fbx'),use_selecti
                         apply_unit_scale=True,bake_space_transform=False,
                         use_mesh_modifiers=True,add_leaf_bones=False,bake_anim=False,
                         path_mode='AUTO')
-manifest=dict(stage=3,width=93,depth=130,floorHeight=5.5,atrium=[30,50],
-              chunks=chunks,guardColliders=collision_boxes,
+manifest=dict(stage=6,width=93,depth=130,floorHeight=5.5,atrium=[30,50],
+              chunks=chunks,guardColliders=collision_boxes,propInstances=prop_instances,
               palette=[dict(name=n,rgba=list(c)) for n,c in palette.items()])
+manifest.update(interior_layout)
+manifest.update(settlement_layout)
 (OUT/'KursHubManifest.json').write_text(json.dumps(manifest,indent=2),encoding='utf-8')
 (REPORT/'geometry.json').write_text(json.dumps(dict(sourceObjects=len(objects),
     sourceVertices=sum(x['vertices'] for x in metrics),exportChunks=len(exports),

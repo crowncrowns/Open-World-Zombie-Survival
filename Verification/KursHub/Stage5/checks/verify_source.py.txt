@@ -1,0 +1,25 @@
+from pathlib import Path
+import bpy,json,hashlib
+R=Path('E:/git/Open-World-Zombie-Survival');W=R/'work/KursHub/stage5'
+def snapshot(path):
+ bpy.ops.wm.open_mainfile(filepath=str(path))
+ meshes={}
+ for obj in bpy.context.scene.objects:
+  if obj.type!='MESH':continue
+  data=dict(vertices=[list(v.co) for v in obj.data.vertices],faces=[list(p.vertices) for p in obj.data.polygons],matrix=[list(row) for row in obj.matrix_world])
+  meshes[obj.name]=hashlib.sha256(json.dumps(data,sort_keys=True).encode()).hexdigest()
+ return meshes
+old=snapshot(W/'baseline/Sources/KursHub/KursHub.blend')
+new=snapshot(W/'authoring/Sources/KursHub/KursHub.blend')
+assert old==new,'Accepted source shell mesh/transform changed'
+manifest=json.loads((W/'authoring/Assets/Environment/KursHub/KursHubManifest.json').read_text())
+group=bpy.data.collections['Reusable interior architecture'];assert len(group.objects)==130
+for p in manifest['interiorInstances']:
+ obj=group.objects[p['id']];assert obj.instance_type=='COLLECTION' and obj.instance_collection.name==p['prop']
+ assert obj['UnityPrefab'].endswith('/'+p['prop']+'.prefab')
+ x,y,z=p['position'];assert max(abs(a-b) for a,b in zip(obj.location,(x,z,y)))<1e-5
+ assert all(abs(v-1)<1e-7 for v in obj.scale)
+exterior=bpy.data.collections['Reusable exterior props'];assert len(exterior.objects)==63
+result=dict(status='KURS_STAGE5_SOURCE_OK',shellMeshObjects=len(old),shellGeometryAndTransformsUnchanged=True,interiorCollectionInstances=130,exteriorCollectionInstances=63)
+(W/'source_validation.json').write_text(json.dumps(result,indent=2))
+print(result)

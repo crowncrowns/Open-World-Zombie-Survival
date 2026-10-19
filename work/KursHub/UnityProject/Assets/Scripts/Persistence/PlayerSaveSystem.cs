@@ -64,6 +64,7 @@ namespace ZombieSurvival.Persistence
         { using(var sha=SHA256.Create())return BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(s))).Replace("-",""); }
         private void CheckContext()
         {
+            if (ZombieSurvival.Services.TradeService.IsBusy) throw new InvalidOperationException("Дождитесь завершения сделки.");
             if(!isActiveAndEnabled || !Application.isPlaying)throw new InvalidOperationException("Сохранение работает только в Play.");
             if(string.IsNullOrWhiteSpace(fileName) || Path.GetFileName(fileName)!=fileName)throw new InvalidOperationException("В имени сохранения запрещены пути.");
             Registry().ValidateCoverage();
@@ -116,6 +117,7 @@ namespace ZombieSurvival.Persistence
         /// <summary>Дешёвая проверка для планировщика. Полная проверка мира остаётся внутри TrySaveSlot.</summary>
         public bool CanSaveNow(out string reason)
         {
+            if (ZombieSurvival.Services.TradeService.IsBusy) { reason = "Ожидание завершения сделки"; return false; }
             var weapons=GetComponent<PlayerWeapons>();
             if(!isActiveAndEnabled || !Application.isPlaying || working) { reason="Система сохранения занята или отключена";return false; }
             if(Time.timeScale<=0) { reason="Игра на паузе";return false; }
@@ -368,7 +370,7 @@ namespace ZombieSurvival.Persistence
         }
         private void OnGUI()
         {
-            if(!showHud || GetComponent<PlayerInventory>()?.IsOpen == true || GetComponent<PlayerProgressionMenu>()?.IsOpen == true || GetComponent<PlayerSaveMenu>()?.IsOpen == true)return;float scale=Mathf.Min(Screen.width/1000f,Screen.height/700f);var matrix=GUI.matrix;GUI.matrix=Matrix4x4.Scale(Vector3.one*scale);
+            if(!showHud || GetComponent<PlayerInventory>()?.IsOpen == true || GetComponent<PlayerProgressionMenu>()?.IsOpen == true || GetComponent<PlayerSaveMenu>()?.IsOpen == true || GetComponent<ZombieSurvival.Services.PlayerServiceSession>()?.IsOpen == true)return;float scale=Mathf.Min(Screen.width/1000f,Screen.height/700f);var matrix=GUI.matrix;GUI.matrix=Matrix4x4.Scale(Vector3.one*scale);
             float width=Screen.width/scale;Color color=GUI.color;GUI.color=new Color(.055f,.075f,.095f,1);GUI.DrawTexture(new Rect(width/2-300,125,600,74),Texture2D.whiteTexture);GUI.color=color;
             GUI.Label(new Rect(width/2-292,128,584,68),Status+"\nF6 — меню · "+(GetComponent<PlayerSaveSlots>()?.AutoStatus??""),new GUIStyle(GUI.skin.label){fontSize=13,wordWrap=true});GUI.matrix=matrix;
         }

@@ -1310,6 +1310,7 @@ GameObject:
   - component: {fileID: 6305308422426640020}
   - component: {fileID: 1238592991080586786}
   - component: {fileID: 7093068383827326038}
+  - component: {fileID: 4254398441733706529}
   m_Layer: 0
   m_Name: CharacterTestPlayer
   m_TagString: Untagged
@@ -2278,6 +2279,37 @@ MonoBehaviour:
       m_Processors: 
       m_Groups: 
       m_Action: CloseSaveMenu
+      m_Flags: 0
+    m_Flags: 0
+    m_Priority: 0
+  requireApplicationFocus: 1
+--- !u!114 &4254398441733706529
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4323131168981000575}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e05c1777a2b590049953a088f5d1544a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ZombieSurvival.Services.PlayerServiceSession
+  closeInput:
+    m_Name: CloseService
+    m_Type: 1
+    m_ExpectedControlType: 
+    m_Id: 9220730a-c9f3-443b-8a57-82d177b33702
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: b9ce55ae-a6f5-4f60-98a3-8dffe21450ce
+      m_Path: <Keyboard>/escape
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: CloseService
       m_Flags: 0
     m_Flags: 0
     m_Priority: 0

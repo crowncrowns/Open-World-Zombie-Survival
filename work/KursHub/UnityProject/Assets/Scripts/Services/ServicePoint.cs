@@ -28,7 +28,7 @@ namespace ZombieSurvival.Services
         protected override bool PerformInteraction(PlayerInteractor actor)
         { return actor != null && actor.GetComponent<PlayerServiceSession>() is PlayerServiceSession session && session.TryOpen(this); }
 
-        public bool CanAccess(PlayerInteractor actor, out string reason)
+        public virtual bool CanAccess(PlayerInteractor actor, out string reason)
         {
             if (!base.CanInteract(actor)) return Fail("Сервис недоступен.", out reason);
             if (actor == null || !actor.isActiveAndEnabled || actor.ViewCamera == null || !actor.ViewCamera.isActiveAndEnabled)
