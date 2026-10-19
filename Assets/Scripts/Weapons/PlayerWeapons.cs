@@ -36,10 +36,14 @@ namespace ZombieSurvival.Weapons
         private GameObject view;
         private AudioSource audioSource;
         private float swingStarted = -100, attackAt, reloadAt, readyAt, recoilAngle, hitUntil, aimWeight;
-        private bool armed;
+        private bool armed, committingAttack;
+        private static int attacksInProgress;
+        public static bool IsBusy => attacksInProgress > 0;
         public ItemStack Equipped => equipped;
         public bool IsReloading => reloadAt > 0;
-        public bool IsAttacking => pending != null;
+        public bool IsAttacking => pending != null || committingAttack;
+        private void BeginCommit() { committingAttack=true; attacksInProgress++; }
+        private void EndCommit() { attacksInProgress--; committingAttack=false; }
         public bool IsAiming { get; private set; }
         public string Status { get; private set; } = "";
         private bool CanAct => motor != null && motor.AcceptingGameplayInput && viewCamera != null
@@ -67,15 +71,17 @@ namespace ZombieSurvival.Weapons
         private void OnDisable() { if(storage!=null) storage.Changed-=OnStorageChanged; Cancel(); if(view!=null) Destroy(view); view=null; equipped=null; }
         private void OnStorageChanged() { if(equipped!=null && !storage.Contains(equipped)) Unequip(); }
         private void Cancel() { pending=null; swingStarted=-100; attackAt=reloadAt=0; IsAiming=false; if(audioSource!=null) audioSource.Stop(); }
-        public void Unequip() { Cancel(); equipped=null; armed=false; if(view!=null) Destroy(view); view=null; }
+        public void Unequip() { if(committingAttack)return; Cancel(); equipped=null; armed=false; if(view!=null) Destroy(view); view=null; }
         public bool Equip(int slot)
         {
+            if(committingAttack)return false;
             if (hotbar == null) hotbar = GetComponent<PlayerHotbar>();
             return hotbar != null && hotbar.isActiveAndEnabled ? hotbar.EquipInventorySlot(slot) : EquipFromHotbar(slot);
         }
         // Хотбар уже проверил владение/выбор. Публичный Equip не должен обходить текущий быстрый слот.
         internal bool EquipFromHotbar(int slot)
         {
+            if(committingAttack)return false;
             var item=storage.GetSlot(slot);
             if(!motor.IsAlive || item==null || item.IsEmpty || item.Definition.Weapon==null) return false;
             Cancel(); if(view!=null) Destroy(view); view=null; equipped=item; readyAt=Time.time+.2f; armed=false; recoilAngle=0;
@@ -116,40 +122,56 @@ namespace ZombieSurvival.Weapons
             if(pending!=null && Time.time>=attackAt)
             {
                 var strike=pending; pending=null;
-                if(strike==equipped && storage.Contains(strike)) MeleeImpact(data);
+                if(strike==equipped && storage.Contains(strike))
+                {
+                    var strikeData=strike.Definition.Weapon;
+                    BeginCommit();
+                    try
+                    {
+                        if(storage.TryUseWeapon(strike,strikeData.durabilityCostPerUse,false,out var reason)) MeleeImpact(strikeData);
+                        else Status=reason;
+                    }
+                    finally { EndCommit(); }
+                }
             }
             // При хотбаре Attack обрабатывает один маршрутизатор. Aim/reload и таймер попадания остаются здесь.
             if(!hotbarOwnsInput && armed && attack!=null && (data.automatic && data.kind==WeaponKind.Firearm ? attack.IsPressed() : attack.WasPressedThisFrame())) TryAttack();
         }
         public bool TryReload()
         {
-            if(!CanAct || equipped==null || IsReloading || pending!=null || Time.time<readyAt) return false;
+            if(committingAttack || !CanAct || equipped==null || IsReloading || pending!=null || Time.time<readyAt) return false;
             var data=equipped.Definition.Weapon;
             if(data.kind!=WeaponKind.Firearm || data.Ammo==null || equipped.LoadedRounds>=data.MagazineSize || storage.Count(data.Ammo)==0) return false;
             reloadAt=Time.time+data.reloadSeconds; IsAiming=false; Play(data.reloadSound,data); Status="Перезарядка…"; return true;
         }
         public bool TryAttack()
         {
-            if(!CanAct || equipped==null || !storage.Contains(equipped) || IsReloading || pending!=null || Time.time<readyAt) return false;
-            var data=equipped.Definition.Weapon;
+            if(committingAttack || !CanAct || equipped==null || !storage.Contains(equipped) || IsReloading || pending!=null || Time.time<readyAt) return false;
+            var original=equipped; var data=original.Definition.Weapon;
+            if(!storage.CanUseWeapon(original,data.durabilityCostPerUse,false,out var useReason)) { Status=useReason; return false; }
             // Хотбар вызывает команду до Update оружия. При одновременных R/ЛКМ сохраняем приоритет reload,
             // а Aim читаем сейчас, чтобы первый выстрел с ПКМ не использовал разброс прошлого кадра.
             var reloadNow=motor.FindGameplayAction("Reload");
             if(reloadNow!=null && reloadNow.WasPressedThisFrame() && TryReload()) return false;
             var aimNow=motor.FindGameplayAction("Aim");
             IsAiming=data.kind==WeaponKind.Firearm && aimNow!=null && aimNow.IsPressed() && !IsReloading;
-            if(data.kind==WeaponKind.Melee)
+            BeginCommit();
+            try
             {
-                if(motor.Stamina!=null && !motor.Stamina.TrySpend(data.staminaCost)) { Status="Мало выносливости"; return false; }
-                pending=equipped; swingStarted=Time.time; attackAt=Time.time+Mathf.Clamp(data.windup,0,data.cooldown);
+                if(data.kind==WeaponKind.Melee)
+                {
+                    if(motor.Stamina!=null && !motor.Stamina.TrySpend(data.staminaCost)) { Status="Мало выносливости"; return false; }
+                    pending=original; swingStarted=Time.time; attackAt=Time.time+Mathf.Clamp(data.windup,0,data.cooldown);
+                }
+                else if(!storage.TryUseWeapon(original,data.durabilityCostPerUse,true,out useReason)) { Status=useReason; return false; }
+                readyAt=Time.time+data.cooldown; Status="";
+                if(data.attacks!=null && data.attacks.Length>0) Play(data.attacks[Random.Range(0,data.attacks.Length)],data);
+                if(noise!=null) noise.Emit(data.noise,data.kind==WeaponKind.Firearm ? NoiseKind.Gunshot : NoiseKind.Melee);
+                else GameplayNoise.Emit(transform.position,data.noise.x,data.noise.y,gameObject,data.kind==WeaponKind.Firearm ? NoiseKind.Gunshot : NoiseKind.Melee);
+                if(data.kind==WeaponKind.Firearm) { Fire(data); recoilAngle=Mathf.Min(15,recoilAngle+data.recoil); }
+                return true;
             }
-            else if(!storage.SpendRound(equipped)) { readyAt=Time.time+.2f; Status="Магазин пуст — R"; return false; }
-            readyAt=Time.time+data.cooldown; Status="";
-            if(data.attacks!=null && data.attacks.Length>0) Play(data.attacks[Random.Range(0,data.attacks.Length)],data);
-            if(noise!=null) noise.Emit(data.noise,data.kind==WeaponKind.Firearm ? NoiseKind.Gunshot : NoiseKind.Melee);
-            else GameplayNoise.Emit(transform.position,data.noise.x,data.noise.y,gameObject,data.kind==WeaponKind.Firearm ? NoiseKind.Gunshot : NoiseKind.Melee);
-            if(data.kind==WeaponKind.Firearm) { Fire(data); recoilAngle=Mathf.Min(15,recoilAngle+data.recoil); }
-            return true;
+            finally { EndCommit(); }
         }
         private bool OriginBlocked(Vector3 point)
         {
@@ -227,6 +249,7 @@ namespace ZombieSurvival.Weapons
             {
                 var data=equipped.Definition.Weapon;
                 text=equipped.Definition.DisplayName+"\n"+(data.kind==WeaponKind.Firearm?$"{equipped.LoadedRounds} / {storage.Count(data.Ammo)}   [R] перезарядка":"ЛКМ — удар")+"\n"+Status;
+                if(equipped.Definition.HasDurability) text+="\n"+(ItemStorage.IsWeaponBroken(equipped)?"СЛОМАНО":"Прочность: "+equipped.Durability.ToString("0.#")+" / "+equipped.Definition.MaximumDurability.ToString("0.#"));
             }
             // Хотбар уже показывает выбор и команды: пустой старый блок оружия больше не дублирует его.
             if(!hasHotbar || equipped!=null)

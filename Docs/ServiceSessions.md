@@ -82,3 +82,7 @@ FPC хранит независимый legacy base gate и множество �
 ## Т6: подтверждение сделки
 
 PlayerServiceSession содержит счётчик SessionVersion: Close и новое открытие делают прежнюю котировку недействительной даже у того же NPC. При подтверждении TradeService снова вызывает ValidateAccess(expectedPoint). Существующее окно расширено выбором покупки/продажи, количества и предложения; правила/деньги/перенос остаются в сервисе. GUI рисуется поверх прочих HUD с непрозрачной панелью. Исправления исходного/сценового игрока из предыдущей записи теперь подключены в Edit, checks импортированы, PlayerServiceSession сохранён в CharacterTest; прежний pending не актуален. См. [TradeTransactions.md](TradeTransactions.md).
+
+## После Т7: представление торговли
+
+TradeWindow принадлежит PlayerServiceSession и не заменяет проверки E/дистанции/жизни/фокуса/SessionVersion. Старый проверочный trader shell удалён; верстак остаётся прежним. Close/Reset снимают ссылки и подписки, Disable/Destroy очищают GUI-текстуры. Цена читается через preview API, а право сделки проверяется отдельно. См. [TradingWindow.md](TradingWindow.md).

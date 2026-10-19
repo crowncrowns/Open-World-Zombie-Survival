@@ -14,6 +14,8 @@ namespace ZombieSurvival.Inventory
         [SerializeField] private List<ItemStack> slots = new List<ItemStack>();
         public event Action Changed;
         private bool tradeLocked;
+        private static int weaponUsesInProgress;
+        public static bool IsWeaponUseBusy => weaponUsesInProgress > 0;
         internal bool TryLockTrade() { if (tradeLocked) return false; tradeLocked = true; return true; }
         internal void UnlockTrade() => tradeLocked = false;
         internal void PublishTrade()
@@ -195,6 +197,35 @@ namespace ZombieSurvival.Inventory
             if (tradeLocked) return false;
             if (!Contains(weapon) || weapon.Definition.Weapon == null || weapon.LoadedRounds <= 0) return false;
             weapon.SetLoadedRounds(weapon.LoadedRounds - 1); Changed?.Invoke(); return true;
+        }
+        public static bool IsWeaponBroken(ItemStack item) => item != null && !item.IsEmpty && item.Definition.Weapon != null
+            && item.Definition.HasDurability && item.Durability <= 0f;
+        /// <summary>Read-only preflight. Completion must revalidate with TryUseWeapon.</summary>
+        public bool CanUseWeapon(ItemStack weapon, float wear, bool spendRound, out string reason)
+        {
+            reason = "";
+            if (tradeLocked || !isActiveAndEnabled) { reason = "Инвентарь занят или недоступен"; return false; }
+            if (!Contains(weapon) || weapon.IsSnapshot || weapon.Definition.Weapon == null) { reason = "Оружие больше не принадлежит персонажу"; return false; }
+            if (float.IsNaN(wear) || float.IsInfinity(wear) || wear < 0f) { reason = "Некорректная настройка износа оружия"; return false; }
+            if (IsWeaponBroken(weapon)) { reason = "Оружие сломано"; return false; }
+            if (spendRound && weapon.LoadedRounds <= 0) { reason = "Магазин пуст — R"; return false; }
+            return true;
+        }
+        /// <summary>One committed weapon use: ammunition and condition change before a single notification.
+        /// Storage remains mutation-locked through observers, just like a trade commit.</summary>
+        public bool TryUseWeapon(ItemStack weapon, float wear, bool spendRound, out string reason)
+        {
+            if (!CanUseWeapon(weapon, wear, spendRound, out reason)) return false;
+            tradeLocked = true; weaponUsesInProgress++;
+            try
+            {
+                float before = weapon.Durability;
+                if (spendRound) weapon.SetLoadedRounds(weapon.LoadedRounds - 1);
+                if (weapon.Definition.HasDurability && wear > 0f) weapon.SetDurability(Mathf.Max(0f, before - wear));
+                if (spendRound || before != weapon.Durability) PublishTrade();
+                return true;
+            }
+            finally { weaponUsesInProgress--; tradeLocked = false; }
         }
         public int TransferTo(ItemStorage destination, int index, int requested = int.MaxValue)
         {

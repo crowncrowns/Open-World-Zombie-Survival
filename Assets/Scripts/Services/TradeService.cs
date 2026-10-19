@@ -31,6 +31,17 @@ namespace ZombieSurvival.Services
     {
         public static bool IsBusy { get; private set; }
         private static bool Fail(string message, out string reason) { reason = message; return false; }
+        /// <summary>Read-only display price, NOT an authorization or a quote. Uses the same pricing as execution.</summary>
+        public static bool TryPreviewPrice(TraderProfile profile, TradeDirection direction, ItemStack item, int quantity, out long unit, out long total, out string reason)
+        {
+            unit = total = 0;
+            if (profile == null || item == null || item.IsEmpty || quantity <= 0 || quantity > item.Quantity
+                || !Enum.IsDefined(typeof(TradeDirection), direction) || item.Definition.IsIndividual && quantity != 1)
+                return Fail("Выберите вещь и допустимое количество.", out reason);
+            try { profile.Validate(); }
+            catch (InvalidOperationException error) { return Fail(error.Message, out reason); }
+            return TryPrice(profile, direction, item, quantity, out unit, out total, out reason);
+        }
         public static bool TryQuote(PlayerServiceSession session, Trader trader, TradeDirection direction, ItemStack item, int quantity, out TradeQuote quote, out string reason)
         {
             quote = null;
