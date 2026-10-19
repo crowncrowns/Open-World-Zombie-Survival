@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using ZombieSurvival.Interaction;
 using ZombieSurvival.Player;
+using ZombieSurvival.Inventory;
 
 namespace ZombieSurvival.Services
 {
@@ -19,6 +20,9 @@ namespace ZombieSurvival.Services
         private InputAction close;
         private ServicePoint point;
         private readonly TradeWindow tradeWindow = new TradeWindow();
+        private readonly WorkbenchWindow workbenchWindow = new WorkbenchWindow();
+        private RepairWorkbench activeWorkbench;
+        private ServicePresentation presentation;
         public bool IsOpen { get; private set; }
         public long SessionVersion { get; private set; }
         public ServicePoint Point => IsOpen ? point : null;
@@ -40,22 +44,28 @@ namespace ZombieSurvival.Services
             close.Enable();
         }
         private void Resolve() { if (motor == null) motor = GetComponent<FirstPersonController>(); if (actor == null) actor = GetComponent<PlayerInteractor>(); }
-        private void OnDisable() { Close(); tradeWindow.Dispose(); close?.Dispose(); close = null; }
-        private void OnDestroy() => tradeWindow.Dispose();
+        private void OnDisable() { Close(); tradeWindow.Dispose(); workbenchWindow.Dispose(); close?.Dispose(); close = null; }
+        private void OnDestroy() { tradeWindow.Dispose(); workbenchWindow.Dispose(); }
         private void OnApplicationFocus(bool focused) { if (!focused && requireApplicationFocus) Close(); }
         private void Update()
         {
             if (!IsOpen) return;
             if (close != null && close.WasPressedThisFrame()) { Close(); return; }
             if (!ValidateAccess(out var reason)) { Status = reason; Close(); }
-            if (IsOpen) tradeWindow.Tick(this, point.GetComponent<Trader>());
+            if (IsOpen && point is WorkbenchServicePoint && (activeWorkbench == null || !activeWorkbench.isActiveAndEnabled)) { Status = "Верстак недоступен."; Close(); return; }
+            if (IsOpen) { tradeWindow.Tick(this, point.GetComponent<Trader>()); if (activeWorkbench != null) workbenchWindow.Tick(this, activeWorkbench); }
         }
         public bool TryOpen(ServicePoint service)
         {
             Resolve();
             if (!isActiveAndEnabled || IsOpen || motor == null || !motor.AcceptingGameplayInput || actor == null || !actor.IsAvailable || service == null
                 || requireApplicationFocus && !Application.isFocused || !service.CanAccess(actor, out _)) return false;
+            var repair = service.GetComponent<RepairWorkbench>();
+            if (service is WorkbenchServicePoint && (repair == null || !repair.isActiveAndEnabled)) return false;
+            activeWorkbench = repair;
             point = service; IsOpen = true; AdvanceSessionVersion(); Status = "Сессия открыта.";
+            presentation=service.GetComponent<ServicePresentation>();
+            if(presentation!=null)presentation.BeginSession(actor.ViewCamera!=null?actor.ViewCamera.transform:actor.transform);
             motor.SetGameplayInputLock(this, true); return true;
         }
         /// <summary>Future operations must call this immediately before committing; cached access is not a permit.</summary>
@@ -72,10 +82,19 @@ namespace ZombieSurvival.Services
         }
         public void Close()
         {
+            if(presentation!=null)presentation.EndSession();presentation=null;
             if (IsOpen) AdvanceSessionVersion();
             IsOpen = false; point = null;
             tradeWindow.Reset();
+            workbenchWindow.Reset(); activeWorkbench = null;
             if (motor != null) motor.SetGameplayInputLock(this, false);
+        }
+        /// <summary>UI result feedback only. It cannot grant access or perform an economic operation.</summary>
+        public void ReportOperationResult(bool success)
+        {
+            if(!IsOpen||point==null||presentation==null)return;
+            try{presentation.PlayResult(success,activeWorkbench!=null);}
+            catch(System.Exception error){Debug.LogException(error,this);}
         }
         private void AdvanceSessionVersion() => SessionVersion = SessionVersion == long.MaxValue ? 1 : SessionVersion + 1;
         private void OnGUI()
@@ -83,25 +102,24 @@ namespace ZombieSurvival.Services
             if (!IsOpen || point == null) return;
             var trader = point.GetComponent<Trader>();
             if (trader != null) { tradeWindow.Draw(this, trader); return; }
+            if (point is WorkbenchServicePoint)
+            {
+                if (activeWorkbench == null || !activeWorkbench.isActiveAndEnabled) { Close(); return; }
+                workbenchWindow.Draw(this, activeWorkbench); return;
+            }
             var old = GUI.matrix; var color = GUI.color; int oldDepth = GUI.depth;
             try
             {
-                GUI.depth = -100;
-                float scale = Mathf.Min(Screen.width / 1000f, Screen.height / 700f);
-                GUI.matrix = Matrix4x4.Scale(Vector3.one * scale);
-                float width = Screen.width / scale, height = Screen.height / scale;
+                GUI.depth = -100; float scale = Mathf.Min(Screen.width / 1000f, Screen.height / 700f); if (scale <= 0) return;
+                GUI.matrix = Matrix4x4.Scale(Vector3.one * scale); float width = Screen.width / scale, height = Screen.height / scale;
                 GUI.color = new Color(0,0,0,.7f); GUI.DrawTexture(new Rect(0,0,width,height),Texture2D.whiteTexture);
                 var panel = new Rect((width-600)/2,(height-270)/2,600,270);
-                GUI.color = new Color(.055f,.075f,.095f);GUI.DrawTexture(panel,Texture2D.whiteTexture);GUI.color=color;
-                GUILayout.BeginArea(panel,GUI.skin.box);
-                GUILayout.Label(point.SessionTitle.ToUpperInvariant());GUILayout.Space(15);
-                GUILayout.Label(point.SessionDescription);GUILayout.Space(12);
-                GUILayout.Label("Движение и бой заблокированы. Мир продолжает работать.");
-                GUILayout.Label(Status);GUILayout.FlexibleSpace();
-                if(GUILayout.Button("Закрыть · Escape"))Close();
-                GUILayout.EndArea();
+                GUI.color = new Color(.055f,.075f,.095f); GUI.DrawTexture(panel,Texture2D.whiteTexture); GUI.color=color;
+                GUILayout.BeginArea(panel,GUI.skin.box); GUILayout.Label(point.SessionTitle.ToUpperInvariant()); GUILayout.Space(15);
+                GUILayout.Label(point.SessionDescription); GUILayout.Space(12); GUILayout.Label(Status); GUILayout.FlexibleSpace();
+                if (GUILayout.Button("Закрыть · Escape")) Close(); GUILayout.EndArea();
             }
-            finally { GUI.matrix=old;GUI.color=color;GUI.depth=oldDepth; }
+            finally { GUI.matrix=old; GUI.color=color; GUI.depth=oldDepth; }
         }
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void ResetForPlay()

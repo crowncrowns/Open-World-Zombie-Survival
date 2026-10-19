@@ -64,6 +64,8 @@ namespace ZombieSurvival.Persistence
         { using(var sha=SHA256.Create())return BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(s))).Replace("-",""); }
         private void CheckContext()
         {
+            if (ZombieSurvival.Services.Trader.RestockIsBusy) throw new InvalidOperationException("Дождитесь завершения пополнения товаров.");
+            if (ZombieSurvival.Services.RepairService.IsBusy) throw new InvalidOperationException("Дождитесь завершения ремонта.");
             if (PlayerWeapons.IsBusy || ItemStorage.IsWeaponUseBusy) throw new InvalidOperationException("Дождитесь завершения применения оружия.");
             if (ZombieSurvival.Services.TradeService.IsBusy) throw new InvalidOperationException("Дождитесь завершения сделки.");
             if(!isActiveAndEnabled || !Application.isPlaying)throw new InvalidOperationException("Сохранение работает только в Play.");
@@ -118,6 +120,8 @@ namespace ZombieSurvival.Persistence
         /// <summary>Дешёвая проверка для планировщика. Полная проверка мира остаётся внутри TrySaveSlot.</summary>
         public bool CanSaveNow(out string reason)
         {
+            if (ZombieSurvival.Services.Trader.RestockIsBusy) { reason = "Ожидание завершения пополнения товаров"; return false; }
+            if (ZombieSurvival.Services.RepairService.IsBusy) { reason = "Ожидание завершения ремонта"; return false; }
             if (PlayerWeapons.IsBusy || ItemStorage.IsWeaponUseBusy) { reason = "Ожидание завершения применения оружия"; return false; }
             if (ZombieSurvival.Services.TradeService.IsBusy) { reason = "Ожидание завершения сделки"; return false; }
             var weapons=GetComponent<PlayerWeapons>();

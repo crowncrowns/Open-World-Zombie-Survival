@@ -21,6 +21,7 @@ namespace ZombieSurvival.Services
         private float selectedDurability, selectedMaximum;
         private string selectedId;
         private Vector2 stockScroll, bagScroll, detailsScroll;
+        private readonly ItemListPresentation stockList=new ItemListPresentation(), bagList=new ItemListPresentation();
         private GUIStyle title, heading, text, muted, price, row, selectedRow, button, primary, input, notice;
         private Texture2D rowTexture, hoverTexture, selectedTexture, buttonTexture, primaryTexture;
         private static readonly Color Ink = new Color(.9f, .94f, .95f);
@@ -59,7 +60,7 @@ namespace ZombieSurvival.Services
             if (bag != null) bag.Changed -= InventoryChanged;
             if (stock != null) stock.Changed -= InventoryChanged;
             session = null; trader = null; bag = stock = null; sessionVersion = catalogVersion = 0;
-            stockScroll = bagScroll = Vector2.zero; ClearSelection("");
+            stockScroll = bagScroll = Vector2.zero; stockList.Reset(); bagList.Reset(); ClearSelection("");
         }
         private void Select(ItemStorage source, ItemStack item, TradeDirection side)
         {
@@ -67,13 +68,14 @@ namespace ZombieSurvival.Services
             selectedQuantity = item.Quantity; selectedRounds = item.LoadedRounds; selectedDurability = item.Durability; selectedMaximum = item.Definition.MaximumDurability;
             quantityText = "1"; message = ""; detailsScroll = Vector2.zero; RefreshQuote(); GUI.FocusControl(null);
         }
-        private void RefreshQuote()
+        private void RefreshQuote(bool reportFailure=false)
         {
             quote = null; quoteReason = "";
             if (selected == null) return;
             if (!int.TryParse(quantityText, NumberStyles.None, CultureInfo.InvariantCulture, out int count) || count <= 0 || count > selected.Quantity)
-            { quoteReason = "Введите количество от 1 до " + selected.Quantity + "."; return; }
-            TradeService.TryQuote(session, trader, direction, selected, count, out quote, out quoteReason);
+            { quoteReason = "Введите количество от 1 до " + selected.Quantity + "."; if(reportFailure)session.ReportOperationResult(false); return; }
+            bool success=TradeService.TryQuote(session, trader, direction, selected, count, out quote, out quoteReason);
+            if(reportFailure&&!success)session.ReportOperationResult(false);
         }
         private void Quantity(int value)
         { if (selected == null) return; quantityText = Mathf.Clamp(value, 1, selected.Quantity).ToString(CultureInfo.InvariantCulture); RefreshQuote(); }
@@ -92,7 +94,8 @@ namespace ZombieSurvival.Services
                 var panel = new Rect((w-Mathf.Min(1240,w-32))/2,16,Mathf.Min(1240,w-32),h-32);
                 Fill(panel,new Color(.035f,.048f,.061f)); Fill(new Rect(panel.x,panel.y,panel.width,3),Accent);
                 GUI.Label(new Rect(panel.x+24,panel.y+17,panel.width-240,38),"ТОРГОВЛЯ",title);
-                GUI.Label(new Rect(panel.x+24,panel.y+58,panel.width-240,30),trader.Profile != null ? trader.Profile.DisplayName : "Торговый профиль недоступен",muted);
+                GUI.Label(new Rect(panel.x+24,panel.y+56,panel.width-240,24),trader.Profile != null ? trader.Profile.DisplayName : "Торговый профиль недоступен",muted);
+                GUI.Label(new Rect(panel.x+24,panel.y+82,panel.width-48,23),EconomyCaption(),muted);
                 if (GUI.Button(new Rect(panel.xMax-165,panel.y+24,140,38),"Закрыть  ×",button)) { session.Close(); return; }
                 float contentY=panel.y+106, contentH=panel.height-164, gap=14, detailsWidth=330;
                 float listWidth=(panel.width-48-detailsWidth-gap*2)/2;
@@ -113,14 +116,16 @@ namespace ZombieSurvival.Services
             GUI.Label(new Rect(area.x+14,area.y+12,area.width-28,28),caption,heading);
             GUI.Label(new Rect(area.x+14,area.y+45,area.width-28,28),funds,price);
             GUILayout.BeginArea(new Rect(area.x+8,area.y+84,area.width-16,area.height-93));
+            var presentation=side==TradeDirection.Buy?stockList:bagList;
+            presentation.DrawControls(storage,true,button,ref scroll);
             scroll=GUILayout.BeginScrollView(scroll);
             bool any=false;
-            if(storage!=null)for(int i=0;i<storage.SlotCount;i++)
+            foreach(var item in presentation.Items(storage,trader.Profile,side,true,null,trader))
             {
-                var item=storage.GetSlot(i);if(item==null||item.IsEmpty)continue;any=true;
+                any=true;
                 string cost;
                 if(side==TradeDirection.Sell&& !trader.Profile.Accepts(item.Definition)) cost="Не выкупается";
-                else cost=TradeService.TryPreviewPrice(trader.Profile,side,item,1,out long unit,out _,out _)?Wallet.FormatRubles(unit)+" / шт.":"Цена не назначена";
+                else cost=TradeService.TryPreviewPrice(trader,side,item,1,out long unit,out _,out _)?Wallet.FormatRubles(unit)+" / шт.":"Цена не назначена";
                 string state=item.Definition.HasDurability?"Прочность "+item.Durability.ToString("0.#")+" / "+item.Definition.MaximumDurability.ToString("0.#"):item.Definition.CategoryLabel;
                 if(item.Definition.Weapon!=null&&item.Definition.Weapon.Ammo!=null)state+=" · магазин "+item.LoadedRounds;
                 string label=item.Definition.DisplayName+"  ×"+item.Quantity+"\n"+cost+"\n"+state;
@@ -162,7 +167,7 @@ namespace ZombieSurvival.Services
             if(GUILayout.Button("Всё",button,GUILayout.Height(30)))Quantity(item.Quantity);GUILayout.EndHorizontal();
             GUILayout.Space(18);
             int count=ParsedQuantity();bool validQuantity=int.TryParse(quantityText,NumberStyles.None,CultureInfo.InvariantCulture,out count)&&count>0&&count<=item.Quantity;
-            bool preview=TradeService.TryPreviewPrice(trader.Profile,direction,item,validQuantity?count:1,out long unit,out long total,out var previewReason);
+            bool preview=TradeService.TryPreviewPrice(trader,direction,item,validQuantity?count:1,out long unit,out long total,out var previewReason);
             GUILayout.Label(preview?"За единицу: "+Wallet.FormatRubles(unit):"Цена недоступна",text);
             GUILayout.Label(preview&&validQuantity?"Итого: "+Wallet.FormatRubles(total):"Итого: —",price);
             bool eligible=false;string refusal=quoteReason;
@@ -181,15 +186,33 @@ namespace ZombieSurvival.Services
             if(!string.IsNullOrEmpty(message)){GUILayout.Space(8);GUILayout.Label(message,text);}
             GUILayout.Space(15);bool enabled=GUI.enabled;GUI.enabled=enabled&&eligible&&validQuantity&&quote!=null;
             bool execute=GUILayout.Button(direction==TradeDirection.Buy?"Купить":"Продать",primary,GUILayout.Height(43));GUI.enabled=enabled;
+            bool refresh=GUILayout.Button("Обновить предложение",button,GUILayout.Height(34));
+            ItemListPresentation.DrawComparison(item,bag,trader.Profile,null,heading,muted,trader);
+            GUILayout.EndScrollView();GUILayout.EndArea();
             if(execute)
             {
-                var submitted=quote;bool success=TradeService.TryExecute(submitted,out var reason);
+                var submitted=quote;var operationSession=session;bool success=TradeService.TryExecute(submitted,out var reason);
+                if(operationSession!=null)operationSession.ReportOperationResult(success);
                 ClearSelection(success?(direction==TradeDirection.Buy?"Покупка выполнена.":"Продажа выполнена."):reason);
             }
-            else if(GUILayout.Button("Обновить предложение",button,GUILayout.Height(34)))RefreshQuote();
-            GUILayout.EndScrollView();GUILayout.EndArea();
+            else if(refresh)RefreshQuote(true);
         }
         private int ParsedQuantity()=>int.TryParse(quantityText,NumberStyles.None,CultureInfo.InvariantCulture,out int n)&&n>0?n:1;
+        private string EconomyCaption()
+        {
+            string schedule="Пополнение выключено";
+            if(trader.RestockEnabled)
+            {
+                double remaining=trader.GetRestockRemainingSeconds(trader.Profile);
+                if(!double.IsNaN(remaining)&&!double.IsInfinity(remaining)&&remaining>=0&&remaining<=1e12)
+                {
+                    long seconds=(long)Math.Ceiling(remaining);
+                    schedule="Пополнение через "+(seconds/60)+":"+(seconds%60).ToString("00")+" игрового времени";
+                }
+                else schedule="Пополнение временно недоступно";
+            }
+            return schedule+"  ·  Наценка +"+trader.SaleMarkupPercent+"%  ·  Скидка "+trader.SaleDiscountPercent+"%";
+        }
         private static void Fill(Rect rect,Color color){var old=GUI.color;GUI.color=color;GUI.DrawTexture(rect,Texture2D.whiteTexture);GUI.color=old;}
         private static Texture2D Solid(Color color){var t=new Texture2D(1,1){hideFlags=HideFlags.HideAndDontSave};t.SetPixel(0,0,color);t.Apply();return t;}
         private static GUIStyle Label(int size,Color color,bool bold=false)=>new GUIStyle(GUI.skin.label){fontSize=size,fontStyle=bold?FontStyle.Bold:FontStyle.Normal,wordWrap=true,normal={textColor=color},padding=new RectOffset(0,0,2,2)};

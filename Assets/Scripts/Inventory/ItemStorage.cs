@@ -25,6 +25,85 @@ namespace ZombieSurvival.Inventory
             foreach (Action listener in listeners.GetInvocationList())
                 try { listener(); } catch (Exception error) { Debug.LogException(error, this); }
         }
+        internal sealed class PreparedTopUp
+        {
+            internal ItemStorage storage;
+            internal ItemStack[] items;
+            internal int[] quantities;
+            internal bool changed;
+            internal void Commit()
+            {
+                for(int i=0;i<items.Length;i++)
+                {
+                    var item=items[i];if(item==null)continue;
+                    if(item.Quantity!=quantities[i])item.SetQuantity(quantities[i]);
+                    storage.slots[i]=item;item.Owner=storage;
+                }
+            }
+        }
+        internal bool TryPrepareTopUp(IReadOnlyList<ZombieSurvival.Services.TraderProfile.Entry> catalog,out PreparedTopUp plan)
+        {
+            plan=null;if(tradeLocked||!isActiveAndEnabled||catalog==null)return false;EnsureSlots();
+            var prepared=new PreparedTopUp{storage=this,items=slots.ToArray(),quantities=new int[slots.Count]};
+            for(int i=0;i<slots.Count;i++)if(prepared.items[i]!=null&&!prepared.items[i].IsEmpty)prepared.quantities[i]=prepared.items[i].Quantity;
+            foreach(var entry in catalog)
+            {
+                if(entry==null||entry.item==null||entry.quantity<0)return false;
+                long existing=0;for(int i=0;i<prepared.items.Length;i++)if(prepared.items[i]!=null&&!prepared.items[i].IsEmpty&&prepared.items[i].Definition==entry.item)existing+=prepared.quantities[i];
+                int missing=(int)Math.Max(0L,(long)entry.quantity-existing);if(missing==0)continue;
+                if(!entry.item.IsIndividual)for(int i=0;i<prepared.items.Length&&missing>0;i++)
+                {
+                    var item=prepared.items[i];if(item==null||item.IsEmpty||item.Definition!=entry.item)continue;
+                    int added=Math.Min(missing,Math.Max(0,entry.item.MaxStack-prepared.quantities[i]));prepared.quantities[i]+=added;missing-=added;prepared.changed|=added>0;
+                }
+                for(int i=0;i<prepared.items.Length&&missing>0;i++)
+                {
+                    if(prepared.items[i]!=null&&!prepared.items[i].IsEmpty)continue;
+                    int amount=Math.Min(missing,entry.item.MaxStack);prepared.items[i]=new ItemStack(entry.item,amount);prepared.quantities[i]=amount;missing-=amount;prepared.changed=true;
+                }
+            }
+            plan=prepared;return true;
+        }
+        internal sealed class PreparedRepair
+        {
+            internal ItemStorage storage;
+            internal ItemStack target;
+            internal float maximum;
+            internal readonly List<int> indices=new List<int>();
+            internal readonly List<ItemStack> materials=new List<ItemStack>();
+            internal readonly List<int> remaining=new List<int>();
+            internal void Commit()
+            {
+                for(int i=0;i<materials.Count;i++)
+                {
+                    materials[i].SetQuantity(remaining[i]);
+                    if(remaining[i]==0){storage.slots[indices[i]]=null;materials[i].Owner=null;}
+                }
+                target.SetDurability(maximum);
+            }
+        }
+        internal bool TryPrepareRepair(ItemStack target,IReadOnlyList<ZombieSurvival.Services.RepairCost> costs,out PreparedRepair plan,out string reason)
+        {
+            plan=null;reason="";
+            if(tradeLocked||!isActiveAndEnabled||!Contains(target)||target.IsSnapshot||!target.Definition.Repairable||target.Quantity!=1)
+            {reason="Инвентарь занят или вещь недоступна";return false;}
+            if(costs==null||costs.Count==0){reason="Рецепт ремонта пуст";return false;}
+            var prepared=new PreparedRepair{storage=this,target=target,maximum=target.Definition.MaximumDurability};var seen=new HashSet<ItemDefinition>();
+            foreach(var cost in costs)
+            {
+                if(cost==null||cost.Material==null||cost.Material.HasDurability||cost.Material.Category!=ItemCategory.Material||cost.Amount<=0||!seen.Add(cost.Material))
+                {reason="Некорректные материалы ремонта";return false;}
+                int needed=cost.Amount;
+                for(int i=0;i<slots.Count&&needed>0;i++)
+                {
+                    var slot=slots[i];if(slot==null||slot.IsEmpty||slot.Definition!=cost.Material||slot==target)continue;
+                    int take=Math.Min(needed,slot.Quantity);needed-=take;
+                    prepared.indices.Add(i);prepared.materials.Add(slot);prepared.remaining.Add(slot.Quantity-take);
+                }
+                if(needed>0){reason="Недостаточно материала: "+cost.Material.DisplayName;return false;}
+            }
+            plan=prepared;return true;
+        }
         internal sealed class TradeTransfer
         {
             internal ItemStorage source, destination;
