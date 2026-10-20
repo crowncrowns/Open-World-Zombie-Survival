@@ -128,6 +128,10 @@ namespace ZombieSurvival.Player
         [SerializeField] private bool invertVerticalLook;
         [Tooltip("Предел наклона камеры вверх и вниз, градусов.")]
         [SerializeField, Range(1f, 89f)] private float verticalLookLimit = 85f;
+        [Tooltip("Дополнительный предел взгляда вниз, градусов. Не расширяет общий вертикальный предел; 85 сохраняет прежний обзор.")]
+        [SerializeField, Range(1f, 89f)] private float downwardLookLimit = 85f;
+        [Tooltip("Смещение камеры вперёд при взгляде вниз после 25°, м. Только представление; ограничено радиусом капсулы. 0 сохраняет прежнюю камеру.")]
+        [SerializeField, Min(0f)] private float downwardCameraShift;
 
         [Header("Курсор и фокус окна")]
         [Tooltip("Захватывать курсор при включении управления и возвращении в игру.")]
@@ -204,6 +208,23 @@ namespace ZombieSurvival.Player
         public bool IsGrounded => controller != null && controller.isGrounded && verticalVelocity <= 0f
             && (parkour == null || !parkour.OwnsMovement);
         public float VerticalSpeed => verticalVelocity;
+        public float MaximumDownwardLook => Mathf.Min(verticalLookLimit, downwardLookLimit);
+        public float DownwardCameraShift => Mathf.Max(0f, downwardCameraShift);
+        private float ClampViewPitch(float value) => Mathf.Clamp(value, -verticalLookLimit, MaximumDownwardLook);
+        private Vector3 ApplyDownwardCameraShift(Vector3 position)
+        {
+            if (DownwardCameraShift <= 0f) return position;
+            float fraction = MaximumDownwardLook > 25f ? Mathf.InverseLerp(25f, MaximumDownwardLook, pitch) : 0f;
+            position.z += DownwardCameraShift * Mathf.SmoothStep(0f, 1f, fraction);
+            float radius = controller.radius;
+            float cylinderHalfHeight = Mathf.Max(0f, controller.height * .5f - radius);
+            float sphereCenterY = Mathf.Clamp(position.y, controller.center.y - cylinderHalfHeight, controller.center.y + cylinderHalfHeight);
+            float verticalDistance = position.y - sphereCenterY;
+            float availableRadius = Mathf.Max(0f, Mathf.Sqrt(Mathf.Max(0f, radius * radius - verticalDistance * verticalDistance)) - .02f);
+            Vector2 offset = Vector2.ClampMagnitude(new Vector2(position.x - controller.center.x, position.z - controller.center.z), availableRadius);
+            position.x = controller.center.x + offset.x; position.z = controller.center.z + offset.y;
+            return position;
+        }
         public float StandingHeight => standingHeight;
         public float BottomOffset => standingCenter.y - standingHeight * 0.5f;
         public Vector3 FeetPosition => transform.position + transform.up * BottomOffset;
@@ -392,6 +413,19 @@ namespace ZombieSurvival.Player
                 proneToggleArmed = crouchToggleArmed = false;
                 return;
             }
+            if (acceptingInput && lookEnabled && !skipLook)
+            {
+                Vector2 look = lookAction.ReadValue<Vector2>();
+                bool pointerLook = lookAction.activeControl?.device is Pointer;
+                look *= pointerLook ? mouseSensitivity : stickLookSpeed * Time.deltaTime;
+                look.x *= horizontalLookMultiplier;
+                look.y *= verticalLookMultiplier * (invertVerticalLook ? -1f : 1f);
+                transform.Rotate(0f, look.x, 0f);
+                pitch = ClampViewPitch(pitch - look.y);
+                playerCamera.localRotation = Quaternion.Euler(pitch, 0f, 0f);
+            }
+            skipLook = false;
+
             Vector2 movement = acceptingInput && movementEnabled
                 ? Vector2.ClampMagnitude(moveAction.ReadValue<Vector2>(), 1f) : Vector2.zero;
             if (parkour == null || !parkour.OwnsMovement) UpdateCrouch(acceptingInput);
@@ -402,19 +436,6 @@ namespace ZombieSurvival.Player
             bool crouchPressed = acceptingInput && crouchAction.WasPressedThisFrame();
             bool rollPressed = acceptingInput && rollAction != null && rollAction.WasPressedThisFrame();
             skipJumpInput = false;
-
-            if (acceptingInput && lookEnabled && !skipLook)
-            {
-                Vector2 look = lookAction.ReadValue<Vector2>();
-                bool pointerLook = lookAction.activeControl?.device is Pointer;
-                look *= pointerLook ? mouseSensitivity : stickLookSpeed * Time.deltaTime;
-                look.x *= horizontalLookMultiplier;
-                look.y *= verticalLookMultiplier * (invertVerticalLook ? -1f : 1f);
-                transform.Rotate(0f, look.x, 0f);
-                pitch = Mathf.Clamp(pitch - look.y, -verticalLookLimit, verticalLookLimit);
-                playerCamera.localRotation = Quaternion.Euler(pitch, 0f, 0f);
-            }
-            skipLook = false;
 
             Vector3 desiredVelocity = (transform.right * movement.x + transform.forward * movement.y)
                 * (IsProne ? crawlSpeed : IsCrouching ? crouchSpeed : running ? EffectiveRunSpeed : IsSlowWalking ? slowWalkSpeed : EffectiveWalkSpeed);
@@ -511,8 +532,8 @@ namespace ZombieSurvival.Player
         {
             ResetForRespawn(position, rotation);
             proneRequested = prone; crouchRequested = crouched && !prone;
+            pitch = ClampViewPitch(savedPitch);
             SetParkourPosture(SavedPoseHeight(prone, crouched), prone ? proneCameraDrop : crouched ? crouchCameraDrop : 0);
-            pitch = Mathf.Clamp(savedPitch, -verticalLookLimit, verticalLookLimit);
             playerCamera.localRotation = Quaternion.Euler(pitch, 0, 0);
             SetAlive(true); Physics.SyncTransforms();
         }
@@ -571,7 +592,7 @@ namespace ZombieSurvival.Player
             float clearance = Mathf.Min(cameraHeadClearance, height * 0.5f);
             cameraPosition.y = Mathf.Clamp(standingCameraPosition.y - cameraDrop,
                 bottom + clearance, bottom + height - clearance);
-            playerCamera.position = transform.TransformPoint(cameraPosition);
+            playerCamera.position = transform.TransformPoint(ApplyDownwardCameraShift(cameraPosition));
         }
 
         internal void SetParkourPosture(float height, float cameraDrop)
@@ -582,7 +603,7 @@ namespace ZombieSurvival.Player
             controller.center = new Vector3(standingCenter.x, BottomOffset + height * .5f, standingCenter.z);
             Vector3 position = standingCameraPosition;
             position.y = Mathf.Clamp(standingCameraPosition.y - cameraDrop, BottomOffset + .1f, BottomOffset + height - .1f);
-            playerCamera.position = transform.TransformPoint(position);
+            playerCamera.position = transform.TransformPoint(ApplyDownwardCameraShift(position));
         }
 
         internal void ReleaseParkour(Vector3 horizontalVelocity, float fallSpeed = 0f)

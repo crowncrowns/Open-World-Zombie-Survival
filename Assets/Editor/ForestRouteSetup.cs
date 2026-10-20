@@ -103,13 +103,36 @@ public static class ForestRouteSetup
         try
         {
             var visual = (GameObject)PrefabUtility.InstantiatePrefab(model, root.transform);
+            PrefabUtility.UnpackPrefabInstance(visual, PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
+            // FBX carries a 90-degree axis conversion at its root. Door pivots use Unity
+            // world-up coordinates; normalize the container without moving any mesh.
+            var importedChildren = visual.transform.Cast<Transform>().ToArray();
+            foreach (var child in importedChildren) child.SetParent(root.transform, true);
+            visual.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity); visual.transform.localScale = Vector3.one;
+            foreach (var child in importedChildren) child.SetParent(visual.transform, true);
             visual.name = "House model";
             foreach (var renderer in visual.GetComponentsInChildren<Renderer>(true))
             {
                 string n = renderer.name; int marker = n.LastIndexOf("__Static_", StringComparison.Ordinal);
                 string materialName = marker >= 0 ? n.Substring(marker + "__Static_".Length) : n.Contains("Knob") ? "metal" : "wood";
                 var material = AssetDatabase.LoadAssetAtPath<Material>("Assets/Environment/ApocalypseHouse_Unity/Materials/" + materialName + ".mat");
-                if (material == null) throw new InvalidOperationException("Нет URP материала для " + n + ": " + materialName);
+                if (material == null)
+                {
+                    // The OBJ importer exported only used overrides, not all GLB materials.
+                    string path = Folder + "/Materials/House/" + materialName + ".mat";
+                    EnsureFolder(Folder + "/Materials/House");
+                    material = AssetDatabase.LoadAssetAtPath<Material>(path);
+                    if (material == null)
+                    {
+                        var texture = AssetDatabase.FindAssets(materialName + " t:Texture2D", new[] { "Assets/Environment/ApocalypseHouse_Unity" })
+                            .Select(AssetDatabase.GUIDToAssetPath).Where(p => System.IO.Path.GetFileNameWithoutExtension(p) == materialName)
+                            .Select(AssetDatabase.LoadAssetAtPath<Texture2D>).FirstOrDefault();
+                        if (texture == null) throw new InvalidOperationException("Нет текстуры дома: " + materialName);
+                        material = new Material(Shader.Find("Universal Render Pipeline/Lit")); material.name = materialName;
+                        material.SetTexture("_BaseMap", texture); material.SetColor("_BaseColor", Color.white); material.SetFloat("_Smoothness", .2f);
+                        AssetDatabase.CreateAsset(material, path);
+                    }
+                }
                 renderer.sharedMaterials = Enumerable.Repeat(material, Math.Max(1, renderer.sharedMaterials.Length)).ToArray();
             }
             foreach (var filter in visual.GetComponentsInChildren<MeshFilter>(true))
@@ -122,9 +145,9 @@ public static class ForestRouteSetup
                 if (shell && filter.sharedMesh != null && filter.GetComponent<Collider>() == null)
                     filter.gameObject.AddComponent<MeshCollider>().sharedMesh = filter.sharedMesh;
             }
-            AddDoor(visual.transform, "Front door", new Vector3(-.45f, 0, 3.02f), new Vector3(.45f, 1, 0), new Vector3(.88f, 1.97f, .05f),
+            AddDoor(visual.transform, "Front door", new Vector3(-.38f, 0, 3.02f), new Vector3(.38f, 1, 0), new Vector3(.7f, 1.97f, .035f),
                 t => t.name.Contains("DOOR_FRONT") || t.name.Contains("Door_Front_"));
-            AddDoor(visual.transform, "Bathroom door", new Vector3(-1.09f, 0, 1.78f), new Vector3(.38f, 1, 0), new Vector3(.74f, 1.97f, .035f),
+            AddDoor(visual.transform, "Bathroom door", new Vector3(-.99f, 0, 1.78f), new Vector3(.33f, 1, 0), new Vector3(.62f, 1.97f, .035f),
                 t => t.name.Contains("DOOR_BATHROOM"));
             AddDoor(visual.transform, "Bedroom door", new Vector3(-.35f, 0, -1.35f), new Vector3(0, 1, .38f), new Vector3(.035f, 1.97f, .74f),
                 t => t.name.Contains("DOOR_BEDROOM"));
@@ -140,9 +163,10 @@ public static class ForestRouteSetup
         var go = new GameObject(name); go.transform.SetParent(model, false); go.transform.localPosition = pivot;
         foreach (var part in parts) part.transform.SetParent(go.transform, true);
         var leaf = go.AddComponent<BoxCollider>(); leaf.center = center; leaf.size = size;
+        if (name == "Front door") { center = new Vector3(center.x, 1.12f, center.z); size = new Vector3(size.x, 1.76f, size.z); leaf.center = center; leaf.size = size; }
         var door = go.AddComponent<DoorInteractable>(); Set(door, "hinge", go.transform); Set(door, "leaf", leaf);
         Set(door, "displayName", name == "Front door" ? "Входная дверь" : "Межкомнатная дверь");
-        Set(door, "openAngle", 95f); Set(door, "collisionMargin", .002f);
+        Set(door, "openAngle", name == "Front door" ? 90f : 85f); Set(door, "collisionMargin", .002f);
         SaveRoot(go); go.AddComponent<WorldDoorSaveAdapter>();
         go.AddComponent<NavMeshModifier>().ignoreFromBuild = true;
         var obstacle = go.AddComponent<NavMeshObstacle>(); obstacle.shape = NavMeshObstacleShape.Box;
@@ -187,7 +211,7 @@ public static class ForestRouteSetup
         return surface;
     }
 
-    [MenuItem("Tools/First Expedition/Add Route To Open CharacterTest (No Save)")]
+    // Original proposal retained for reference; use UserLocationSetup for the authored district.
     public static void Run()
     {
         var scene = OpenScene(); Registry(scene);
@@ -216,7 +240,7 @@ public static class ForestRouteSetup
         Debug.Log("FOREST_ROUTE_ADDED: дома/двери/контейнеры/5 зомби/2 союзника, отдельные поверхности. Сцена НЕ сохранена. Навигация запекается отдельной командой.");
     }
 
-    private static void AddGround(Transform parent, string name, Vector3 center, Vector3 size, Material material)
+    public static void AddGround(Transform parent, string name, Vector3 center, Vector3 size, Material material)
     {
         if (parent.Find(name) != null) return;
         var go = GameObject.CreatePrimitive(PrimitiveType.Cube); go.name = name; go.transform.SetParent(parent, false);
@@ -226,26 +250,30 @@ public static class ForestRouteSetup
     }
     private static ItemDefinition Item(string path) => AssetDatabase.LoadAssetAtPath<ItemDefinition>(path)
         ?? throw new InvalidOperationException("Нет существующего типа предмета: " + path);
-    private static void AddHouse(Transform parent, string name, Vector3 position, bool medical, Material material)
+    public static void AddHouse(Transform parent, string name, Vector3 position, bool medical, Material material)
     {
         if (parent.Find(name) != null) return;
         var house = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(HousePath), parent);
         house.name = name; house.transform.SetPositionAndRotation(position, Quaternion.Euler(0, 180, 0));
         house.transform.localScale = Vector3.one * 1.4f;
+        PrefabUtility.RecordPrefabInstancePropertyModifications(house.transform);
         Undo.RegisterCreatedObjectUndo(house, "Добавить дом вылазки"); NewIds(house);
         var items = medical ? new[] { Item("Assets/CharacterTesting/Progression/MedicalKit.asset"), Item("Assets/CharacterTesting/Survival/Water.asset") }
             : new[] { Item("Assets/CharacterTesting/Items/CannedFood.asset"), Item("Assets/CharacterTesting/Items/Repair/WeaponParts.asset") };
         AddContainer(house.transform, medical ? "Medical supplies" : "Warehouse supplies", new Vector3(1.5f, .325f, 1.35f), material, items, medical ? new[] { 2, 2 } : new[] { 3, 4 });
     }
-    private static void AddZombie(Transform parent, string name, Vector3 position, float radius)
+    public static void AddZombie(Transform parent, string name, Vector3 position, float radius)
     {
         if (parent.Find(name) != null) return;
         var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Characters/Enemies/ZombieMaleActor.prefab");
         if (prefab == null) throw new InvalidOperationException("Не найден общий префаб зомби.");
         var npc = (GameObject)PrefabUtility.InstantiatePrefab(prefab, parent); npc.name = name;
         npc.transform.SetPositionAndRotation(position, Quaternion.Euler(0, 180, 0));
+        PrefabUtility.RecordPrefabInstancePropertyModifications(npc.transform);
         Undo.RegisterCreatedObjectUndo(npc, "Добавить зомби маршрута"); NewIds(npc);
         var brain = npc.GetComponent<EnemyBrain>(); if (brain == null) throw new InvalidOperationException("На префабе отсутствует EnemyBrain.");
+        var body = npc.GetComponent<CapsuleCollider>();
+        if (body != null) { var center = body.center; center.y = Mathf.Max(center.y, body.height * .5f + .05f); Set(body, "m_Center", center); }
         Set(brain, "patrolRadius", radius);
         if (npc.GetComponent<WorldSaveObject>() == null) SaveRoot(npc);
         if (npc.GetComponent<WorldActorSaveAdapter>() == null) npc.AddComponent<WorldActorSaveAdapter>();
@@ -270,7 +298,7 @@ public static class ForestRouteSetup
         var state = controller.layers[0].stateMachine.AddState("Idle"); state.motion = authored;
         controller.layers[0].stateMachine.defaultState = state; AssetDatabase.SaveAssetIfDirty(controller); return controller;
     }
-    private static void AddGuard(Transform parent, string name, string visualPath, Vector3 position)
+    public static void AddGuard(Transform parent, string name, string visualPath, Vector3 position)
     {
         if (parent.Find(name) != null) return;
         var source = AssetDatabase.LoadAssetAtPath<GameObject>(visualPath);
@@ -289,13 +317,14 @@ public static class ForestRouteSetup
                 return AssetDatabase.LoadAssetAtPath<Material>(Folder + "/Materials/Survivalist/" + material.name + ".mat")
                     ?? throw new InvalidOperationException("Не подготовлена URP копия материала союзника: " + material.name);
             }).ToArray();
+            PrefabUtility.RecordPrefabInstancePropertyModifications(renderer);
         }
-        foreach (var animator in visual.GetComponentsInChildren<Animator>(true)) { animator.runtimeAnimatorController = GuardIdle(); animator.applyRootMotion = false; }
+        foreach (var animator in visual.GetComponentsInChildren<Animator>(true)) { animator.runtimeAnimatorController = GuardIdle(); animator.applyRootMotion = false; PrefabUtility.RecordPrefabInstancePropertyModifications(animator); }
         // No CombatTarget, EnemyBrain, weapon or damage reaction: these allies are presentation only at this stage.
         npc.AddComponent<NavMeshModifier>().ignoreFromBuild = true;
         SaveRoot(npc); npc.AddComponent<WorldActorSaveAdapter>(); npc.AddComponent<WorldIdentitySaveAdapter>();
     }
-    private static void AddPlaque(Transform parent, string name, Vector3 position, string caption)
+    public static void AddPlaque(Transform parent, string name, Vector3 position, string caption)
     {
         if (parent.Find(name) != null) return;
         var go = Child(parent, name); go.transform.position = position;
@@ -304,7 +333,6 @@ public static class ForestRouteSetup
     }
 
     /// <summary>Explicit one-time relocation of the existing three actors; no stock, money or IDs are recreated.</summary>
-    [MenuItem("Tools/First Expedition/Place Existing Services In Kurs (No Save)")]
     public static void PlaceExistingServices()
     {
         var scene = OpenScene(); var traders = UnityEngine.Object.FindObjectsByType<Trader>(FindObjectsInactive.Include).Where(t => t.gameObject.scene == scene).ToArray();
@@ -345,7 +373,7 @@ public static class ForestRouteSetup
             {
                 EditorUtility.CopySerialized(surface.navMeshData, stored); surface.RemoveData(); surface.navMeshData = stored; surface.AddData();
             }
-            AssetDatabase.SaveAssetIfDirty(stored);
+            EditorUtility.SetDirty(stored); AssetDatabase.SaveAssetIfDirty(stored);
         }
         EditorSceneManager.MarkSceneDirty(scene);
     }

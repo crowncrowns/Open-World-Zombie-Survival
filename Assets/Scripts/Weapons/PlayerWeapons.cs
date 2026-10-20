@@ -26,6 +26,16 @@ namespace ZombieSurvival.Weapons
         [SerializeField, Min(1)] private float aimSpeed = 12;
         [Tooltip("Продолжительность отметки попадания на HUD, с.")]
         [SerializeField, Min(.05f)] private float hitMarkerSeconds = .2f;
+        [Header("Полное тело — крепление оружия")]
+        [SerializeField, Tooltip("Крепить единственную модель оружия к правой кисти PlayerVisual. Выключено: прежний вид относительно камеры.")]
+        private bool handBoundVisual;
+        [SerializeField, Tooltip("Необязательная точка крепления в модели игрока. Без неё используется Humanoid RightHand текущего PlayerVisual.")]
+        private Transform handAttachment;
+        [SerializeField, Tooltip("Локальная позиция пистолета относительно кисти, м.")] private Vector3 firearmHandPosition;
+        [SerializeField, Tooltip("Локальный поворот пистолета относительно кисти, градусов.")] private Vector3 firearmHandEuler;
+        [SerializeField, Tooltip("Локальная позиция оружия ближнего боя относительно кисти, м.")] private Vector3 meleeHandPosition;
+        [SerializeField, Tooltip("Локальный поворот оружия ближнего боя относительно кисти, градусов.")] private Vector3 meleeHandEuler;
+        [SerializeField, Tooltip("Дополнительный масштаб модели на кисти; умножается на viewScale типа оружия.")] private Vector3 handVisualScale = Vector3.one;
         private FirstPersonController motor;
         private ItemStorage storage;
         private PlayerNoiseEmitter noise;
@@ -40,8 +50,24 @@ namespace ZombieSurvival.Weapons
         private static int attacksInProgress;
         public static bool IsBusy => attacksInProgress > 0;
         public ItemStack Equipped => equipped;
+        public GameObject View => view;
+        public bool UsesHandBoundVisual => handBoundVisual;
+        public Vector3 FirearmHandPosition => firearmHandPosition;
+        public Quaternion FirearmHandRotation => Quaternion.Euler(firearmHandEuler);
+        public float VisualRecoil => recoilAngle;
+        public event System.Action<WeaponDefinition> ShotFired;
+        public event System.Action<WeaponDefinition> SwingStarted;
+        public event System.Action<WeaponDefinition> ReloadStarted;
+        public event System.Action<WeaponDefinition> WeaponEquipped;
+        private void Notify(System.Action<WeaponDefinition> listeners, WeaponDefinition data)
+        {
+            if(listeners==null)return;
+            foreach(System.Action<WeaponDefinition> listener in listeners.GetInvocationList())
+                try { listener(data); } catch(System.Exception error) { Debug.LogException(error,this); }
+        }
         public bool IsReloading => reloadAt > 0;
         public bool IsAttacking => pending != null || committingAttack;
+        public bool IsRecovering => equipped != null && Time.time < readyAt;
         private void BeginCommit() { committingAttack=true; attacksInProgress++; }
         private void EndCommit() { attacksInProgress--; committingAttack=false; }
         public bool IsAiming { get; private set; }
@@ -86,16 +112,28 @@ namespace ZombieSurvival.Weapons
             if(!motor.IsAlive || item==null || item.IsEmpty || item.Definition.Weapon==null) return false;
             Cancel(); if(view!=null) Destroy(view); view=null; equipped=item; readyAt=Time.time+.2f; armed=false; recoilAngle=0;
             var data=item.Definition.Weapon;
-            if(data.viewPrefab!=null && viewCamera!=null)
+            CreateView(data);
+            Notify(WeaponEquipped,data);
+            Status=""; return true;
+        }
+        private Transform HandAnchor()
+        {
+            if(handAttachment!=null && handAttachment.IsChildOf(transform))return handAttachment;
+            var animator=GetComponent<PlayerVisual>()?.ModelAnimator;
+            return animator!=null && animator.isHuman && animator.avatar!=null && animator.avatar.isValid ? animator.GetBoneTransform(HumanBodyBones.RightHand) : null;
+        }
+        private void CreateView(WeaponDefinition data)
+        {
+            var parent=handBoundVisual ? HandAnchor() : viewCamera!=null ? viewCamera.transform : null;
+            if(data.viewPrefab!=null && parent!=null)
             {
-                view=Instantiate(data.viewPrefab,viewCamera.transform,false); view.name="HeldWeapon";
+                view=Instantiate(data.viewPrefab,parent,false); view.name="HeldWeapon";
                 foreach(var c in view.GetComponentsInChildren<Collider>(true)) c.enabled=false;
                 foreach(var body in view.GetComponentsInChildren<Rigidbody>(true)) { body.isKinematic=true; body.detectCollisions=false; }
                 foreach(var source in view.GetComponentsInChildren<AudioSource>(true)) source.enabled=false;
                 foreach(var renderer in view.GetComponentsInChildren<Renderer>(true)) renderer.shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.Off;
                 view.transform.localScale=data.viewScale;
             }
-            Status=""; return true;
         }
         private void Cycle(int direction)
         {
@@ -142,7 +180,7 @@ namespace ZombieSurvival.Weapons
             if(committingAttack || !CanAct || equipped==null || IsReloading || pending!=null || Time.time<readyAt) return false;
             var data=equipped.Definition.Weapon;
             if(data.kind!=WeaponKind.Firearm || data.Ammo==null || equipped.LoadedRounds>=data.MagazineSize || storage.Count(data.Ammo)==0) return false;
-            reloadAt=Time.time+data.reloadSeconds; IsAiming=false; Play(data.reloadSound,data); Status="Перезарядка…"; return true;
+            reloadAt=Time.time+data.reloadSeconds; IsAiming=false; Play(data.reloadSound,data); Status="Перезарядка…"; Notify(ReloadStarted,data); return true;
         }
         public bool TryAttack()
         {
@@ -162,13 +200,14 @@ namespace ZombieSurvival.Weapons
                 {
                     if(motor.Stamina!=null && !motor.Stamina.TrySpend(data.staminaCost)) { Status="Мало выносливости"; return false; }
                     pending=original; swingStarted=Time.time; attackAt=Time.time+Mathf.Clamp(data.windup,0,data.cooldown);
+                    Notify(SwingStarted,data);
                 }
                 else if(!storage.TryUseWeapon(original,data.durabilityCostPerUse,true,out useReason)) { Status=useReason; return false; }
                 readyAt=Time.time+data.cooldown; Status="";
                 if(data.attacks!=null && data.attacks.Length>0) Play(data.attacks[Random.Range(0,data.attacks.Length)],data);
                 if(noise!=null) noise.Emit(data.noise,data.kind==WeaponKind.Firearm ? NoiseKind.Gunshot : NoiseKind.Melee);
                 else GameplayNoise.Emit(transform.position,data.noise.x,data.noise.y,gameObject,data.kind==WeaponKind.Firearm ? NoiseKind.Gunshot : NoiseKind.Melee);
-                if(data.kind==WeaponKind.Firearm) { Fire(data); recoilAngle=Mathf.Min(15,recoilAngle+data.recoil); }
+                if(data.kind==WeaponKind.Firearm) { Fire(data); recoilAngle=Mathf.Min(15,recoilAngle+data.recoil); Notify(ShotFired,data); }
                 return true;
             }
             finally { EndCommit(); }
@@ -213,10 +252,28 @@ namespace ZombieSurvival.Weapons
         private void Play(AudioClip clip,WeaponDefinition data) { if(clip!=null) { audioSource.transform.position=viewCamera.transform.position; audioSource.PlayOneShot(clip,data.volume); } }
         private void LateUpdate()
         {
+            aimWeight=Mathf.MoveTowards(aimWeight,IsAiming?1:0,Time.deltaTime*aimSpeed);
+            if(handBoundVisual && equipped!=null && storage.Contains(equipped))
+            {
+                var anchor=HandAnchor();
+                if(anchor==null) { if(view!=null)view.SetActive(false); return; }
+                if(view==null)CreateView(equipped.Definition.Weapon);
+                if(view!=null)
+                {
+                    if(view.transform.parent!=anchor)view.transform.SetParent(anchor,false);
+                    bool firearm=equipped.Definition.Weapon.kind==WeaponKind.Firearm;
+                    view.transform.localPosition=firearm?firearmHandPosition:meleeHandPosition;
+                    view.transform.localRotation=Quaternion.Euler(firearm?firearmHandEuler:meleeHandEuler);
+                    view.transform.localScale=Vector3.Scale(equipped.Definition.Weapon.viewScale,handVisualScale);
+                    // Visual-only near-wall suppression; hit query, muzzle and damage remain authoritative.
+                    bool obstructed=viewCamera!=null && WeaponHitQuery.Cast(viewCamera.transform.position,viewCamera.transform.forward,.55f,.05f,transform,hitMask,out _);
+                    view.SetActive(CanAct && !obstructed);
+                }
+                return;
+            }
             if(view==null || equipped==null) return;
             view.SetActive(CanAct); if(!CanAct) return;
             var data=equipped.Definition.Weapon;
-            aimWeight=Mathf.MoveTowards(aimWeight,IsAiming?1:0,Time.deltaTime*aimSpeed);
             Vector3 position=Vector3.Lerp(data.holdPosition,data.aimPosition,aimWeight);
             Vector3 rotation=data.holdEuler;
             if(data.kind==WeaponKind.Melee && Time.time<swingStarted+data.cooldown)
