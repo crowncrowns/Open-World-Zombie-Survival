@@ -99,6 +99,14 @@ namespace ZombieSurvival.Inventory
                     feedback = needs.TryConsume(selected) ? "Предмет употреблён" : "Показатели полные или предмет недоступен";
                 if (!selectedContainer && stack.Definition.Weapon != null && GUILayout.Button("Экипировать"))
                 { var weapons = GetComponent<ZombieSurvival.Weapons.PlayerWeapons>(); if (weapons != null) feedback = weapons.Equip(selected) ? "Оружие выбрано. Закрой рюкзак для атаки." : "Нельзя экипировать: проверь допуск типа в хотбар и состояние персонажа."; }
+                if (!selectedContainer && stack.Definition.Flashlight != null && GUILayout.Button("Экипировать фонарик"))
+                {
+                    var hotbar = GetComponent<PlayerHotbar>();
+                    int slot = hotbar != null ? System.Array.IndexOf(hotbar.CaptureAssignments(), stack.InstanceId) : -1;
+                    if (hotbar != null && slot < 0) slot = hotbar.SelectedIndex;
+                    feedback = hotbar != null && hotbar.Assign(slot, selected) && hotbar.Select(slot)
+                        ? "Фонарик выбран. Закрой рюкзак; ЛКМ — включить / выключить." : "Нельзя выбрать фонарик: проверь хотбар и состояние персонажа.";
+                }
                 if (hadContainer && container != null)
                 {
                     var destination = selectedContainer ? storage : container;

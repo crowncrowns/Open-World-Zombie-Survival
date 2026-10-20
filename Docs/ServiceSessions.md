@@ -1,5 +1,11 @@
 # Т4: общие сессии сервисов — выполнен
 
+Т11: [ServicePolish.md](ServicePolish.md). Сессия связывает ServicePresentation.BeginSession с камерой собеседника и EndSession при закрытии. ReportOperationResult(bool) — только необязательная обратная связь явной UI-команды, не разрешение/исполнение сделки. Отсутствие FX-компонента/Animator/клипа не блокирует сервис; ValidateAccess/SessionVersion/owner-lock и прежние backend остаются обязательными.
+
+Т10 (20.10.2026): [WorkbenchWindow.md](WorkbenchWindow.md). Проверочная оболочка Т9 удалена: окно верстака теперь отдельное представление с Tick/Draw/Reset/Dispose, принадлежащее прежней сессии. Disabled/missing RepairWorkbench отклоняет CanAccess/E и закрывает открытое окно; SessionVersion и owner-lock ввода сохранены. Исторические записи ниже не означают наличие двух окон одновременно.
+
+Т9 (20.10.2026): [RepairService.md](RepairService.md). RepairWorkbench подключён к прежнему WorkbenchServicePoint исходного prefab. Общая PlayerServiceSession содержит проверочную оболочку выбора вещи, расчёта и подтверждения; каждая операция идёт через RepairService. ValidateAccess(expectedPoint), блокировки ввода и SessionVersion сохранены. Для Т10 выделить полноценное представление без дублирования сессий или экономики. Историческое описание пустой оболочки ниже относится к Т4.
+
 ## Объём и пути
 
 Один `PlayerServiceSession` на игроке открывает одну сессию через существующий `PlayerInteractor` / E. `TraderServicePoint` и `WorkbenchServicePoint` наследуют общий `ServicePoint : Interactable`. Это тестовая оболочка доступа: каталогов, сделок, ремонта, улучшений, наград или сохранения экономики здесь нет. Wallet guard F5/F9 сохранён.
@@ -82,3 +88,7 @@ FPC хранит независимый legacy base gate и множество �
 ## Т6: подтверждение сделки
 
 PlayerServiceSession содержит счётчик SessionVersion: Close и новое открытие делают прежнюю котировку недействительной даже у того же NPC. При подтверждении TradeService снова вызывает ValidateAccess(expectedPoint). Существующее окно расширено выбором покупки/продажи, количества и предложения; правила/деньги/перенос остаются в сервисе. GUI рисуется поверх прочих HUD с непрозрачной панелью. Исправления исходного/сценового игрока из предыдущей записи теперь подключены в Edit, checks импортированы, PlayerServiceSession сохранён в CharacterTest; прежний pending не актуален. См. [TradeTransactions.md](TradeTransactions.md).
+
+## После Т7: представление торговли
+
+TradeWindow принадлежит PlayerServiceSession и не заменяет проверки E/дистанции/жизни/фокуса/SessionVersion. Старый проверочный trader shell удалён; верстак остаётся прежним. Close/Reset снимают ссылки и подписки, Disable/Destroy очищают GUI-текстуры. Цена читается через preview API, а право сделки проверяется отдельно. См. [TradingWindow.md](TradingWindow.md).

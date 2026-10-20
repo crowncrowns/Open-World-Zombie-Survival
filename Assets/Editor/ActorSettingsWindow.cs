@@ -92,12 +92,12 @@ public sealed class ActorSettingsWindow : EditorWindow
             case "PlayerParkour": return 2;
             case "PlayerNoiseEmitter": case "PlayerInteractor": case "EnemyBrain": case "EnemyCrawlPursuit": case "MeleeAttack": case "NoiseEmitter": return 3;
             case "PlayerCameraMotion": case "PlayerVisual": case "PlayerModelDefinition": case "PlayerCrawlAnimation": case "HumanoidCrawlPose": case "HumanoidGrounding": case "EnemyAnimationBridge": return 4;
-            case "ItemStorage": case "PlayerInventory": case "PlayerServiceSession": case "TraderServicePoint": case "WorkbenchServicePoint": case "ServiceVisual": case "Trader": return 5;
+            case "ItemStorage": case "PlayerInventory": case "PlayerServiceSession": case "TraderServicePoint": case "WorkbenchServicePoint": case "RepairWorkbench": case "ServiceVisual": case "Trader": return 5;
             case "PlayerProgression": case "PlayerStatModifiers": case "PlayerProgressionMenu": case "PlayerHotbar": return 10;
             case "Wallet": case "TraderBudget": return 8;
             case "PlayerSaveSlots": case "PlayerSaveMenu": case "PlayerNeeds": case "PlayerSaveSystem": case "SaveIdentity": case "WorldSaveObject": case "WorldActorSaveAdapter": case "WorldIdentitySaveAdapter": case "WorldWalletSaveAdapter": case "WorldDoorSaveAdapter": case "WorldToggleSaveAdapter": case "WorldRigidbodySaveAdapter": return 9;
-            case "ActorAudioEmitter": case "PlayerMovementAudio": case "NavMeshActorAudio": return 6;
-            case "PlayerWeapons": case "WeaponPracticeTarget": return 7;
+            case "ActorAudioEmitter": case "PlayerMovementAudio": case "NavMeshActorAudio": case "ServicePresentation": return 6;
+            case "PlayerWeapons": case "PlayerFlashlight": case "WeaponPracticeTarget": return 7;
             default: return -1;
         }
     }
@@ -119,7 +119,9 @@ public sealed class ActorSettingsWindow : EditorWindow
             case "TraderServicePoint": return "Доступ к торговой сессии";
             case "Trader": return "Профили и личные остатки торговца (Т5)";
             case "WorkbenchServicePoint": return "Доступ к сессии верстака";
+            case "RepairWorkbench": return "Правила ремонта верстака";
             case "ServiceVisual": return "Префаб внешности сервиса";
+            case "ServicePresentation": return "Анимации и обратная связь сервисов";
             case "PlayerProgression": return "Опыт, уровни и дерево развития";
             case "PlayerStatModifiers": return "Расчёт бонусов характеристик";
             case "PlayerProgressionMenu": return "Окно дерева развития";

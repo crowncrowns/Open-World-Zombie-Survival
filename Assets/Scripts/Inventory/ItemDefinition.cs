@@ -3,7 +3,7 @@ using UnityEngine;
 namespace ZombieSurvival.Inventory
 {
     public enum ItemCategory { [InspectorName("Не назначено")] Uncategorized = 0, [InspectorName("Оружие")] Weapon = 10, [InspectorName("Патроны")] Ammunition = 20, [InspectorName("Снаряжение")] Equipment = 30, [InspectorName("Еда")] Food = 40, [InspectorName("Медицина")] Medicine = 50, [InspectorName("Материалы")] Material = 60 }
-    public enum ItemSubcategory { [InspectorName("Не назначено")] Unspecified = 0, [InspectorName("Огнестрельное")] Firearm = 10, [InspectorName("Ближний бой")] Melee = 11, [InspectorName("Боеприпасы")] Ammunition = 20, [InspectorName("Рюкзак")] Backpack = 30, [InspectorName("Броня")] BodyArmor = 31, [InspectorName("Тактический жилет")] TacticalVest = 32, [InspectorName("Одежда")] Clothing = 33, [InspectorName("Продукты")] Food = 40, [InspectorName("Медицинские средства")] MedicalSupplies = 50, [InspectorName("Текстиль")] Textile = 60, [InspectorName("Оружейные детали")] WeaponParts = 61, [InspectorName("Бронематериалы")] ArmorMaterial = 62 }
+    public enum ItemSubcategory { [InspectorName("Не назначено")] Unspecified = 0, [InspectorName("Огнестрельное")] Firearm = 10, [InspectorName("Ближний бой")] Melee = 11, [InspectorName("Боеприпасы")] Ammunition = 20, [InspectorName("Рюкзак")] Backpack = 30, [InspectorName("Броня")] BodyArmor = 31, [InspectorName("Тактический жилет")] TacticalVest = 32, [InspectorName("Одежда")] Clothing = 33, [InspectorName("Фонарик")] Flashlight = 34, [InspectorName("Продукты")] Food = 40, [InspectorName("Медицинские средства")] MedicalSupplies = 50, [InspectorName("Текстиль")] Textile = 60, [InspectorName("Оружейные детали")] WeaponParts = 61, [InspectorName("Бронематериалы")] ArmorMaterial = 62 }
 
     /// <summary>Shared type data; individual durability, quantity and magazine belong to ItemStack.</summary>
     [CreateAssetMenu(menuName = "Zombie Survival/Предмет", fileName = "NewItem")]
@@ -21,13 +21,15 @@ namespace ZombieSurvival.Inventory
         [SerializeField] private GameObject worldPrefab;
         [Tooltip("Настройки оружия. Пусто для остальных типов.")]
         [SerializeField] private ZombieSurvival.Weapons.WeaponDefinition weapon;
+        [SerializeField, InspectorName("Фонарик"), Tooltip("Настройки переносного фонарика. Это снаряжение, а не оружие; ссылку Оружие оставьте пустой.")]
+        private ZombieSurvival.Equipment.FlashlightDefinition flashlight;
         [SerializeField, Tooltip("Основная категория типа. Числовые ID enum стабильны, не перенумеровывать.")]
         private ItemCategory category;
         [SerializeField, Tooltip("Подкатегория типа; не определяет эффекты экипировки или рецепты автоматически.")]
         private ItemSubcategory subcategory;
-        [SerializeField, Tooltip("Разрешён ли будущий ремонт этого типа. Сам ремонт на Т2 не реализован.")]
+        [SerializeField, Tooltip("Разрешает ремонт этого типа на верстаке. Дополнительно нужен подходящий рецепт в RepairPolicy; материалы списываются из рюкзака игрока.")]
         private bool repairable;
-        [SerializeField, Tooltip("Стабильный ID будущего ремонтного профиля (weapon/textile/armor); это не рецепт и не цена.")]
+        [SerializeField, Tooltip("Стабильный ID ремонтного профиля (weapon/textile/armor), по которому RepairPolicy выбирает рецепт. Сам рецепт и расход задаются отдельно.")]
         private string repairProfileId;
         [SerializeField, Min(.01f), Tooltip("Максимальная прочность нового оружия/снаряжения, ед. Текущее значение хранится в экземпляре.")]
         private float maximumDurability = 100f;
@@ -35,6 +37,7 @@ namespace ZombieSurvival.Inventory
         private bool allowInHotbar;
         public bool AllowInHotbar => allowInHotbar;
         public ZombieSurvival.Weapons.WeaponDefinition Weapon => weapon;
+        public ZombieSurvival.Equipment.FlashlightDefinition Flashlight => flashlight;
         private bool warnedUncategorized;
         internal void WarnIfUncategorized()
         {
@@ -53,8 +56,8 @@ namespace ZombieSurvival.Inventory
         public string DisplayName => displayName;
         public string Description => description;
         // Legacy weapon data has a reliable typed reference; never infer categories from names.
-        public ItemCategory Category => weapon != null ? ItemCategory.Weapon : category;
-        public ItemSubcategory Subcategory => weapon != null ? (weapon.kind == ZombieSurvival.Weapons.WeaponKind.Firearm ? ItemSubcategory.Firearm : ItemSubcategory.Melee) : subcategory;
+        public ItemCategory Category => weapon != null ? ItemCategory.Weapon : flashlight != null ? ItemCategory.Equipment : category;
+        public ItemSubcategory Subcategory => weapon != null ? (weapon.kind == ZombieSurvival.Weapons.WeaponKind.Firearm ? ItemSubcategory.Firearm : ItemSubcategory.Melee) : flashlight != null ? ItemSubcategory.Flashlight : subcategory;
         public bool IsIndividual => Category == ItemCategory.Weapon || Category == ItemCategory.Equipment;
         public bool HasDurability => IsIndividual;
         public bool Repairable => HasDurability && repairable;

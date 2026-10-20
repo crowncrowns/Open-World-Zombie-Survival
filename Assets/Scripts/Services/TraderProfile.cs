@@ -11,7 +11,7 @@ namespace ZombieSurvival.Services
         [Serializable] public sealed class Entry
         {
             [Tooltip("Существующий тип предмета; состояние экземпляра хранится только в ItemStorage.")] public ItemDefinition item;
-            [Min(0), Tooltip("Начальное количество, выдаваемое торговцу один раз за новую сессию мира.")] public int quantity;
+            [Min(0), Tooltip("Начальное количество и целевой остаток при пополнении. Пополнение добавляет только недостающее, не удаляет проданные игроком экземпляры.")] public int quantity;
             [Tooltip("Базовая цена одной единицы в целых рублях. Ноль разрешён явно; отрицательная цена запрещена.")] public long basePrice;
         }
         [SerializeField, Tooltip("Постоянный ID профиля. Не менять после создания сохраняемого торговца.")] private string profileId;

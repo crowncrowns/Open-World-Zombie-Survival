@@ -20,6 +20,7 @@ public static class WeaponValidation
             if(data.viewPrefab==null || data.attacks==null || data.attacks.Length==0) errors.Add(item.name+": не назначены модель/звуки атаки");
             if(data.kind==WeaponKind.Firearm && (data.Ammo==null || data.Ammo==item || data.Ammo.Weapon!=null || data.reloadSound==null)) errors.Add(item.name+": нужен отдельный ресурс патронов и звук перезарядки");
             if(data.range<=0 || data.cooldown<=0 || data.windup<0 || data.damage<0) errors.Add(item.name+": неверные дистанция/время/урон");
+            if(float.IsNaN(data.durabilityCostPerUse) || float.IsInfinity(data.durabilityCostPerUse) || data.durabilityCostPerUse<0) errors.Add(item.name+": износ должен быть конечным неотрицательным числом, ед./применение");
         }
         foreach(var player in UnityEngine.Object.FindObjectsByType<FirstPersonController>(FindObjectsInactive.Include))
         {

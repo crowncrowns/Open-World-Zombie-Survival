@@ -10,6 +10,8 @@ namespace ZombieSurvival.Weapons
     {
         [Tooltip("Тип атаки: удар или мгновенный луч выстрела.")]
         public WeaponKind kind;
+        [InspectorName("Износ за применение"), Tooltip("Расход прочности экземпляра, ед./применение: за состоявшийся выстрел или завершённый замах, в том числе промах. Отменённый замах не расходует прочность. 0 отключает расход, но не разрешает атаку сломанным оружием. Отрицательное/NaN/Infinity запрещает атаку."), Min(0)]
+        public float durabilityCostPerUse = .5f;
         [Tooltip("Урон одного попадания, единицы здоровья.")][Min(0)] public float damage = 35;
         [Tooltip("Дальность попадания от камеры, м.")][Min(.1f)] public float range = 1.8f;
         [Tooltip("Пауза между началами атак, с.")][Min(.05f)] public float cooldown = .7f;

@@ -10,6 +10,8 @@ GameObject:
   m_Component:
   - component: {fileID: 3575909725266768207}
   - component: {fileID: 3834469194102609449}
+  - component: {fileID: 4436406762782476265}
+  - component: {fileID: 8497394805135760546}
   m_Layer: 0
   m_Name: T4WorkbenchSession
   m_TagString: Untagged
@@ -55,6 +57,38 @@ MonoBehaviour:
   obstructionMask:
     serializedVersion: 2
     m_Bits: 4294967295
+--- !u!114 &4436406762782476265
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3268620443472460817}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1b660b04beeb6b14a9ed0ac848d86638, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ZombieSurvival.Services.RepairWorkbench
+  policyOverride: {fileID: 0}
+--- !u!114 &8497394805135760546
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3268620443472460817}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d4b0e46cb0c7de343bf3b5d3d2230b93, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ZombieSurvival.Services.ServicePresentation
+  profileOverride: {fileID: 0}
+  idleEnabled: 1
+  lookEnabled: 1
+  maximumYaw: 35
+  maximumPitch: 15
+  lookSpeed: 80
+  soundsEnabled: 1
 --- !u!1001 &3161441808975893585
 PrefabInstance:
   m_ObjectHideFlags: 0

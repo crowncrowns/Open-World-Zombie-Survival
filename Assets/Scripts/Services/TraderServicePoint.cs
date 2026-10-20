@@ -3,7 +3,7 @@ namespace ZombieSurvival.Services
     [UnityEngine.DisallowMultipleComponent]
     public sealed class TraderServicePoint : ServicePoint
     {
-        public override string SessionTitle => "Торговая сессия";
+        public override string SessionTitle => "Торговля";
         public override string SessionDescription => GetComponent<Trader>() != null ? "Выберите покупку или продажу, предмет и количество. Цена учитывает состояние вещи и патроны в магазине." : "Проверка доступа к сервису. Каталог подключается компонентом Trader.";
         public override bool CanAccess(ZombieSurvival.Interaction.PlayerInteractor actor, out string reason)
         {
