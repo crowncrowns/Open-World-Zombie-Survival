@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 """Stage 4: finishes and reusable prop placements, separate from the shell FBX."""
 TEX=ROOT/'Assets/Environment/KursHub/Textures'
 for name,prefix in {'BlueCladding':'BluePaint','MallBlue':'BluePaint','Concrete':'CreamConcrete',
@@ -79,8 +80,127 @@ for item in prop_instances:
     collection('Reusable exterior props').objects.link(instance)
     instance.location=xyz(item['position']);instance.rotation_euler=(0,0,-math.radians(item['rotation'][1]));instance.scale=xyz(item['scale'])
     instance['UnityPrefab']='Assets/Environment/KursHub/Props/Prefabs/'+item['prop']+'.prefab'
+=======
+"""Stage 4: shared surfaces and nested reusable props, never baked into Shell.
+
+Executed by build_kurs_hub.py. Coordinates and placement rotations are Unity
+metres/degrees. Placement IDs are stable authoring keys, not runtime save IDs.
+"""
+TEXTURES='Assets/Environment/KursHub/Textures/'
+def surface(material,prefix,tile=.5,smoothness=1,metallic=0,tint=(1,1,1,1),transparent=False):
+    base=TEXTURES+prefix+'_BaseColor.png'
+    assert (ROOT/base).exists(),f'Generate surface textures first: {base}'
+    normal=TEXTURES+prefix+'_Normal.png'
+    mask=TEXTURES+prefix+'_MetallicSmoothness.png'
+    record=dict(baseMap=base,tile=tile,smoothness=smoothness,metallic=metallic,tint=list(tint),transparent=transparent)
+    if (ROOT/normal).exists():record['normalMap']=normal
+    if (ROOT/mask).exists():record['maskMap']=mask
+    finishes[material]=record
+    # Pack the same authored maps into Blender, so the source has the Unity finish.
+    mat=materials[material];nodes=mat.node_tree.nodes;links=mat.node_tree.links
+    bsdf=nodes.get('Principled BSDF')
+    texcoord=nodes.new('ShaderNodeTexCoord');mapping=nodes.new('ShaderNodeVectorMath');mapping.operation='SCALE'
+    mapping.inputs[3].default_value=tile
+    links.new(texcoord.outputs['UV'],mapping.inputs[0])
+    def texture(relative,linear=False):
+        node=nodes.new('ShaderNodeTexImage');node.image=bpy.data.images.load(str(ROOT/relative),check_existing=True)
+        if linear:node.image.colorspace_settings.name='Non-Color'
+        links.new(mapping.outputs[0],node.inputs['Vector'])
+        return node
+    albedo=texture(base)
+    tint_node=nodes.new('ShaderNodeMixRGB');tint_node.blend_type='MULTIPLY';tint_node.inputs[0].default_value=1;tint_node.inputs[2].default_value=tint
+    links.new(albedo.outputs['Color'],tint_node.inputs[1]);links.new(tint_node.outputs[0],bsdf.inputs['Base Color'])
+    if transparent:
+        alpha=nodes.new('ShaderNodeMath');alpha.operation='MULTIPLY';alpha.inputs[1].default_value=tint[3]
+        links.new(albedo.outputs['Alpha'],alpha.inputs[0]);links.new(alpha.outputs[0],bsdf.inputs['Alpha'])
+        mat.surface_render_method='DITHERED'
+    if 'normalMap' in record:
+        bump=texture(record['normalMap'],True);normal_node=nodes.new('ShaderNodeNormalMap');normal_node.inputs['Strength'].default_value=.35
+        links.new(bump.outputs['Color'],normal_node.inputs['Color']);links.new(normal_node.outputs[0],bsdf.inputs['Normal'])
+    if 'maskMap' in record:
+        mask_node=texture(record['maskMap'],True);split=nodes.new('ShaderNodeSeparateColor');links.new(mask_node.outputs['Color'],split.inputs[0])
+        links.new(split.outputs['Red'],bsdf.inputs['Metallic'])
+        invert=nodes.new('ShaderNodeMath');invert.operation='SUBTRACT';invert.inputs[0].default_value=1
+        links.new(mask_node.outputs['Alpha'],invert.inputs[1]);links.new(invert.outputs[0],bsdf.inputs['Roughness'])
+    else:bsdf.inputs['Roughness'].default_value=1-smoothness
+for material in ('BlueCladding','MallBlue'):surface(material,'BluePaint')
+for material in ('Concrete','CreamPanel'):surface(material,'CreamConcrete')
+surface('Floor','CreamConcrete',.4,tint=(.62,.65,.60,1))
+for material in ('Frame','SteelOxide'):surface(material,'RustedSteel',.8)
+surface('Roof','RoofMembrane',.5)
+surface('Glass','GlassGrime',.5,.42,tint=(1,1,1,.5),transparent=True)
+for material in ('TarpGreen','SandCanvas','WornWood'):surface(material,material,.75)
+surface('DirtStain','DirtStreaks',1,.05,tint=(1,1,1,.7),transparent=True)
+finishes['LampGlass']=dict(emission=True)
+
+def place(id,prop,position,rotation=(0,0,0),scale=(1,1,1)):
+    prop_instances.append(dict(id=id,prop=prop,position=list(position),rotation=list(rotation),scale=list(scale)))
+
+# Keep the accepted architecture and the 6 m entry completely open.
+place('Lookout west','KH_WatchPost',(-37,14.12,-38))
+place('Lookout east','KH_WatchPost',(36,11.02,-23),(0,180,0))
+place('Barrier west roof','KH_Barricade',(-33,11.02,-18),(0,25,0))
+place('Barrier east roof','KH_Barricade',(39,11.02,-17),(0,-15,0))
+for section,start in (('west',.73),('east',.20)):
+    for row in range(3):
+        for index in range(7-row):
+            theta=math.pi*(start+(index+.5*(row%2))*.009)
+            x,z=29.65*math.cos(theta),-50-14.65*math.sin(theta)
+            # Bags rest on the parapet; the top is below the accepted roof sign.
+            yaw=math.degrees(math.atan2(14.65*math.cos(theta),29.65*math.sin(theta)))
+            place(f'Parapet {section} bag {row}_{index}','KH_Sandbag',(x,12.15+row*.28,z),(0,-yaw,0))
+place('High left drape','KH_TarpNarrow',(-42.4,11.15,-50.25),scale=(.8,1,1))
+place('Terrace banner','KH_TarpWide',(-37.5,2.75,-56.22))
+place('Right shoulder drape','KH_TarpNarrow',(38,9.6,-50.18),scale=(1.3,1.1,1))
+place('West roof cloth','KH_TarpWide',(-46.62,9.7,-35),(0,90,0))
+# Two material types, two sides and the rear: patches remain sparse and reusable.
+for id,prop,p,r in [
+    ('Left boards low','KH_WindowBoards',(-46.64,1.45,-15.4),(0,90,0)),
+    ('Left metal upper','KH_CorrugatedPatch',(-46.64,5.85,22.8),(0,90,0)),
+    ('Right boards upper','KH_WindowBoards',(46.64,5.85,15.1),(0,-90,0)),
+    ('Right metal lower','KH_CorrugatedPatch',(46.64,1.45,53.4),(0,-90,0)),
+    ('Rear boards','KH_WindowBoards',(-19,5.85,65.18),(0,180,0))]:place(id,prop,p,r)
+for id,p,r,s in [
+    ('Cable left roof',(-40,14.8,-14),(0,-70,0),(2.1,.7,1)),
+    ('Cable right roof',(30,15,-15),(0,60,0),(2.0,.9,1)),
+    ('Cable rear',(16,15,57),(0,0,0),(1.3,.6,1))]:place(id,'KH_CableSag',p,r,s)
+for id,p,r in [
+    ('Entry west lamp',(-8,3.65,-64.65),(0,0,0)),
+    ('Entry east lamp',(8,3.65,-64.65),(0,0,0)),
+    ('Terrace lamp',(-37,5.8,-56.22),(0,0,0)),
+    ('East shoulder lamp',(37,5.8,-50.2),(0,0,0)),
+    ('Rear lamp left',(-22,5.2,65.22),(0,180,0)),
+    ('Rear lamp right',(24,5.2,65.99),(0,180,0))]:place(id,'KH_Floodlight',p,r)
+for id,p,r,s in [
+    ('Terrace grime',(-38,0,-56.04),(0,0,0),(3.0,1.3,1)),
+    ('Front right grime',(37,0,-50.04),(0,0,0),(3.0,.65,1)),
+    ('Left lower grime',(-46.53,0,-5),(0,90,0),(5,.6,1)),
+    ('Right lower grime',(46.53,0,28),(0,-90,0),(4,.65,1)),
+    ('Rear lower grime',(-32,0,65.03),(0,180,0),(4,.65,1))]:place(id,'KH_GrimePatch',p,r,s)
+
+# Editable library instances in the full Blender source; export Shell separately.
+library=ROOT/'Sources/KursHub/KursHubProps.blend'
+props_manifest=ROOT/'Assets/Environment/KursHub/Props/KursHubPropsManifest.json'
+assert library.exists() and props_manifest.exists(),'Build the reusable prop library first'
+records=json.loads(props_manifest.read_text(encoding='utf8'))['props']
+names={r['id']:r.get('collection',r['id']) for r in records}
+with bpy.data.libraries.load(str(library),link=False) as (data_from,data_to):
+    data_to.collections=[name for name in names.values() if name in data_from.collections]
+loaded={c.name:c for c in data_to.collections if c is not None}
+for item in prop_instances:
+    c=loaded[names[item['prop']]]
+    instance=bpy.data.objects.new(item['id'],None);instance.instance_type='COLLECTION';instance.instance_collection=c
+    collection('Exterior prop instances').objects.link(instance)
+    instance.location=xyz(item['position']);instance.rotation_euler=(0,0,-math.radians(item['rotation'][1]));instance.scale=xyz(item['scale'])
+    instance['ReusablePrefab']='Assets/Environment/KursHub/Props/Prefabs/'+item['prop']+'.prefab'
+    # Appended prototype materials point at the very same shared authored finish.
+>>>>>>> Stashed changes
     for obj in c.objects:
         if obj.type=='MESH':
             for slot in obj.material_slots:
                 original=slot.material.name.split('.')[0] if slot.material else ''
                 if original in materials:slot.material=materials[original]
+<<<<<<< Updated upstream
+=======
+scene['ReusableProps']='Sources/KursHub/KursHubProps.blend; nested prefab instances in Unity, never baked into Shell'
+>>>>>>> Stashed changes

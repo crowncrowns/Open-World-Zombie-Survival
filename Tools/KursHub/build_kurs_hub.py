@@ -1,4 +1,8 @@
+<<<<<<< Updated upstream
 """Blender 4.5+: editable stage-6 Kurs architecture, FBX chunks and manifest.
+=======
+"""Blender 4.5+: editable stage-4 Kurs architecture, FBX chunks and manifest.
+>>>>>>> Stashed changes
 
 All construction coordinates below are Unity metres (X right, Y up, Z back).
 The entrance faces -Z; the building envelope, excluding the apron, is 93 x 130.
@@ -48,11 +52,19 @@ palette = {
     "TenantGreen": (0.22, 0.42, 0.09, 1),
     "SignRed": (0.35, 0.08, 0.065, 1),
     "SailOrange": (0.73, 0.29, 0.13, 1),
+<<<<<<< Updated upstream
     "TarpGreen": (.17,.21,.14,1),
     "SandCanvas": (.46,.43,.30,1),
     "WornWood": (.30,.24,.16,1),
     "LampGlass": (1,.72,.35,1),
     "DirtStain": (.25,.22,.17,.65),
+=======
+    "TarpGreen": (0.17, 0.21, 0.14, 1),
+    "SandCanvas": (0.46, 0.43, 0.30, 1),
+    "WornWood": (0.30, 0.24, 0.16, 1),
+    "LampGlass": (1.0, 0.72, 0.35, 1),
+    "DirtStain": (0.25, 0.22, 0.17, 0.65),
+>>>>>>> Stashed changes
 }
 materials = {}
 import runpy
@@ -386,7 +398,12 @@ for z in (-64.4,-57):
 box('VestibuleCeiling',(0,3.98,-60.7),(12.3,.20,7.7),'Concrete','Vestibule')
 text_object('ГЛАВНЫЙ ВХОД',(0,3.17,-64.56),.38,'Lettering','EntranceLabel','VestibuleDetails')
 
+<<<<<<< Updated upstream
 # Stage 4: canopy, roof beams and all four posts removed at user request.
+=======
+# Stage 4: the user explicitly removed the complete canopy and its four posts.
+# The internal vestibule, entry header and apron remain part of the building.
+>>>>>>> Stashed changes
 
 # Fine facade framing and panel joints are visual only; the original closed
 # wall/glass meshes continue to define player collision.
@@ -475,6 +492,9 @@ for x in (-10,-5,5,10):
 # Reference-led exterior massing, dome and signs are kept separate for authoring.
 import runpy
 runpy.run_path(str(pathlib.Path(__file__).with_name('stage3_exterior.py')),init_globals=globals())
+finishes={}
+prop_instances=[]
+runpy.run_path(str(pathlib.Path(__file__).with_name('stage4_finish.py')),init_globals=globals())
 
 prop_instances=[]
 import runpy
@@ -504,7 +524,11 @@ for obj in objects:
     metrics.append(dict(name=obj.name,vertices=len(obj.data.vertices),faces=len(obj.data.polygons)))
     bm.free()
 
+<<<<<<< Updated upstream
 scene['KursHubStage']='6: dense market, housing, checkpoint and ceramic floor; no entry canopy'
+=======
+scene['KursHubStage']='4: weathered materials and exterior settlement accents; no entry canopy; empty playable interior'
+>>>>>>> Stashed changes
 scene['Dimensions']='93 m X x 130 m Z external walls; floors Y=0/5.5, roof Y=11'
 scene['Atrium']='30 x 50 m; X=-15..15, Z=-32..18'
 scene['UnityOrigin']='ground centre of rectangular envelope; entrance -Z'
@@ -561,11 +585,18 @@ bpy.ops.export_scene.fbx(filepath=str(OUT/'Models/KursHubShell.fbx'),use_selecti
                         apply_unit_scale=True,bake_space_transform=False,
                         use_mesh_modifiers=True,add_leaf_bones=False,bake_anim=False,
                         path_mode='AUTO')
+<<<<<<< Updated upstream
 manifest=dict(stage=6,width=93,depth=130,floorHeight=5.5,atrium=[30,50],
               chunks=chunks,guardColliders=collision_boxes,propInstances=prop_instances,
               palette=[dict(name=n,rgba=list(c)) for n,c in palette.items()])
 manifest.update(interior_layout)
 manifest.update(settlement_layout)
+=======
+manifest=dict(stage=4,width=93,depth=130,floorHeight=5.5,atrium=[30,50],
+              chunks=chunks,guardColliders=collision_boxes,
+              propInstances=prop_instances,
+              palette=[dict(name=n,rgba=list(c),**finishes.get(n,{})) for n,c in palette.items()])
+>>>>>>> Stashed changes
 (OUT/'KursHubManifest.json').write_text(json.dumps(manifest,indent=2),encoding='utf-8')
 (REPORT/'geometry.json').write_text(json.dumps(dict(sourceObjects=len(objects),
     sourceVertices=sum(x['vertices'] for x in metrics),exportChunks=len(exports),

@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 """Blender 4.5+: reusable, metre-sized Kurs exterior and interior modules.
 
 Run with Blender --background --python this_file -- --root <staging-project>.
@@ -5,10 +6,22 @@ Authoring collections stay separate in KursHubProps.blend; each FBX is local to
 its own useful placement origin. No prop becomes part of the mall shell mesh.
 """
 import argparse
+=======
+"""Blender 4.5: reusable Kurs exterior props, editable source and local FBX assets.
+
+Coordinates are Unity metres: X right, Y up, front is -Z.  Display offsets in
+the source are collection instance offsets, never baked into exported models.
+"""
+import argparse
+import bpy
+import bmesh
+import hashlib
+>>>>>>> Stashed changes
 import json
 import math
 import pathlib
 import sys
+<<<<<<< Updated upstream
 import runpy
 from collections import defaultdict
 
@@ -22,6 +35,14 @@ parser.add_argument('--root', type=pathlib.Path,
                     default=pathlib.Path(__file__).resolve().parents[2])
 ROOT = parser.parse_args(sys.argv[sys.argv.index('--') + 1:]
                          if '--' in sys.argv else []).root.resolve()
+=======
+from collections import defaultdict
+from mathutils import Vector
+
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--root', type=pathlib.Path, default=pathlib.Path(__file__).resolve().parents[2])
+ROOT = parser.parse_args(sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else []).root.resolve()
+>>>>>>> Stashed changes
 OUT = ROOT / 'Assets/Environment/KursHub/Props'
 SOURCE = ROOT / 'Sources/KursHub'
 REPORT = ROOT / 'work/KursHub'
@@ -33,6 +54,7 @@ scene = bpy.context.scene
 scene.unit_settings.system = 'METRIC'
 scene.unit_settings.scale_length = 1
 PALETTE = {
+<<<<<<< Updated upstream
     'WornWood': (.31, .23, .15, 1),
     'TarpGreen': (.14, .20, .13, 1),
     'SandCanvas': (.52, .46, .31, 1),
@@ -126,10 +148,52 @@ def begin(identifier, description):
 def mesh(name, vertices, faces, material, collider=False, fixed_uv=None):
     data = bpy.data.meshes.new(name)
     data.from_pydata([xyz(vertex) for vertex in vertices], [], faces)
+=======
+    'WornWood': (.30, .24, .16, 1), 'TarpGreen': (.17, .21, .14, 1),
+    'SandCanvas': (.46, .43, .30, 1), 'SteelOxide': (.26, .15, .09, 1),
+    'Frame': (.095, .12, .13, 1), 'LampGlass': (1, .72, .35, 1),
+    'DirtStain': (.19, .17, .12, 1),
+}
+MATERIALS = {}
+for name, color in PALETTE.items():
+    mat = bpy.data.materials.new(name)
+    mat.diffuse_color = color
+    mat.use_nodes = True
+    bsdf = mat.node_tree.nodes.get('Principled BSDF')
+    bsdf.inputs['Base Color'].default_value = color
+    bsdf.inputs['Roughness'].default_value = .85
+    if name == 'LampGlass':
+        bsdf.inputs['Emission Color'].default_value = color
+        bsdf.inputs['Emission Strength'].default_value = 1.5
+    MATERIALS[name] = mat
+
+def xyz(p):
+    return (p[0], p[2], p[1])
+
+PROPS = []
+current = None
+
+def begin(prop_id, size_note, index):
+    global current
+    group = bpy.data.collections.new(prop_id)
+    scene.collection.children.link(group)
+    # Blender XY is the ground plane. Collection instances subtract this
+    # display offset, so the same collection can be linked into the hub source.
+    offset = ((index % 3) * 13, 0, (index // 3) * 11)
+    group.instance_offset = xyz(offset)
+    current = {'id': prop_id, 'collection': group, 'sourceOffset': offset,
+               'description': size_note, 'objects': []}
+    PROPS.append(current)
+
+def mesh(name, vertices, faces, material, collider=True, full_uv=False, smooth=False):
+    data = bpy.data.meshes.new(name)
+    data.from_pydata([xyz(v) for v in vertices], [], faces)
+>>>>>>> Stashed changes
     data.update()
     bm = bmesh.new()
     bm.from_mesh(data)
     bmesh.ops.recalc_face_normals(bm, faces=list(bm.faces))
+<<<<<<< Updated upstream
     if bm.calc_volume(signed=True) < 0:
         bmesh.ops.reverse_faces(bm, faces=list(bm.faces))
     bm.to_mesh(data)
@@ -516,3 +580,267 @@ for prop in prototypes:
            for prop in manifest['props']]), indent=2), encoding='utf-8')
 print('KURS_PROPS_GEOMETRY_OK', len(prototypes), 'reusable props;',
       total_triangles, 'triangles;', len(source_metrics), 'validated solids')
+=======
+    bm.to_mesh(data)
+    bm.free()
+    data.materials.append(MATERIALS[material])
+    uv = data.uv_layers.new(name='UVMap')
+    minx, maxx = min(v[0] for v in vertices), max(v[0] for v in vertices)
+    miny, maxy = min(v[1] for v in vertices), max(v[1] for v in vertices)
+    # Project in metres for tiled prop materials; grime uses the full map.
+    for poly in data.polygons:
+        poly.use_smooth = smooth
+        n = poly.normal
+        axis = max(range(3), key=lambda k: abs(n[k]))
+        for loop_index in poly.loop_indices:
+            v = data.vertices[data.loops[loop_index].vertex_index].co
+            if full_uv:
+                value = ((v.x-minx)/max(maxx-minx, 1e-6), (v.z-miny)/max(maxy-miny, 1e-6))
+            elif axis == 2: value = (v.x, v.y)
+            elif axis == 1: value = (v.x, v.z)
+            else: value = (v.y, v.z)
+            uv.data[loop_index].uv = value
+    obj = bpy.data.objects.new(name, data)
+    current['collection'].objects.link(obj)
+    obj.location = xyz(current['sourceOffset'])
+    obj['unity_collision'] = collider
+    obj['material_contract'] = material
+    current['objects'].append(obj)
+    return obj
+
+def box(name, center, size, material='WornWood', collider=True):
+    x, y, z = center
+    a, b, c = [s/2 for s in size]
+    vertices = [(x+dx,y+dy,z+dz) for dx,dy,dz in
+                [(-a,-b,-c),(a,-b,-c),(a,-b,c),(-a,-b,c),
+                 (-a,b,-c),(a,b,-c),(a,b,c),(-a,b,c)]]
+    return mesh(name,vertices,[(0,3,2,1),(4,5,6,7),(0,1,5,4),(1,2,6,5),(2,3,7,6),(3,0,4,7)],material,collider)
+
+def beam(name, a, b, width=.10, material='WornWood', collider=True, depth=None):
+    a, b = Vector(a), Vector(b)
+    direction = (b-a).normalized()
+    side = direction.cross(Vector((0,0,1)))
+    if side.length < .1: side = direction.cross(Vector((0,1,0)))
+    side.normalize()
+    up = direction.cross(side).normalized()
+    depth = depth if depth is not None else width
+    vertices = [tuple(p+side*i*width/2+up*j*depth/2)
+                for p in (a,b) for i,j in ((-1,-1),(1,-1),(1,1),(-1,1))]
+    return mesh(name,vertices,[(0,3,2,1),(4,5,6,7),(0,1,5,4),(1,2,6,5),(2,3,7,6),(3,0,4,7)],material,collider)
+
+def cloth(name, width, height, roof=False):
+    nx, ny = 12, 6
+    vertices = []
+    for back in (0,1):
+        for j in range(ny+1):
+            v = j/ny
+            for i in range(nx+1):
+                u = i/nx
+                x = (u-.5)*width
+                if roof:
+                    z = (v-.5)*4.35
+                    y = 3.15 + .42*(1-abs(2*v-1)) - .045*math.sin(4*math.pi*u)*math.sin(math.pi*v)
+                    vertices.append((x,y-back*.025,z))
+                else:
+                    y = height*v - .22*math.sin(math.pi*u)*v*v
+                    z = .075*math.sin(4*math.pi*u+.6)*math.sin(math.pi*v) + .04*math.sin(2*math.pi*u) + back*.022
+                    vertices.append((x,y,z))
+    n = (nx+1)*(ny+1)
+    faces = []
+    for side in (0,1):
+        for j in range(ny):
+            for i in range(nx):
+                p = side*n+j*(nx+1)+i
+                face = (p,p+1,p+nx+2,p+nx+1)
+                faces.append(face if side == 0 else tuple(reversed(face)))
+    edge = list(range(nx+1)) + [j*(nx+1)+nx for j in range(1,ny+1)] + \
+           [ny*(nx+1)+i for i in range(nx-1,-1,-1)] + [j*(nx+1) for j in range(ny-1,0,-1)]
+    for a,b in zip(edge,edge[1:]+edge[:1]): faces.append((a,b,b+n,a+n))
+    return mesh(name,vertices,faces,'TarpGreen',False)
+
+begin('KH_Sandbag','Rounded canvas sack: 0.85 x 0.35 x 0.50 m; origin bottom centre.',0)
+vertices=[(0,0,0)]
+segments, rings = 16, 7
+def signed_power(value, power=.66): return math.copysign(abs(value)**power,value)
+for j in range(1,rings):
+    phi = math.pi*j/rings
+    for i in range(segments):
+        theta = 2*math.pi*i/segments
+        vertices.append((.425*math.sin(phi)**.66*signed_power(math.cos(theta)),
+                         .175-.175*signed_power(math.cos(phi)),
+                         .25*math.sin(phi)**.66*signed_power(math.sin(theta))))
+vertices.append((0,.35,0))
+faces=[]
+for i in range(segments):faces.append((0,1+i,1+(i+1)%segments))
+for j in range(rings-2):
+    for i in range(segments):
+        a=1+j*segments+i;b=1+j*segments+(i+1)%segments
+        faces.append((a,a+segments,b+segments,b))
+top=len(vertices)-1
+for i in range(segments):faces.append((top,1+(rings-2)*segments+(i+1)%segments,1+(rings-2)*segments+i))
+mesh('SandbagCanvas',vertices,faces,'SandCanvas',True,smooth=True)
+
+begin('KH_Barricade','Freestanding timber and steel barricade: 2.4 x 1.2 x 0.6 m.',1)
+for x in (-.9,.9):
+    for z in (-.25,.25):beam('TrestleLeg',(x,.04,z),(x,1.12,0),.12)
+    box('Foot',(x,.04,0),(.34,.08,.60))
+for y in (.43,.77,1.08):box('FrontPlank',(0,y,-.07),(2.4,.19,.055))
+beam('MetalDiagonal',(-1.05,.26,.035),(1.05,1.15,.035),.08,'SteelOxide',True,.035)
+for x in (-.9,.9):
+    for y in (.43,.77,1.08):box('Bolt',(x,y,-.11),(.035,.035,.025),'Frame',False)
+
+begin('KH_WatchPost','Open timber lookout: 4 x 4 m floor Y 0..0.15; fabric roof, rear entrance 1.2 m.',2)
+for i in range(12):box('FloorPlank',(-1.833333+i/3,.075,0),(.322,.15,4))
+for x in (-1.82,1.82):
+    for z in (-1.82,1.82):beam('Post',(x,.15,z),(x,3.2,z),.15)
+for y in (.65,1.2):
+    beam('FrontRail',(-1.82,y,-1.82),(1.82,y,-1.82),.10)
+    for x in (-1.82,1.82):beam('SideRail',(x,y,-1.82),(x,y,1.82),.10)
+    for sign in (-1,1):beam('RearRail',(sign*.60,y,1.82),(sign*1.82,y,1.82),.10)
+for x in (-1.82,1.82):
+    beam('SideBrace',(x,.2,-1.82),(x,1.2,-.35),.08)
+    beam('RoofEdge',(x,3.15,-2.12),(x,3.15,2.12),.10)
+beam('RoofRidge',(-2.15,3.57,0),(2.15,3.57,0),.10)
+for x in (-1.82,1.82):
+    beam('RoofRafter',(x,3.15,-2.12),(x,3.57,0),.08)
+    beam('RoofRafter',(x,3.57,0),(x,3.15,2.12),.08)
+cloth('PitchedTarp',4.35,0,True)
+
+for index,prop_id,width,height in [(3,'KH_TarpWide',6,2.3),(4,'KH_TarpNarrow',3,2.5)]:
+    begin(prop_id,f'Loose vertical canvas, {width} x {height} m; bottom-centre origin, front -Z.',index)
+    cloth('Canvas',width,height)
+    for x in (-width/2,width/2):
+        beam('TieRope',(x,height,0),(x,height+.20,.035),.018,'SandCanvas',False)
+
+begin('KH_WindowBoards','Three rough planks for a 2.8 x 2 m window; bottom-centre origin, front -Z.',5)
+beam('BoardCrossA',(-1.30,.23,0),(1.30,1.76,0),.24,'WornWood',True,.045)
+beam('BoardCrossB',(-1.30,1.76,-.055),(1.30,.23,-.055),.22,'WornWood',True,.045)
+beam('BoardMiddle',(-1.38,.94,-.11),(1.38,1.04,-.11),.27,'WornWood',True,.045)
+for x,y in [(-1.1,.35),(1.1,1.65),(-1.1,1.65),(1.1,.35)]:box('Nail',(x,y,-.145),(.025,.025,.015),'Frame',False)
+
+begin('KH_CorrugatedPatch','Ribbed steel patch, 2.6 x 2.4 m; bottom-centre origin, front -Z.',6)
+profile=[]
+for i in range(13):
+    x=-1.3+i*.2
+    profile.extend([(x,-.055),(x+.04,-.055),(x+.08,.015),(x+.12,.015),(x+.16,-.055)])
+profile.append((1.3,-.055))
+polygon=profile+[(x,z+.025) for x,z in reversed(profile)]
+n=len(polygon)
+mesh('CorrugatedSteel',[(x,y,z) for y in (0,2.4) for x,z in polygon],
+     [tuple(range(n-1,-1,-1)),tuple(range(n,2*n))]+[(i,(i+1)%n,(i+1)%n+n,i+n) for i in range(n)],'SteelOxide',True)
+
+begin('KH_CableSag','10 m horizontal cable; end points X +/-5 at Y0; 1 m sag; no collision.',7)
+vertices=[]
+steps,sides=20,6
+for j in range(steps+1):
+    t=j/steps;x=10*(t-.5);y=-4*t*(1-t)
+    direction=Vector((10,-4+8*t,0)).normalized()
+    normal=Vector((-direction.y,direction.x,0))
+    for i in range(sides):
+        angle=2*math.pi*i/sides
+        p=Vector((x,y,0))+normal*(.022*math.cos(angle))+Vector((0,0,.022*math.sin(angle)))
+        vertices.append(tuple(p))
+faces=[tuple(range(sides-1,-1,-1)),tuple(steps*sides+i for i in range(sides))]
+for j in range(steps):
+    for i in range(sides):
+        a=j*sides+i;b=j*sides+(i+1)%sides
+        faces.append((a,b,b+sides,a+sides))
+mesh('Cable',vertices,faces,'Frame',False,smooth=True)
+
+begin('KH_Floodlight','Wall-mounted warm floodlight, optical axis 35 degrees down toward -Z.',8)
+box('MountingPlate',(0,0,.025),(.18,.25,.05),'Frame',True)
+beam('WallBracket',(0,0,0),(0,0,-.16),.065,'SteelOxide',True)
+lamp_angle=math.radians(35)
+def tilt_lamp(obj):
+    # Optical axis is (0,-sin(35),-cos(35)); pivot at the wall mounting point.
+    c,s=math.cos(lamp_angle),math.sin(lamp_angle)
+    for v in obj.data.vertices:
+        y,z=v.co.z,v.co.y
+        v.co.z=c*y+s*z;v.co.y=-s*y+c*z
+    return obj
+tilt_lamp(box('LampHousing',(0,0,-.10),(.50,.38,.22),'Frame',True))
+tilt_lamp(box('GlassLens',(0,0,-.218),(.42,.30,.018),'LampGlass',False))
+for x in (-.27,.27):tilt_lamp(box('LampYoke',(x,.02,-.08),(.04,.29,.055),'SteelOxide',False))
+
+begin('KH_GrimePatch','4 x 3 m vertical dirt overlay, full 0..1 UV, bottom-centre origin; no collision.',9)
+mesh('GrimeOverlay',[(-2,0,0),(2,0,0),(2,3,0),(-2,3,0),
+                     (-2,0,.008),(2,0,.008),(2,3,.008),(-2,3,.008)],
+     [(0,3,2,1),(4,5,6,7),(0,1,5,4),(1,2,6,5),(2,3,7,6),(3,0,4,7)],'DirtStain',False,True)
+
+# Preserve the editable parts in their labelled grid collections. Export copies
+# below are combined by material and collision policy, never destructively joined.
+source_metrics=[]
+for prop in PROPS:
+    volume=0
+    for obj in prop['objects']:
+        bm=bmesh.new();bm.from_mesh(obj.data)
+        assert all(e.is_manifold for e in bm.edges), f'Non-manifold source: {prop["id"]}/{obj.name}'
+        signed_volume=bm.calc_volume(signed=True)
+        assert signed_volume>1e-9, f'Inward/zero volume: {prop["id"]}/{obj.name}: {signed_volume}'
+        volume+=signed_volume;bm.free()
+    source_metrics.append({'id':prop['id'],'objects':len(prop['objects']),'volume':round(volume,6)})
+scene['KursHubPropsContract']='Reusable Stage 4 exterior props; canonical local meshes, display-grid collection offsets.'
+scene['AxisContract']='Unity (X,Y,Z) maps to Blender (X,Z,Y); front is Unity -Z.'
+scene['PropCount']=len(PROPS)
+for area in bpy.context.screen.areas:
+    if area.type=='VIEW_3D':
+        area.spaces.active.region_3d.view_distance=65
+        area.spaces.active.region_3d.view_location=(13,15,0)
+bpy.ops.wm.save_as_mainfile(filepath=str(SOURCE/'KursHubProps.blend'))
+
+manifest={'version':1,'units':'metres','front':'-Z',
+          'source':'Sources/KursHub/KursHubProps.blend','props':[]}
+export_collection=bpy.data.collections.new('_TemporaryExport')
+scene.collection.children.link(export_collection)
+for prop in PROPS:
+    buckets=defaultdict(list)
+    for obj in prop['objects']:
+        buckets[(obj['material_contract'],bool(obj['unity_collision']))].append(obj)
+    exported=[];chunks=[];total_tris=0
+    root=bpy.data.objects.new(prop['id'],None);export_collection.objects.link(root)
+    for (material,collider),parts in sorted(buckets.items()):
+        name=prop['id']+'_'+material+('_Solid' if collider else '_Decor')
+        vertices=[];faces=[];uv_values=[];smooth_values=[]
+        for obj in parts:
+            offset=len(vertices);vertices.extend(tuple(v.co) for v in obj.data.vertices)
+            for face in obj.data.polygons:
+                faces.append(tuple(offset+i for i in face.vertices))
+                uv_values.extend(tuple(obj.data.uv_layers.active.data[j].uv) for j in face.loop_indices)
+                smooth_values.append(face.use_smooth)
+        data=bpy.data.meshes.new(name)
+        data.from_pydata(vertices,[],faces);data.update();data.materials.append(MATERIALS[material])
+        uv=data.uv_layers.new(name='UVMap')
+        for i,value in enumerate(uv_values):uv.data[i].uv=value
+        for poly,smooth in zip(data.polygons,smooth_values):poly.use_smooth=smooth
+        obj=bpy.data.objects.new(name,data);export_collection.objects.link(obj);obj.parent=root
+        data.calc_loop_triangles();triangles=len(data.loop_triangles);total_tris+=triangles
+        exported.append(obj);chunks.append({'name':name,'material':material,'collider':collider,'triangles':triangles})
+    all_vertices=[v.co for obj in exported for v in obj.data.vertices]
+    minimum=[min(v[k] for v in all_vertices) for k in range(3)]
+    maximum=[max(v[k] for v in all_vertices) for k in range(3)]
+    bpy.ops.object.select_all(action='DESELECT')
+    root.select_set(True)
+    for obj in exported:obj.select_set(True)
+    bpy.context.view_layer.objects.active=root
+    model=OUT/'Models'/f'{prop["id"]}.fbx'
+    bpy.ops.export_scene.fbx(filepath=str(model),use_selection=True,object_types={'MESH','EMPTY'},
+                             apply_unit_scale=True,apply_scale_options='FBX_SCALE_UNITS',
+                             axis_forward='-Z',axis_up='Y',bake_space_transform=False,
+                             use_mesh_modifiers=True,mesh_smooth_type='FACE',add_leaf_bones=False,bake_anim=False)
+    manifest['props'].append({'id':prop['id'],'model':str(model.relative_to(ROOT)).replace('\\','/'),
+                              'collection':prop['id'],'sourceOffset':list(prop['sourceOffset']),
+                              'description':prop['description'],'chunks':chunks,
+                              'bounds':{'min':[minimum[0],minimum[2],minimum[1]],
+                                        'max':[maximum[0],maximum[2],maximum[1]]},
+                              'triangles':total_tris,'sha256':hashlib.sha256(model.read_bytes()).hexdigest()})
+    for obj in exported+[root]:bpy.data.objects.remove(obj,do_unlink=True)
+manifest['triangles']=sum(p['triangles'] for p in manifest['props'])
+assert manifest['triangles']<10000, f'Prop geometry budget exceeded: {manifest["triangles"]}'
+(OUT/'KursHubPropsManifest.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+metrics={'props':len(PROPS),'source_objects':sum(len(p['objects']) for p in PROPS),
+         'triangles':manifest['triangles'],'chunks':sum(len(p['chunks']) for p in manifest['props']),
+         'source_sha256':hashlib.sha256((SOURCE/'KursHubProps.blend').read_bytes()).hexdigest(),
+         'source_validation':source_metrics}
+(REPORT/'props_geometry.json').write_text(json.dumps(metrics,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+print('KURS_PROPS_OK '+json.dumps(metrics,ensure_ascii=False))
+>>>>>>> Stashed changes
