@@ -1,0 +1,428 @@
+// Temporary verification source. Copy to Assets/Editor ONLY in the isolated
+// validation project, then invoke KursHubCapture8.Run. Never put in product Assets.
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.RegularExpressions;
+using UnityEditor;
+using UnityEditor.SceneManagement;
+using UnityEngine;
+using UnityEngine.Profiling;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
+using Debug = UnityEngine.Debug;
+using Object = UnityEngine.Object;
+
+public static class KursHubCapture8
+{
+    private const string PrefabPath = "Assets/Environment/KursHub/KursHub.prefab";
+    private const int Width = 1920;
+    private const int Height = 1080;
+    private const string Contract = "KursHub8 camera/light contract v1";
+    private static readonly CultureInfo Invariant = CultureInfo.InvariantCulture;
+    private static readonly Color DayAmbient = new Color(.15f, .18f, .23f);
+    private static readonly Color NightAmbient = new Color(.012f, .020f, .038f);
+    private static readonly Vector3 DaySunEuler = new Vector3(38, -35, 0);
+    private static readonly Vector3 NightSunEuler = new Vector3(28, 145, 0);
+
+    [Serializable] private sealed class Tour
+    {
+        public int revision;
+        public TourCamera[] cameras;
+    }
+
+    [Serializable] private sealed class TourCamera
+    {
+        public string id;
+        public float[] position;
+        public float[] target;
+        public float fieldOfView;
+        public string purpose;
+    }
+
+    [Serializable] private sealed class ViewResult
+    {
+        public string id;
+        public string mode;
+        public string file;
+        public float[] position;
+        public float[] target;
+        public float fieldOfView;
+        public string renderMethod;
+        public int nativeEditorDrawCalls;
+        public int nativeEditorDynamicBatches;
+        public int nativeEditorStaticBatches;
+        public int nativeEditorInstancedBatches;
+        public int nativeEditorSrpBatcherDrawCalls;
+        public string nativeEditorBatchStats;
+        public long nativeEditorTriangles;
+        public double renderSubmissionCpuMsBeforeReadback;
+    }
+
+    [Serializable] private sealed class Report
+    {
+        public string status;
+        public string contract;
+        public string phase;
+        public string generatedUtc;
+        public string unityVersion;
+        public string renderPipeline;
+        public string graphicsApi;
+        public string cpu;
+        public int cpuCores;
+        public int cpuFrequencyMHz;
+        public string gpu;
+        public string gpuVendor;
+        public int gpuMemoryMB;
+        public int systemMemoryMB;
+        public string prefabGuid;
+        public string prefabSha256;
+        public string layoutSha256;
+        public int width;
+        public int height;
+        public int dayViews;
+        public int nightViews;
+        public int originalFixtureLights;
+        public int enabledFixtureLights;
+        public bool proceduralSkyAvailable;
+        public string dayLightContract;
+        public string nightLightContract;
+        public int uniqueReferencedMeshesAcrossAllLods;
+        public long uniqueReferencedMeshMemoryBytes;
+        public int uniqueReferencedMaterialTextures;
+        public long uniqueReferencedTextureMemoryBytes;
+        public ViewResult[] views;
+        public string[] limitations;
+        public string[] errors;
+    }
+
+    public static void Run()
+    {
+        var owned = new List<Object>();
+        var errors = new List<string>();
+        var views = new List<ViewResult>();
+        var rows = new List<string> {
+            "mode\tid\tfile\tposition_m\ttarget_m\tfov_degrees\trender_method\tnative_editor_draw_calls\tnative_editor_dynamic_batches\tnative_editor_static_batches\tnative_editor_instanced_batches\tnative_editor_srp_batcher_draw_calls\tnative_editor_triangles\trender_submission_cpu_ms_before_readback\tnative_editor_batch_stats"
+        };
+        string output = null;
+        var report = new Report();
+        int exitCode = 1;
+        Application.LogCallback errorReceiver = (condition, stack, type) => {
+            if (type == LogType.Error || type == LogType.Exception || type == LogType.Assert)
+                errors.Add(condition);
+        };
+        Application.logMessageReceived += errorReceiver;
+        try
+        {
+            var phase = Environment.GetEnvironmentVariable("KURS8_CAPTURE_PHASE") ?? "before";
+            if (phase != "before" && phase != "after")
+                throw new InvalidOperationException("KURS8_CAPTURE_PHASE must be exactly before or after");
+            var project = Directory.GetParent(Application.dataPath).FullName;
+            var auditRoot = Path.GetFullPath(Path.Combine(project, "..", "audit8"));
+            var layoutPath = Path.Combine(auditRoot, "functional_layout.json");
+            output = Path.Combine(auditRoot, phase);
+            Directory.CreateDirectory(output);
+            if (!File.Exists(layoutPath)) throw new FileNotFoundException("Missing functional_layout.json", layoutPath);
+            var tour = JsonUtility.FromJson<Tour>(File.ReadAllText(layoutPath, Encoding.UTF8));
+            if (tour == null || tour.cameras == null || tour.cameras.Length == 0)
+                throw new InvalidOperationException("The layout has no camera tour");
+            if (tour.cameras.Select(c => c.id).Distinct(StringComparer.Ordinal).Count() != tour.cameras.Length)
+                throw new InvalidOperationException("Duplicate tour camera IDs");
+            foreach (var view in tour.cameras) ValidateCamera(view);
+            if (!(GraphicsSettings.currentRenderPipeline is UniversalRenderPipelineAsset))
+                throw new InvalidOperationException("This capture must run in the target URP project");
+
+            // Unsaved empty scene; no builder, asset/prefab edits, save or bake.
+            EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath);
+            if (prefab == null) throw new InvalidOperationException("Missing current KursHub prefab");
+            var hub = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+            owned.Add(hub);
+            hub.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
+            hub.transform.localScale = Vector3.one;
+            foreach (var lod in hub.GetComponentsInChildren<LODGroup>(true)) lod.ForceLOD(0);
+            var fixtureLights = hub.GetComponentsInChildren<Light>(true);
+
+            var sunObject = new GameObject("Capture8 temporary comparison sun");
+            owned.Add(sunObject);
+            var sun = sunObject.AddComponent<Light>();
+            sun.type = LightType.Directional;
+            sun.shadows = LightShadows.Soft;
+            sun.shadowStrength = .85f;
+            RenderSettings.sun = sun;
+
+            Material sky = null;
+            var skyShader = Shader.Find("Skybox/Procedural");
+            if (skyShader != null && skyShader.isSupported)
+            {
+                sky = new Material(skyShader) { name = "Capture8 temporary procedural sky", hideFlags = HideFlags.HideAndDontSave };
+                owned.Add(sky);
+                sky.SetFloat("_SunSize", .035f);
+                sky.SetFloat("_SunSizeConvergence", 5f);
+                sky.SetFloat("_AtmosphereThickness", 1f);
+                sky.EnableKeyword("_SUNDISK_HIGH_QUALITY");
+                RenderSettings.skybox = sky;
+            }
+            else RenderSettings.skybox = null;
+
+            var ground = GameObject.CreatePrimitive(PrimitiveType.Plane);
+            ground.name = "Capture8 temporary neutral ground";
+            owned.Add(ground);
+            ground.transform.localScale = new Vector3(35, 1, 35);
+            ground.transform.position = new Vector3(0, -.37f, 0);
+            var groundShader = Shader.Find("Universal Render Pipeline/Lit");
+            if (groundShader == null) throw new InvalidOperationException("URP/Lit is unavailable");
+            var groundMaterial = new Material(groundShader) { name = "Capture8 temporary ground", hideFlags = HideFlags.HideAndDontSave };
+            owned.Add(groundMaterial);
+            groundMaterial.SetColor("_BaseColor", new Color(.27f, .29f, .31f));
+            groundMaterial.SetFloat("_Smoothness", .12f);
+            ground.GetComponent<Renderer>().sharedMaterial = groundMaterial;
+
+            var cameraObject = new GameObject("Capture8 temporary comparison camera");
+            owned.Add(cameraObject);
+            var camera = cameraObject.AddComponent<Camera>();
+            camera.nearClipPlane = .06f;
+            camera.farClipPlane = 600;
+            camera.allowHDR = true;
+            camera.allowMSAA = true;
+            camera.GetUniversalAdditionalCameraData().renderPostProcessing = false;
+            camera.clearFlags = sky == null ? CameraClearFlags.SolidColor : CameraClearFlags.Skybox;
+
+            report.contract = Contract;
+            report.phase = phase;
+            report.generatedUtc = DateTime.UtcNow.ToString("O", Invariant);
+            report.unityVersion = Application.unityVersion;
+            report.renderPipeline = GraphicsSettings.currentRenderPipeline.GetType().FullName;
+            report.graphicsApi = SystemInfo.graphicsDeviceType.ToString();
+            report.cpu = SystemInfo.processorType;
+            report.cpuCores = SystemInfo.processorCount;
+            report.cpuFrequencyMHz = SystemInfo.processorFrequency;
+            report.gpu = SystemInfo.graphicsDeviceName;
+            report.gpuVendor = SystemInfo.graphicsDeviceVendor;
+            report.gpuMemoryMB = SystemInfo.graphicsMemorySize;
+            report.systemMemoryMB = SystemInfo.systemMemorySize;
+            report.prefabGuid = AssetDatabase.AssetPathToGUID(PrefabPath);
+            report.prefabSha256 = Hash(Path.Combine(project, PrefabPath));
+            report.layoutSha256 = Hash(layoutPath);
+            report.width = Width;
+            report.height = Height;
+            report.originalFixtureLights = fixtureLights.Length;
+            report.enabledFixtureLights = fixtureLights.Count(l => l.enabled && l.gameObject.activeInHierarchy);
+            report.proceduralSkyAvailable = sky != null;
+            report.dayLightContract = "Directional rotation=(38,-35,0), intensity=1.1, colour=(1,.958,.90); flat ambient + explicit SH=(.15,.18,.23); procedural sky exposure=1.15; existing fixture lights unchanged; postprocessing off; LOD0 forced";
+            report.nightLightContract = "Directional rotation=(28,145,0), intensity=.025, colour=(.48,.62,1); flat ambient + explicit SH=(.012,.020,.038); procedural sky exposure=.08; existing fixture lights unchanged; postprocessing off; LOD0 forced";
+            ReferencedMemory(hub, report);
+
+            SetLighting(camera, sun, sky, false);
+            for (int i = 0; i < tour.cameras.Length; i++)
+            {
+                var result = Capture(camera, tour.cameras[i], "day", "day_"+(i+1).ToString("D3", Invariant), output);
+                views.Add(result); rows.Add(Row(result));
+                Debug.Log("KURS8_CAPTURE_VIEW day " + (i+1) + "/" + tour.cameras.Length + " " + tour.cameras[i].id);
+            }
+            report.dayViews = tour.cameras.Length;
+
+            SetLighting(camera, sun, sky, true);
+            var night = new[] {
+                Find(tour, "Hub8 Market and community hearth"),
+                Find(tour, "Hub8 Upper rear gallery"),
+                new TourCamera { id="Supplemental front exterior", position=new[]{-45f,5f,-99f}, target=new[]{0f,8f,-40f}, fieldOfView=50,
+                    purpose="Architectural front elevation supplement; this elevated view is not a player-height inspection point" },
+                Find(tour, "Hub8 Ground rear Kitchen"),
+                Find(tour, "Hub8 Upper East Medical 01 overview")
+            };
+            for (int i = 0; i < night.Length; i++)
+            {
+                ValidateCamera(night[i]);
+                var result = Capture(camera, night[i], "night", "night_"+(i+1).ToString("D2", Invariant), output);
+                views.Add(result); rows.Add(Row(result));
+                Debug.Log("KURS8_CAPTURE_VIEW night " + (i+1) + "/" + night.Length + " " + night[i].id);
+            }
+            report.nightViews = night.Length;
+            report.views = views.ToArray();
+            report.limitations = new[] {
+                "Images are native target-URP captures of the actual current prefab; identical camera/light constants apply to before and after. No builder, scene/asset save or light/reflection bake was invoked.",
+                "Native UnityStats counters are editor-global values observed after each explicit render request. Other editor work and counter update timing may affect them; they are not an isolated GPU measurement.",
+                "Unity 6000.6 exposes no UnityStats.batches property. The report records its real dynamicBatches/staticBatches/instancedBatches, srpBatcherDrawCalls and unmodified batchStats text separately rather than inventing a total.",
+                "Stopwatch measures CPU elapsed time around the render submission method only, after one warm-up render and before ReadPixels/PNG encoding. This is NOT FPS, frame time, GPU time or a gameplay performance guarantee.",
+                "Mesh and texture bytes use Profiler.GetRuntimeMemorySizeLong for distinct resources referenced by the instantiated whole prefab across every LOD. They are not total process memory, peak memory, VRAM residency or a streaming budget.",
+                "All existing prefab fixture Light components and their settings are preserved. The night exterior supplement uses a fixed elevated camera, while all layout tour eyes remain as supplied.",
+                "No population, NavMesh, gameplay or player-controller traversal is tested by rendering. Images require visual inspection; no AAA score or acceptance claim is inferred."
+            };
+            if (errors.Count != 0) throw new InvalidOperationException("Native errors occurred during capture: " + errors.Count);
+            report.status = "PASS_NATIVE_CAPTURE";
+            exitCode = 0;
+        }
+        catch (Exception exception)
+        {
+            report.status = "FAILED";
+            errors.Add(exception.Message);
+            Debug.LogException(exception);
+        }
+        finally
+        {
+            Application.logMessageReceived -= errorReceiver;
+            report.views = views.ToArray();
+            report.errors = errors.Distinct(StringComparer.Ordinal).ToArray();
+            if (output != null)
+            {
+                try
+                {
+                    File.WriteAllLines(Path.Combine(output, "cameras.tsv"), rows, new UTF8Encoding(false));
+                    File.WriteAllText(Path.Combine(output, "capture_report.json"), JsonUtility.ToJson(report, true), new UTF8Encoding(false));
+                }
+                catch (Exception exception) { Debug.LogException(exception); exitCode = 1; }
+            }
+            RenderTexture.active = null;
+            RenderSettings.skybox = null;
+            RenderSettings.sun = null;
+            for (int i = owned.Count-1; i >= 0; i--) if (owned[i] != null) Object.DestroyImmediate(owned[i]);
+            Debug.Log(exitCode == 0 ? "KURS8_CAPTURE_OK" : "KURS8_CAPTURE_FAILED");
+            EditorApplication.Exit(exitCode);
+        }
+    }
+
+    private static void SetLighting(Camera camera, Light sun, Material sky, bool night)
+    {
+        sun.transform.rotation = Quaternion.Euler(night ? NightSunEuler : DaySunEuler);
+        sun.intensity = night ? .025f : 1.1f;
+        sun.color = night ? new Color(.48f, .62f, 1f) : new Color(1f, .958f, .90f);
+        var ambient = night ? NightAmbient : DayAmbient;
+        RenderSettings.ambientMode = AmbientMode.Flat;
+        RenderSettings.ambientLight = ambient;
+        RenderSettings.ambientIntensity = 1;
+        var probe = new SphericalHarmonicsL2();
+        probe.AddAmbientLight(ambient);
+        RenderSettings.ambientProbe = probe;
+        RenderSettings.fog = false;
+        camera.backgroundColor = night ? new Color(.012f, .020f, .04f) : new Color(.36f, .45f, .59f);
+        if (sky != null)
+        {
+            sky.SetColor("_SkyTint", night ? new Color(.025f, .045f, .085f) : new Color(.48f, .56f, .70f));
+            sky.SetColor("_GroundColor", night ? new Color(.012f, .018f, .026f) : new Color(.29f, .30f, .33f));
+            sky.SetFloat("_Exposure", night ? .08f : 1.15f);
+        }
+    }
+
+    private static ViewResult Capture(Camera camera, TourCamera view, string mode, string prefix, string output)
+    {
+        camera.transform.position = Vector(view.position);
+        camera.transform.LookAt(Vector(view.target));
+        camera.fieldOfView = view.fieldOfView;
+        var texture = new RenderTexture(Width, Height, 24, RenderTextureFormat.ARGB32) {
+            name="Capture8 owned render target", hideFlags=HideFlags.HideAndDontSave,
+            antiAliasing=1, useMipMap=false, autoGenerateMips=false
+        };
+        Texture2D pixels = null;
+        var previous = RenderTexture.active;
+        try
+        {
+            if (!texture.Create()) throw new InvalidOperationException("Cannot create render target");
+            camera.targetTexture = texture;
+            string method = Render(camera, texture); // warm the same camera/pose
+            var watch = Stopwatch.StartNew();
+            method = Render(camera, texture);
+            watch.Stop(); // deliberately before native readback and PNG encoding
+            var result = new ViewResult {
+                id=view.id, mode=mode,
+                file=prefix+"_"+Regex.Replace(view.id, "[^A-Za-z0-9_-]+", "_").Trim('_')+".png",
+                position=view.position, target=view.target, fieldOfView=view.fieldOfView,
+                renderMethod=method,
+                nativeEditorDrawCalls=UnityStats.drawCalls,
+                nativeEditorDynamicBatches=UnityStats.dynamicBatches,
+                nativeEditorStaticBatches=UnityStats.staticBatches,
+                nativeEditorInstancedBatches=UnityStats.instancedBatches,
+                nativeEditorSrpBatcherDrawCalls=UnityStats.srpBatcherDrawCalls,
+                nativeEditorBatchStats=UnityStats.batchStats,
+                nativeEditorTriangles=UnityStats.trianglesLong,
+                renderSubmissionCpuMsBeforeReadback=watch.Elapsed.TotalMilliseconds
+            };
+            RenderTexture.active = texture;
+            pixels = new Texture2D(Width, Height, TextureFormat.RGB24, false) {
+                name="Capture8 owned readback", hideFlags=HideFlags.HideAndDontSave
+            };
+            pixels.ReadPixels(new Rect(0, 0, Width, Height), 0, 0, false);
+            pixels.Apply(false, false);
+            File.WriteAllBytes(Path.Combine(output, result.file), pixels.EncodeToPNG());
+            return result;
+        }
+        finally
+        {
+            RenderTexture.active = previous;
+            camera.targetTexture = null;
+            if (pixels != null) Object.DestroyImmediate(pixels);
+            texture.Release();
+            Object.DestroyImmediate(texture);
+        }
+    }
+
+    private static string Render(Camera camera, RenderTexture texture)
+    {
+        var request = new UniversalRenderPipeline.SingleCameraRequest { destination=texture };
+        if (RenderPipeline.SupportsRenderRequest(camera, request))
+        {
+            RenderPipeline.SubmitRenderRequest(camera, request);
+            return "URP.SingleCameraRequest";
+        }
+        camera.Render();
+        return "Camera.Render fallback";
+    }
+
+    private static void ReferencedMemory(GameObject hub, Report report)
+    {
+        var meshes = new HashSet<Mesh>();
+        foreach (var filter in hub.GetComponentsInChildren<MeshFilter>(true))
+            if (filter.sharedMesh != null) meshes.Add(filter.sharedMesh);
+        foreach (var renderer in hub.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+            if (renderer.sharedMesh != null) meshes.Add(renderer.sharedMesh);
+        var textures = new HashSet<Texture>();
+        foreach (var renderer in hub.GetComponentsInChildren<Renderer>(true))
+            foreach (var material in renderer.sharedMaterials)
+                if (material != null)
+                    foreach (var property in material.GetTexturePropertyNames())
+                    {
+                        var texture = material.GetTexture(property);
+                        if (texture != null) textures.Add(texture);
+                    }
+        report.uniqueReferencedMeshesAcrossAllLods = meshes.Count;
+        report.uniqueReferencedMeshMemoryBytes = meshes.Sum(m => Profiler.GetRuntimeMemorySizeLong(m));
+        report.uniqueReferencedMaterialTextures = textures.Count;
+        report.uniqueReferencedTextureMemoryBytes = textures.Sum(t => Profiler.GetRuntimeMemorySizeLong(t));
+    }
+
+    private static TourCamera Find(Tour tour, string id)
+    {
+        var result = tour.cameras.SingleOrDefault(c => c.id == id);
+        return result ?? throw new InvalidOperationException("Missing required night view: " + id);
+    }
+
+    private static void ValidateCamera(TourCamera camera)
+    {
+        if (camera == null || string.IsNullOrWhiteSpace(camera.id) || !Finite(camera.position) || !Finite(camera.target)
+            || float.IsNaN(camera.fieldOfView) || float.IsInfinity(camera.fieldOfView)
+            || camera.fieldOfView < 20 || camera.fieldOfView > 110
+            || Vector3.Distance(Vector(camera.position), Vector(camera.target)) < .1f)
+            throw new InvalidOperationException("Invalid functional-layout camera");
+    }
+
+    private static bool Finite(float[] values) => values != null && values.Length == 3 && values.All(v => !float.IsNaN(v) && !float.IsInfinity(v));
+    private static Vector3 Vector(float[] values) => new Vector3(values[0], values[1], values[2]);
+    private static string V(float[] a) => string.Join(",", a.Select(v => v.ToString("R", Invariant)));
+    private static string Row(ViewResult r) => string.Join("\t", r.mode, r.id, r.file, V(r.position), V(r.target),
+        r.fieldOfView.ToString("R", Invariant), r.renderMethod, r.nativeEditorDrawCalls.ToString(Invariant),
+        r.nativeEditorDynamicBatches.ToString(Invariant), r.nativeEditorStaticBatches.ToString(Invariant),
+        r.nativeEditorInstancedBatches.ToString(Invariant), r.nativeEditorSrpBatcherDrawCalls.ToString(Invariant),
+        r.nativeEditorTriangles.ToString(Invariant), r.renderSubmissionCpuMsBeforeReadback.ToString("F4", Invariant),
+        (r.nativeEditorBatchStats ?? "").Replace("\r", " ").Replace("\n", " ").Replace("\t", " "));
+    private static string Hash(string file)
+    {
+        using (var algorithm = SHA256.Create())
+        using (var stream = File.OpenRead(file))
+            return string.Concat(algorithm.ComputeHash(stream).Select(b => b.ToString("x2", Invariant)));
+    }
+}

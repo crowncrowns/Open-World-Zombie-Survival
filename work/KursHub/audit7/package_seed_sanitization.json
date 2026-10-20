@@ -1,0 +1,24 @@
+{
+  "scope": "Only PackageImportProject; authorized by parent; main Assets/Settings and ProjectSettings remain unchanged.",
+  "changes": [
+    {
+      "path": "Assets/Settings/DefaultVolumeProfile.asset",
+      "reason": "Empty seed-only default volume; old profile included missing scripts / editor-test components. Original project unchanged.",
+      "beforeSha256": "463776c51ae49d4fef980e8fd268081b2f505610d79315003faae1acff8f4115",
+      "afterSha256": "737e21c904372436ed34fb79fe908e026846e9ead3a58018bb16635f5fe1d13a"
+    },
+    {
+      "path": "Assets/Settings/PC_Renderer.asset",
+      "reason": "Clear seven obsolete unused probe-debug resources in seed only; checker creates an independent fresh Universal renderer.",
+      "beforeSha256": "1a0568c60ef4bb606891c8a890521ccb696b3a538dcc5a7b80c90315f933b6f3",
+      "afterSha256": "a6826e642467fc0d01f05b55d074bdc0ca98c41814c43044ba0b8ba10c48cf9e"
+    },
+    {
+      "path": "ProjectSettings/EditorBuildSettings.asset",
+      "reason": "Remove unrelated SampleScene build entry and InputSystem_Actions config object from this gameplay-free import test.",
+      "beforeSha256": "8d1712535531522f729d34e843ea20772c01d002227338f8f802f472d7e8d78e",
+      "afterSha256": "65f012cb8f5697059abd088f540367a11927a57f0d4acffde2b9e1ed68eb4966"
+    }
+  ],
+  "runtimeSetup": "KursHubPackageImportCheck creates UniversalRendererData and UniversalRenderPipelineAsset.Create(renderer), sets all quality levels to the fresh URP asset."
+}

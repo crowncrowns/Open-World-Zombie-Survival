@@ -1,0 +1,189 @@
+#if UNITY_EDITOR
+using System;
+using System.Collections;
+using System.IO;
+using System.Linq;
+using UnityEditor;
+using UnityEditor.SceneManagement;
+using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
+using ZombieSurvival.Player;
+
+public sealed class KursHubProbe : MonoBehaviour
+{
+    public const string Results = "../stage6/play_validation.txt";
+    public static void Require(bool condition,string text) { if(!condition)throw new Exception("KURS_TEST_FAILED: "+text); File.AppendAllText(Results,"PASS "+text+"\n"); Debug.Log("KURS_PROBE "+text); }
+    private Keyboard keyboard;
+    private CharacterController capsule;
+    private void OnEnable() => Application.logMessageReceived += OnLog;
+    private void OnDisable() => Application.logMessageReceived -= OnLog;
+    private void OnLog(string condition, string stack, LogType type)
+    {
+        if (type != LogType.Exception && type != LogType.Error && type != LogType.Assert) return;
+        if(stack.Contains("UnityEditor.Search.")) { File.AppendAllText(Results,"EDITOR_SEARCH_WARNING " + condition + "\n"); return; }
+        File.AppendAllText(Results, "FAIL " + condition + "\n" + stack + "\n");
+        EditorApplication.Exit(1);
+    }
+    private IEnumerator Start()
+    {
+        Time.captureFramerate = 60; QualitySettings.vSyncCount = 0;
+        Application.runInBackground = true;
+        InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus;
+        InputSystem.settings.editorInputBehaviorInPlayMode = InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
+        keyboard = InputSystem.AddDevice<Keyboard>("KursProbeKeyboard"); capsule = GetComponent<CharacterController>();
+        yield return null; yield return null;
+        yield return Walk(new Vector3(-27f,0f,-98f),0f,"Lab approach");
+        yield return Walk(new Vector3(0f,0f,-96f),0f,"Path turn");
+        yield return Walk(new Vector3(0f,0f,-80f),0f,"Entrance apron");
+        yield return Walk(new Vector3(0f,0f,-61f),0f,"Vestibule");
+        yield return Walk(new Vector3(-1.4f,0f,-53f),0f,"Checkpoint left approach");
+        yield return Walk(new Vector3(-1.4f,0f,-44f),0f,"Walk through real checkpoint detector");
+        yield return Walk(new Vector3(0f,0f,-41f),0f,"Checkpoint exit");
+        yield return Walk(new Vector3(3.4f,0f,-35f),0f,"Market right lane");
+        yield return Walk(new Vector3(3.4f,0f,-12f),0f,"Dense market walk");
+        yield return Walk(new Vector3(3.4f,0f,3f),0f,"Common hearth side lane");
+        yield return Walk(new Vector3(3.4f,0f,7f),0f,"Clear turn beyond last stall");
+        yield return Walk(new Vector3(10f,0f,7f),0f,"Stair approach");
+        yield return Walk(new Vector3(10f,5.5f,20f),5.5f,"East main stair");
+        yield return Walk(new Vector3(17f,5.5f,22f),5.5f,"East gallery approach");
+        yield return Walk(new Vector3(17f,5.5f,-30f),5.5f,"East sleeping gallery");
+        yield return Walk(new Vector3(23f,5.5f,-30f),5.5f,"East rear alley entrance");
+        yield return Walk(new Vector3(23f,5.5f,22f),5.5f,"East rear alley");
+        yield return Walk(new Vector3(-17f,5.5f,22f),5.5f,"Rear gallery crossing");
+        yield return Walk(new Vector3(-17f,5.5f,-30f),5.5f,"West sleeping gallery");
+        yield return Walk(new Vector3(-23f,5.5f,-30f),5.5f,"West rear alley entrance");
+        yield return Walk(new Vector3(-23f,5.5f,22f),5.5f,"West rear alley");
+        yield return Walk(new Vector3(-39.5f,5.5f,28f),5.5f,"Roof access gallery");
+        yield return Walk(new Vector3(-39.5f,5.5f,37.5f),5.5f,"Roof stair approach");
+        yield return Walk(new Vector3(-39.5f,8.25f,44f),8.25f,"Roof stair lower flight");
+        yield return Walk(new Vector3(-36.5f,8.25f,44f),8.25f,"Roof stair turn");
+        yield return Walk(new Vector3(-36.5f,11f,35f),11f,"Roof access exit");
+        yield return Walk(new Vector3(-30f,11f,33f),11f,"Roof walking area");
+        yield return Walk(new Vector3(-23f,11f,29f),11f,"Roof route");
+        yield return Walk(new Vector3(-23f,11f,-50f),11f,"Front dome approach");
+        yield return Walk(new Vector3(-14f,11f,-50f),11f,"Dome edge walk");
+        yield return Walk(new Vector3(-23f,11f,-50f),11f,"Dome return");
+        yield return Walk(new Vector3(-23f,11f,29f),11f,"Roof return");
+        yield return Walk(new Vector3(-30f,11f,33f),11f,"Roof stair return");
+        yield return Walk(new Vector3(-36.5f,11f,35f),11f,"Roof doorway return");
+        yield return Walk(new Vector3(-36.5f,11f,37.4f),11f,"Roof descent approach");
+        yield return Walk(new Vector3(-36.5f,8.25f,44f),8.25f,"Roof upper descent");
+        yield return Walk(new Vector3(-39.5f,8.25f,44f),8.25f,"Roof descent turn");
+        yield return Walk(new Vector3(-39.5f,5.5f,37f),5.5f,"Roof lower descent");
+        yield return Walk(new Vector3(-39.5f,5.5f,28f),5.5f,"Return rear gallery");
+        yield return Walk(new Vector3(-10f,5.5f,22f),5.5f,"West main stair landing");
+        yield return Walk(new Vector3(-10f,0f,7f),0f,"West main stair descent");
+        yield return Walk(new Vector3(3.4f,0f,6f),0f,"Return to market");
+        yield return Walk(new Vector3(3.4f,0f,-35f),0f,"Return past hearth");
+        yield return Walk(new Vector3(1.4f,0f,-44f),0f,"Checkpoint right approach");
+        yield return Walk(new Vector3(1.4f,0f,-54f),0f,"Right detector reverse walk");
+        yield return Walk(new Vector3(0f,0f,-61f),0f,"Vestibule return");
+        yield return Walk(new Vector3(0f,0f,-80f),0f,"Exit to apron");
+        Warp(new Vector3(44,.03f,0));
+        yield return Push(Vector3.right,150);
+        Require(transform.position.x < 46.3f && transform.position.x > 45.4f && transform.position.y > -.1f,"Outer wall collision " + transform.position);
+        Warp(new Vector3(17,5.53f,-10));
+        yield return Push(Vector3.left,150);
+        Require(transform.position.x > 15.2f && transform.position.y > 5.4f,"Atrium guard collision " + transform.position);
+        Warp(new Vector3(-17,11.03f,0));
+        yield return Push(Vector3.right,150);
+        Require(transform.position.x < -15.2f && transform.position.y > 10.9f,"Roof skylight guard collision " + transform.position);
+        Warp(new Vector3(-14,11.03f,-50));
+        yield return Push(Vector3.right,150);
+        Require(transform.position.x < -11.6f && transform.position.y > 10.9f,"Front dome guard collision " + transform.position);
+        Warp(new Vector3(4,.03f,-61));
+        yield return Push(Vector3.right,100);
+        Require(transform.position.x>5.3f && transform.position.x<5.8f && transform.position.y>-.1f,"Vestibule east glass collision "+transform.position);
+        Warp(new Vector3(-4,.03f,-61));
+        yield return Push(Vector3.left,100);
+        Require(transform.position.x< -5.3f && transform.position.x> -5.8f && transform.position.y>-.1f,"Vestibule west glass collision "+transform.position);
+        Warp(new Vector3(10,2.97f,13));
+        yield return Push(Vector3.right,100);
+        Require(transform.position.x<11.8f && transform.position.y>2.7f,"Open main stair railing protection "+transform.position);
+        Warp(new Vector3(-39.5f,6.9f,40));
+        yield return Push(Vector3.left,100);
+        Require(transform.position.x> -40.75f && transform.position.y>6.6f,"Open roof stair railing protection "+transform.position);
+        var reusableGround=GameObject.CreatePrimitive(PrimitiveType.Cube);
+        reusableGround.transform.position=new Vector3(100,-.2f,0);reusableGround.transform.localScale=new Vector3(10,.4f,10);
+        foreach(var id in new[]{"KH_Barricade","KH_Railing"})
+        {
+            var asset=AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Environment/KursHub/Props/Prefabs/"+id+".prefab");
+            var prop=(GameObject)PrefabUtility.InstantiatePrefab(asset);prop.transform.position=new Vector3(100,0,0);
+            Warp(new Vector3(100,.03f,-2));yield return Push(Vector3.forward,120);
+            Require(transform.position.z<-.35f && transform.position.y>-.1f,"Standalone reusable prop collision "+id+" "+transform.position);
+            Destroy(prop);yield return null;
+        }
+        foreach(var id in new[]{"KH_Shopfront6","KH_DoorPartition4"})
+        {
+            var asset=AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Environment/KursHub/Props/Prefabs/"+id+".prefab");
+            var prop=(GameObject)PrefabUtility.InstantiatePrefab(asset);prop.transform.position=new Vector3(100,0,0);
+            Physics.SyncTransforms();
+            float margin=id=="KH_Shopfront6" ? .65f : .3f;
+            foreach(float offset in new[]{0f,-margin,margin})
+            {
+                Warp(new Vector3(100+offset,.03f,-2));
+                yield return Walk(new Vector3(100+offset,0,2),0,"Standalone open portal forward "+id+" offset="+offset);
+                yield return Walk(new Vector3(100+offset,0,-2),0,"Standalone open portal reverse "+id+" offset="+offset);
+            }
+            float wallOffset=id=="KH_Shopfront6" ? 2.3f : 1.4f;
+            Warp(new Vector3(100+wallOffset,.03f,-2));yield return Push(Vector3.forward,120);
+            Require(transform.position.z<-.2f && transform.position.z>-.8f && transform.position.y>-.1f,"Standalone portal sidewall collision "+id+" "+transform.position);
+            Destroy(prop);yield return null;
+        }
+        {
+            var asset=AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Environment/KursHub/Props/Prefabs/KH_Partition4.prefab");
+            var prop=(GameObject)PrefabUtility.InstantiatePrefab(asset);prop.transform.position=new Vector3(100,0,0);
+            Physics.SyncTransforms();
+            Warp(new Vector3(100,.03f,-2));yield return Push(Vector3.forward,120);
+            Require(transform.position.z<-.2f && transform.position.z>-.8f && transform.position.y>-.1f,"Standalone solid partition collision "+transform.position);
+            Destroy(prop);yield return null;
+        }
+        Destroy(reusableGround);
+        AssetDatabase.SaveAssets();
+        File.AppendAllText(Results,"PASS VERIFIED_LIBRARY_SHA256="+LibraryHash()+"\n");
+        File.AppendAllText(Results,"KURS_PLAY_OK: actual FirstPersonController + queued Input System W; no temporary components deployed.\n");
+        Debug.Log("KURS_PLAY_OK");
+        InputSystem.RemoveDevice(keyboard); EditorApplication.Exit(0);
+    }
+    private static string LibraryHash()
+    {
+        const string folder="Assets/Environment/KursHub";
+        var paths=Directory.GetFiles(folder,"*",SearchOption.AllDirectories).Where(p=>!p.EndsWith(".meta") && p.Replace('\\','/')!=folder+"/Models/KursHubShell.fbx" && !p.EndsWith("KursHub.prefab") && !p.EndsWith("KursHubManifest.json")).Select(p=>p.Replace('\\','/')).OrderBy(p=>p,StringComparer.Ordinal);
+        using(var algorithm=System.Security.Cryptography.SHA256.Create())
+        {
+            Func<string,string> hash=p=>BitConverter.ToString(algorithm.ComputeHash(File.ReadAllBytes(p))).Replace("-","").ToLowerInvariant();
+            var proof=string.Join("\n",paths.Select(p=>p+":"+hash(p)));
+            return BitConverter.ToString(algorithm.ComputeHash(System.Text.Encoding.UTF8.GetBytes(proof))).Replace("-","").ToLowerInvariant();
+        }
+    }
+    private void Warp(Vector3 point)
+    {
+        InputSystem.QueueStateEvent(keyboard,new KeyboardState());
+        capsule.enabled=false;transform.position=point;capsule.enabled=true;Physics.SyncTransforms();
+    }
+    private IEnumerator Push(Vector3 direction,int frames)
+    {
+        transform.rotation=Quaternion.LookRotation(direction);
+        for(int i=0;i<frames;i++){InputSystem.QueueStateEvent(keyboard,new KeyboardState(Key.W)); InputSystem.Update(); yield return null;}
+        InputSystem.QueueStateEvent(keyboard,new KeyboardState());yield return null;
+    }
+    private IEnumerator Walk(Vector3 target,float expectedHeight,string label)
+    {
+        int count=0;
+        while(Vector2.Distance(new Vector2(transform.position.x,transform.position.z),new Vector2(target.x,target.z)) > .16f && count++ < 2400)
+        {
+            var direction=target-transform.position;direction.y=0;transform.rotation=Quaternion.LookRotation(direction);
+            InputSystem.QueueStateEvent(keyboard,new KeyboardState(Key.W)); InputSystem.Update(); yield return null;
+            if(count==60) { var c=GetComponent<FirstPersonController>(); File.AppendAllText(Results,$"INPUT_DIAGNOSTIC enabled={c.enabled} accepts={c.AcceptingGameplayInput} action={c.FindGameplayAction("Move").ReadValue<Vector2>()} W={keyboard.wKey.isPressed} device={keyboard.enabled}\n"); }
+            if(transform.position.y < -1)throw new Exception("Fell through floor: " + label + " " + transform.position);
+        }
+        InputSystem.QueueStateEvent(keyboard,new KeyboardState());
+        for(int i=0;i<20;i++)yield return null;
+        Require(count<2400 && Mathf.Abs(transform.position.y-expectedHeight)<.12f,
+            label+" "+transform.position+" frames="+count);
+    }
+}
+#endif

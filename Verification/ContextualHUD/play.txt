@@ -1,0 +1,51 @@
+Unity 6000.6.3f1
+EDITOR_SEARCH_EXCEPTION ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index
+Screen 640x480 canvas scale 0,3849002 fast=False
+PASS actual player prefab has one runtime HUD
+PASS HUD cannot intercept input
+PASS healthy idle hides all five context groups
+PASS legacy Canvas hidden
+PASS idle has no persistent crosshair
+PASS damage reveals health
+PASS health reads actual 68 HP
+PASS full healing fades health after hold
+PASS real Input System sprint spends stamina and reveals it
+PASS stamina hides after recovery and grace period
+PASS mouse wheel reveals hotbar through runtime binding
+PASS wheel actually selects a slot
+PASS digit selection reveals hotbar
+PASS inactive hotbar fades
+PASS reselecting same slot also reveals hotbar
+PASS test setup adds owned weapon and reserve
+PASS assignment uses existing stack without copying
+PASS equipped weapon reveals ammo
+PASS real R input reloads the magazine
+PASS real LMB consumes one round and reveals ammo
+PASS low needs reveal independently
+PASS critical health warning
+PASS real Tab menu hides gameplay HUD
+PASS closing Tab restores needed warnings
+PASS real D-pad selects slot and reveals hotbar
+PASS 10-slot HUD rebuilds
+PASS one-slot HUD rebuilds
+PASS death replaces context groups
+PASS R respawn clears death presentation
+PASS actual raycast target reveals interaction prompt
+PASS real E executes interaction with new HUD
+PASS looking away clears old interaction target
+PASS disabling presenter restores legacy Canvas
+PASS reenabling does not duplicate Canvas
+PASS Play reinitialization keeps one HUD
+ALL_HUD_PLAY_CHECKS_PASSED
+Screen 640x480 canvas scale 0,3849002 fast=True
+PASS actual player prefab has one runtime HUD
+PASS HUD cannot intercept input
+PASS healthy idle hides all five context groups
+PASS legacy Canvas hidden
+PASS idle has no persistent crosshair
+PASS actual second Play disables Domain Reload and Scene Reload
+PASS fast second Play has one Canvas
+PASS damage subscription works in fast second Play
+PASS hotbar runtime input works in fast second Play
+FAST_RELOAD_PLAY_CHECKS_PASSED

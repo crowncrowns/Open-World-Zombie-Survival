@@ -1,0 +1,24 @@
+from pathlib import Path
+import bpy,json,hashlib,math
+R=Path('E:/git/Open-World-Zombie-Survival');W=R/'work/KursHub/stage6'
+def snapshot(path):
+ bpy.ops.wm.open_mainfile(filepath=str(path));result={}
+ for obj in bpy.context.scene.objects:
+  if obj.type!='MESH':continue
+  data=dict(vertices=[list(v.co) for v in obj.data.vertices],faces=[list(p.vertices) for p in obj.data.polygons],matrix=[list(row) for row in obj.matrix_world])
+  result[obj.name]=hashlib.sha256(json.dumps(data,sort_keys=True).encode()).hexdigest()
+ return result
+old=snapshot(W/'baseline/Sources/KursHub/KursHub.blend');new=snapshot(W/'authoring/Sources/KursHub/KursHub.blend')
+assert old==new,'Shell geometry or transforms changed'
+m=json.loads((W/'authoring/Assets/Environment/KursHub/KursHubManifest.json').read_text())
+group=bpy.data.collections['Reusable interior settlement'];assert len(group.objects)==len(m['settlementInstances'])
+for p in m['settlementInstances']:
+ obj=group.objects[p['id']];assert obj.instance_collection.name==p['prop']
+ x,y,z=p['position'];assert max(abs(a-b) for a,b in zip(obj.location,(x,z,y)))<1e-5
+ assert abs(obj.rotation_euler.z+math.radians(p['rotation'][1]))<1e-5
+ assert all(abs(a-b)<1e-5 for a,b in zip(obj.scale,(p['scale'][0],p['scale'][2],p['scale'][1])))
+assert len(bpy.data.collections['Reusable exterior props'].objects)==63
+assert len(bpy.data.collections['Reusable interior architecture'].objects)==130
+assert bpy.data.objects['GroundBody'].data.materials[1].name=='CeramicTile'
+report=dict(status='KURS_STAGE6_SOURCE_OK',shellGeometryUnchanged=True,shellMeshObjects=len(old),settlementInstances=len(m['settlementInstances']),exteriorInstances=63,architectureInstances=130,practicalLights=len(m['settlementLights']))
+(W/'source_validation.json').write_text(json.dumps(report,indent=2));print(report)

@@ -1,0 +1,59 @@
+{
+  "props": [
+    {
+      "id": "KH_WindowBoards",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_WindowBoards.fbx",
+      "collection": "KH_WindowBoards",
+      "sourceOffset": [
+        13.0,
+        0,
+        10.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_WindowBoards_SteelOxide_NC",
+          "material": "SteelOxide",
+          "collider": false
+        },
+        {
+          "name": "KH_WindowBoards_WornWood_NC",
+          "material": "WornWood",
+          "collider": false
+        }
+      ],
+      "origin": "Bottom centre; front faces local -Z; 2.8 x 2 m boarded patch",
+      "triangles": 744,
+      "boundsMin": [
+        -1.399999976158142,
+        -0.0027670611161738634,
+        -0.18250000476837158
+      ],
+      "boundsMax": [
+        1.399999976158142,
+        2.062767267227173,
+        0.06750000268220901
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 744,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_WindowBoards.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 444,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_WindowBoards_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 250,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_WindowBoards_LOD2.fbx",
+          "roundtripRestoredChunks": [
+            "KH_WindowBoards_SteelOxide_NC"
+          ]
+        }
+      ]
+    }
+  ],
+  "audit7LODCorrection": "Defective small decimated solids detected by actual roundtrip are restored from the preceding safe LOD, preserving all chunk identities and descending triangle counts."
+}
