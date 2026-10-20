@@ -33,6 +33,7 @@ namespace ZombieSurvival.Services
         private TraderProfile observedProfile;
         private long catalogVersion = 1;
         private bool initializing;
+        private bool restocking;
         private bool subscribed;
         internal bool Initializing => initializing;
         public event Action CatalogChanged;
@@ -86,7 +87,7 @@ namespace ZombieSurvival.Services
             }
             subscribed = false;
         }
-        private void StockChanged() { if (!initializing&&!RestockIsBusy) InvalidateCatalog(); }
+        private void StockChanged() { if (!initializing&&!restocking) InvalidateCatalog(); }
         private void Update()
         {
             if(activeProfile!=observedProfile&&!TrySelectProfile(activeProfile))activeProfile=observedProfile;
@@ -180,13 +181,14 @@ namespace ZombieSurvival.Services
         public double GetRestockRemainingSeconds(TraderProfile profile)
         {
             if(!restockEnabled||float.IsNaN(restockIntervalSeconds)||float.IsInfinity(restockIntervalSeconds)||restockIntervalSeconds<=0)return double.PositiveInfinity;
-            foreach(var row in stocks??Array.Empty<Stock>())if(row!=null&&row.profile==profile&&row.initialized)return Math.Max(0,restockIntervalSeconds-row.restockElapsed);
+            foreach(var row in stocks??Array.Empty<Stock>())if(row!=null&&row.profile==profile&&row.initialized)
+                return double.IsNaN(row.restockElapsed)||double.IsInfinity(row.restockElapsed)||row.restockElapsed<0?double.PositiveInfinity:Math.Max(0,restockIntervalSeconds-row.restockElapsed);
             return double.PositiveInfinity;
         }
         // Internal simulated-time hook for isolated tests. Gameplay UI cannot request a stock grant.
         internal bool AdvanceRestock(double scaledSeconds)
         {
-            if(!Application.isPlaying||!isActiveAndEnabled||!restockEnabled||initializing||RestockIsBusy||TradeService.IsBusy||RepairService.IsBusy||ZombieSurvival.Weapons.PlayerWeapons.IsBusy||ItemStorage.IsWeaponUseBusy
+            if(!Application.isPlaying||Time.timeScale<=0||!isActiveAndEnabled||!restockEnabled||initializing||RestockIsBusy||TradeService.IsBusy||RepairService.IsBusy||ZombieSurvival.Weapons.PlayerWeapons.IsBusy||ItemStorage.IsWeaponUseBusy
                 ||double.IsNaN(scaledSeconds)||double.IsInfinity(scaledSeconds)||scaledSeconds<=0)return false;
             foreach(var saving in FindObjectsByType<ZombieSurvival.Persistence.PlayerSaveSystem>(FindObjectsInactive.Include))if(saving.gameObject.scene==gameObject.scene&&saving.IsWorking)return false;
             try{ValidateConfiguration();}catch(InvalidOperationException){return false;}
@@ -201,14 +203,14 @@ namespace ZombieSurvival.Services
                 plans.Add(plan);due.Add(row);elapsed[i]=total%restockIntervalSeconds;
             }
             if(due.Count==0){for(int i=0;i<stocks.Length;i++)stocks[i].restockElapsed=elapsed[i];return true;}
-            RestockIsBusy=true;var locked=new List<ItemStorage>();
+            RestockIsBusy=true;restocking=true;var locked=new List<ItemStorage>();
             try
             {
                 foreach(var row in due){if(!row.storage.TryLockTrade())return false;locked.Add(row.storage);}
                 foreach(var plan in plans)plan.Commit();for(int i=0;i<stocks.Length;i++)stocks[i].restockElapsed=elapsed[i];
                 InvalidateCatalog();foreach(var plan in plans)if(plan.changed)plan.storage.PublishTrade();return true;
             }
-            finally{foreach(var store in locked)store.UnlockTrade();RestockIsBusy=false;}
+            finally{foreach(var store in locked)store.UnlockTrade();restocking=false;RestockIsBusy=false;}
         }
     }
 }

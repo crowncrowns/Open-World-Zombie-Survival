@@ -46,7 +46,8 @@ namespace ZombieSurvival.Services
         public static bool TryPreviewPrice(Trader trader,TradeDirection direction,ItemStack item,int quantity,out long unit,out long total,out string reason)
         {
             unit=total=0;
-            if(trader==null||!trader.TryGetEffectiveSellPercent(trader.Profile,out var sell,out reason)){reason=trader==null?"Торговец недоступен":reason;return false;}
+            if(trader==null)return Fail("Торговец недоступен",out reason);
+            if(!trader.TryGetEffectiveSellPercent(trader.Profile,out var sell,out reason))return false;
             if(item==null||item.IsEmpty||quantity<=0||quantity>item.Quantity||!Enum.IsDefined(typeof(TradeDirection),direction)||item.Definition.IsIndividual&&quantity!=1)return Fail("Выберите вещь и допустимое количество",out reason);
             return TryPrice(trader.Profile,direction,item,quantity,out unit,out total,out reason,sell);
         }

@@ -85,7 +85,7 @@ namespace ZombieSurvival.Inventory
         internal bool TryPrepareRepair(ItemStack target,IReadOnlyList<ZombieSurvival.Services.RepairCost> costs,out PreparedRepair plan,out string reason)
         {
             plan=null;reason="";
-            if(tradeLocked||!isActiveAndEnabled||!Contains(target)||target.IsSnapshot||!target.Definition.Repairable||target.Quantity!=1)
+            if(tradeLocked||ZombieSurvival.Services.Trader.RestockIsBusy||!isActiveAndEnabled||!Contains(target)||target.IsSnapshot||!target.Definition.Repairable||target.Quantity!=1)
             {reason="Инвентарь занят или вещь недоступна";return false;}
             if(costs==null||costs.Count==0){reason="Рецепт ремонта пуст";return false;}
             var prepared=new PreparedRepair{storage=this,target=target,maximum=target.Definition.MaximumDurability};var seen=new HashSet<ItemDefinition>();

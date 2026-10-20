@@ -330,6 +330,9 @@ namespace ZombieSurvival.Persistence
                 }
                 Physics.SyncTransforms();if(!FreePose(data,old,stage,worldPlan))throw new InvalidOperationException("Точка загрузки занята или потеряла опору в сохранённом мире.");
                 // Commit section: everything above is non-destructive. No external observers until all slots/world are replaced.
+                // A successful restore starts a new interaction lifetime: release the service's input lock
+                // before retiring its selected ItemStacks. Rejected loads leave the existing menu intact.
+                GetComponent<ZombieSurvival.Services.PlayerServiceSession>()?.Close();
                 GetComponent<PlayerInventory>()?.Close();GetComponent<PlayerProgressionMenu>()?.Close();GetComponent<PlayerSaveMenu>()?.Close();var weapons=GetComponent<PlayerWeapons>();weapons?.Unequip();
                 worldPlan.CommitSilent();
                 foreach(var w in old){w.RetireForRestore();w.gameObject.SetActive(false);Destroy(w.gameObject);}

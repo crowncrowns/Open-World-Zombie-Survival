@@ -279,12 +279,19 @@ MonoBehaviour:
   - profile: {fileID: 11400000, guid: d8e6e3defdd20674c9f678b0d1ccefbf, type: 2}
     storage: {fileID: 5509280827852482710}
     initialized: 0
+    restockElapsed: 0
   - profile: {fileID: 11400000, guid: e77c3946ad2ba4247a3e3c56d98b9e06, type: 2}
     storage: {fileID: 2630880737206823108}
     initialized: 0
+    restockElapsed: 0
   - profile: {fileID: 11400000, guid: d2e1282459effd34c8156e2b990313e2, type: 2}
     storage: {fileID: 1052370154159887307}
     initialized: 0
+    restockElapsed: 0
+  restockEnabled: 1
+  restockIntervalSeconds: 600
+  saleMarkupPercent: 0
+  saleDiscountPercent: 0
 --- !u!114 &7690629575592426372
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -350,6 +357,13 @@ MonoBehaviour:
   profileOverride: {fileID: 0}
   idleEnabled: 1
   lookEnabled: 1
+  ambientLookEnabled: 1
+  ambientLookRadius: 4
+  ambientFieldOfView: 120
+  ambientSearchInterval: 0.3
+  lookObstructionMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
   maximumYaw: 35
   maximumPitch: 15
   lookSpeed: 80

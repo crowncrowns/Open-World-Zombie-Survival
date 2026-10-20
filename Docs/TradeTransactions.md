@@ -1,5 +1,9 @@
 # Т6 — покупка и продажа
 
+Т13: [TradeRepairIntegration.md](TradeRepairIntegration.md). Продажа/выкуп, выброс/подбор, ремонт и Save/Load проверены одной цепочкой. Успешная загрузка закрывает торговую сессию; старый quote и ItemStack-ссылка недействительны, после открытия выбрать восстановленный экземпляр заново.
+
+Т12: [TraderEconomy.md](TraderEconomy.md). Фактический preview и сделки принимают Trader с индивидуальными наценкой/скидкой; profile-only preview не содержит поправок NPC. Котировка включает точный settings stamp, поставка инвалидирует её. RestockIsBusy блокирует сделки до конца публикации.
+
 Сервис торговли использует существующие ItemStack/ItemStorage, Wallet и TraderBudget. Рубли не становятся предметами; запас конкретного NPC не хранится в общем TraderProfile. Подключение NPC и смена модели остаются прежними: [TraderProfiles.md](TraderProfiles.md).
 
 ## Сделка
