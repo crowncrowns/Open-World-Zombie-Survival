@@ -1,0 +1,20 @@
+"""Shared authored colours for the lived-in interior; no vendor materials."""
+PALETTE6 = {
+    'CeramicTile': (.67,.61,.50,1),
+    'TimberRaw': (.31,.20,.10,1),
+    'CanvasBlue': (.075,.14,.23,1),
+    'CanvasBeige': (.49,.42,.29,1),
+    'CanvasRed': (.32,.085,.055,1),
+    'CanvasDark': (.07,.075,.065,1),
+    'PlasticDark': (.105,.13,.075,1),
+    'Enamel': (.66,.63,.49,1),
+    'Copper': (.35,.19,.075,1),
+    'Paper': (.64,.59,.43,1),
+    'RugRed': (.34,.075,.045,1),
+    'RugBlue': (.065,.13,.18,1),
+    'RugWoven': (.42,.29,.15,1),
+    'Ember': (1,.22,.025,1),
+    'LeafGreen': (.13,.22,.075,1),
+    'ClothInk': (.78,.75,.64,1),
+    'InkDark': (.028,.025,.02,1),
+}

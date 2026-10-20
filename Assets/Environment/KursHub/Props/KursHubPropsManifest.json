@@ -1,0 +1,769 @@
+{
+  "version": 1,
+  "stage": 5,
+  "coordinates": "Unity metres; X right, Y up, front -Z",
+  "palette": [
+    {
+      "name": "WornWood",
+      "rgba": [
+        0.31,
+        0.23,
+        0.15,
+        1
+      ]
+    },
+    {
+      "name": "TarpGreen",
+      "rgba": [
+        0.14,
+        0.2,
+        0.13,
+        1
+      ]
+    },
+    {
+      "name": "SandCanvas",
+      "rgba": [
+        0.52,
+        0.46,
+        0.31,
+        1
+      ]
+    },
+    {
+      "name": "SteelOxide",
+      "rgba": [
+        0.26,
+        0.15,
+        0.09,
+        1
+      ]
+    },
+    {
+      "name": "Frame",
+      "rgba": [
+        0.095,
+        0.12,
+        0.13,
+        1
+      ]
+    },
+    {
+      "name": "LampGlass",
+      "rgba": [
+        0.96,
+        0.72,
+        0.34,
+        1
+      ]
+    },
+    {
+      "name": "DirtStain",
+      "rgba": [
+        0.14,
+        0.105,
+        0.065,
+        0.45
+      ]
+    },
+    {
+      "name": "Concrete",
+      "rgba": [
+        0.57,
+        0.55,
+        0.49,
+        1
+      ]
+    },
+    {
+      "name": "CreamPanel",
+      "rgba": [
+        0.64,
+        0.62,
+        0.53,
+        1
+      ]
+    },
+    {
+      "name": "MallBlue",
+      "rgba": [
+        0.055,
+        0.26,
+        0.46,
+        1
+      ]
+    },
+    {
+      "name": "Glass",
+      "rgba": [
+        0.22,
+        0.4,
+        0.43,
+        0.28
+      ]
+    },
+    {
+      "name": "Lettering",
+      "rgba": [
+        0.8,
+        0.79,
+        0.7,
+        1
+      ]
+    },
+    {
+      "name": "SignRed",
+      "rgba": [
+        0.35,
+        0.08,
+        0.065,
+        1
+      ]
+    }
+  ],
+  "props": [
+    {
+      "id": "KH_Sandbag",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_Sandbag.fbx",
+      "collection": "KH_Sandbag",
+      "sourceOffset": [
+        0.0,
+        0,
+        0.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_Sandbag_SandCanvas_NC",
+          "material": "SandCanvas",
+          "collider": false
+        },
+        {
+          "name": "KH_Sandbag_SandCanvas_C",
+          "material": "SandCanvas",
+          "collider": true
+        }
+      ],
+      "origin": "Ground centre; .85 m wide, .35 m high, .50 m deep",
+      "triangles": 640,
+      "boundsMin": [
+        -0.42500001192092896,
+        0.0,
+        -0.25
+      ],
+      "boundsMax": [
+        0.42500001192092896,
+        0.3499999940395355,
+        0.25
+      ]
+    },
+    {
+      "id": "KH_Barricade",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_Barricade.fbx",
+      "collection": "KH_Barricade",
+      "sourceOffset": [
+        13.0,
+        0,
+        0.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_Barricade_SteelOxide_NC",
+          "material": "SteelOxide",
+          "collider": false
+        },
+        {
+          "name": "KH_Barricade_WornWood_C",
+          "material": "WornWood",
+          "collider": true
+        }
+      ],
+      "origin": "Ground centre; 2.4 x 1.2 m reclaimed plank barricade",
+      "triangles": 204,
+      "boundsMin": [
+        -1.2000000476837158,
+        0.0,
+        -0.30000001192092896
+      ],
+      "boundsMax": [
+        1.2000000476837158,
+        1.2600663900375366,
+        0.30000001192092896
+      ]
+    },
+    {
+      "id": "KH_WatchPost",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_WatchPost.fbx",
+      "collection": "KH_WatchPost",
+      "sourceOffset": [
+        26.0,
+        0,
+        0.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_WatchPost_SandCanvas_NC",
+          "material": "SandCanvas",
+          "collider": false
+        },
+        {
+          "name": "KH_WatchPost_TarpGreen_NC",
+          "material": "TarpGreen",
+          "collider": false
+        },
+        {
+          "name": "KH_WatchPost_WornWood_NC",
+          "material": "WornWood",
+          "collider": false
+        },
+        {
+          "name": "KH_WatchPost_WornWood_C",
+          "material": "WornWood",
+          "collider": true
+        }
+      ],
+      "origin": "Platform bottom centre; 4 x 4 m floor, rear +Z opening 1.2 m",
+      "triangles": 1748,
+      "boundsMin": [
+        -2.2200000286102295,
+        0.0,
+        -2.2200000286102295
+      ],
+      "boundsMax": [
+        2.2200000286102295,
+        3.6649999618530273,
+        2.2200000286102295
+      ]
+    },
+    {
+      "id": "KH_TarpWide",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_TarpWide.fbx",
+      "collection": "KH_TarpWide",
+      "sourceOffset": [
+        39.0,
+        0,
+        0.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_TarpWide_SandCanvas_NC",
+          "material": "SandCanvas",
+          "collider": false
+        },
+        {
+          "name": "KH_TarpWide_TarpGreen_NC",
+          "material": "TarpGreen",
+          "collider": false
+        }
+      ],
+      "origin": "Bottom centre; front faces local -Z; visual cloth, no collision",
+      "triangles": 1488,
+      "boundsMin": [
+        -3.0,
+        0.0,
+        -0.12071674317121506
+      ],
+      "boundsMax": [
+        3.0,
+        2.390216588973999,
+        0.10588236898183823
+      ]
+    },
+    {
+      "id": "KH_TarpNarrow",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_TarpNarrow.fbx",
+      "collection": "KH_TarpNarrow",
+      "sourceOffset": [
+        0.0,
+        0,
+        10.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_TarpNarrow_SandCanvas_NC",
+          "material": "SandCanvas",
+          "collider": false
+        },
+        {
+          "name": "KH_TarpNarrow_TarpGreen_NC",
+          "material": "TarpGreen",
+          "collider": false
+        }
+      ],
+      "origin": "Bottom centre; front faces local -Z; visual cloth, no collision",
+      "triangles": 1488,
+      "boundsMin": [
+        -1.5,
+        0.0,
+        -0.12071674317121506
+      ],
+      "boundsMax": [
+        1.5,
+        2.5902163982391357,
+        0.10588236898183823
+      ]
+    },
+    {
+      "id": "KH_WindowBoards",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_WindowBoards.fbx",
+      "collection": "KH_WindowBoards",
+      "sourceOffset": [
+        13.0,
+        0,
+        10.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_WindowBoards_SteelOxide_NC",
+          "material": "SteelOxide",
+          "collider": false
+        },
+        {
+          "name": "KH_WindowBoards_WornWood_NC",
+          "material": "WornWood",
+          "collider": false
+        }
+      ],
+      "origin": "Bottom centre; front faces local -Z; 2.8 x 2 m boarded patch",
+      "triangles": 168,
+      "boundsMin": [
+        -1.399999976158142,
+        -0.005231834948062897,
+        -0.18250000476837158
+      ],
+      "boundsMax": [
+        1.399999976158142,
+        2.0652318000793457,
+        0.06750000268220901
+      ]
+    },
+    {
+      "id": "KH_CorrugatedPatch",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_CorrugatedPatch.fbx",
+      "collection": "KH_CorrugatedPatch",
+      "sourceOffset": [
+        26.0,
+        0,
+        10.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_CorrugatedPatch_Frame_NC",
+          "material": "Frame",
+          "collider": false
+        },
+        {
+          "name": "KH_CorrugatedPatch_SteelOxide_NC",
+          "material": "SteelOxide",
+          "collider": false
+        }
+      ],
+      "origin": "Bottom centre; front faces local -Z; 2.6 x 2.4 m sheet",
+      "triangles": 1984,
+      "boundsMin": [
+        -1.2999999523162842,
+        0.0,
+        -0.05299999937415123
+      ],
+      "boundsMax": [
+        1.2999999523162842,
+        2.4000000953674316,
+        0.036310888826847076
+      ]
+    },
+    {
+      "id": "KH_CableSag",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_CableSag.fbx",
+      "collection": "KH_CableSag",
+      "sourceOffset": [
+        39.0,
+        0,
+        10.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_CableSag_Frame_NC",
+          "material": "Frame",
+          "collider": false
+        },
+        {
+          "name": "KH_CableSag_SteelOxide_NC",
+          "material": "SteelOxide",
+          "collider": false
+        }
+      ],
+      "origin": "Midpoint at endpoints height; 10 m span local X, sag 1 m, no collision",
+      "triangles": 676,
+      "boundsMin": [
+        -5.050000190734863,
+        -1.0210000276565552,
+        -0.035999998450279236
+      ],
+      "boundsMax": [
+        5.050000190734863,
+        0.05999999865889549,
+        0.0949999988079071
+      ]
+    },
+    {
+      "id": "KH_Floodlight",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_Floodlight.fbx",
+      "collection": "KH_Floodlight",
+      "sourceOffset": [
+        0.0,
+        0,
+        20.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_Floodlight_Frame_NC",
+          "material": "Frame",
+          "collider": false
+        },
+        {
+          "name": "KH_Floodlight_LampGlass_NC",
+          "material": "LampGlass",
+          "collider": false
+        },
+        {
+          "name": "KH_Floodlight_SteelOxide_NC",
+          "material": "SteelOxide",
+          "collider": false
+        }
+      ],
+      "origin": "Wall bracket centre; forward -Z, lens pitched down 35 degrees",
+      "triangles": 96,
+      "boundsMin": [
+        -0.3100000023841858,
+        -0.3355274498462677,
+        -0.5271092653274536
+      ],
+      "boundsMax": [
+        0.3100000023841858,
+        0.13552746176719666,
+        0.035999998450279236
+      ]
+    },
+    {
+      "id": "KH_GrimePatch",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_GrimePatch.fbx",
+      "collection": "KH_GrimePatch",
+      "sourceOffset": [
+        13.0,
+        0,
+        20.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_GrimePatch_DirtStain_NC",
+          "material": "DirtStain",
+          "collider": false
+        }
+      ],
+      "origin": "Bottom centre; front -Z; 4 x 3 m fixed UV dirt overlay, no collision",
+      "triangles": 12,
+      "boundsMin": [
+        -2.0,
+        0.0,
+        -0.0010000000474974513
+      ],
+      "boundsMax": [
+        2.0,
+        3.0,
+        0.0010000000474974513
+      ]
+    },
+    {
+      "id": "KH_Railing",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_Railing.fbx",
+      "collection": "KH_Railing",
+      "sourceOffset": [
+        26.0,
+        0,
+        20.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_Railing_Frame_C",
+          "material": "Frame",
+          "collider": true
+        },
+        {
+          "name": "KH_Railing_SteelOxide_C",
+          "material": "SteelOxide",
+          "collider": true
+        }
+      ],
+      "origin": "Ground centre; 2 m metal section, 1.15 m top, continuous collision",
+      "triangles": 84,
+      "boundsMin": [
+        -1.0,
+        0.0,
+        -0.05000000074505806
+      ],
+      "boundsMax": [
+        1.0,
+        1.149999976158142,
+        0.05000000074505806
+      ]
+    },
+    {
+      "id": "KH_Partition4",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_Partition4.fbx",
+      "collection": "KH_Partition4",
+      "sourceOffset": [
+        39.0,
+        0,
+        20.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_Partition4_Concrete_NC",
+          "material": "Concrete",
+          "collider": false
+        },
+        {
+          "name": "KH_Partition4_CreamPanel_C",
+          "material": "CreamPanel",
+          "collider": true
+        },
+        {
+          "name": "KH_Partition4_Frame_NC",
+          "material": "Frame",
+          "collider": false
+        },
+        {
+          "name": "KH_Partition4_Frame_C",
+          "material": "Frame",
+          "collider": true
+        }
+      ],
+      "origin": "Floor bottom centre; front -Z; 4 x 3.7 x .18 m opaque cream partition",
+      "triangles": 84,
+      "boundsMin": [
+        -2.0,
+        0.0,
+        -0.09000000357627869
+      ],
+      "boundsMax": [
+        2.0,
+        3.700000047683716,
+        0.09000000357627869
+      ]
+    },
+    {
+      "id": "KH_Shopfront6",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_Shopfront6.fbx",
+      "collection": "KH_Shopfront6",
+      "sourceOffset": [
+        0.0,
+        0,
+        30.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_Shopfront6_CreamPanel_C",
+          "material": "CreamPanel",
+          "collider": true
+        },
+        {
+          "name": "KH_Shopfront6_Frame_NC",
+          "material": "Frame",
+          "collider": false
+        },
+        {
+          "name": "KH_Shopfront6_Frame_C",
+          "material": "Frame",
+          "collider": true
+        },
+        {
+          "name": "KH_Shopfront6_Glass_C",
+          "material": "Glass",
+          "collider": true
+        },
+        {
+          "name": "KH_Shopfront6_Lettering_NC",
+          "material": "Lettering",
+          "collider": false
+        },
+        {
+          "name": "KH_Shopfront6_MallBlue_C",
+          "material": "MallBlue",
+          "collider": true
+        }
+      ],
+      "origin": "Floor bottom centre; front -Z; 6 x 3.7 m shopfront; clear portal X +/-1.2, Y 0..2.8",
+      "triangles": 792,
+      "boundsMin": [
+        -3.0,
+        0.0,
+        -0.11100000143051147
+      ],
+      "boundsMax": [
+        3.0,
+        3.700000047683716,
+        0.09000000357627869
+      ]
+    },
+    {
+      "id": "KH_DoorPartition4",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_DoorPartition4.fbx",
+      "collection": "KH_DoorPartition4",
+      "sourceOffset": [
+        13.0,
+        0,
+        30.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_DoorPartition4_CreamPanel_C",
+          "material": "CreamPanel",
+          "collider": true
+        },
+        {
+          "name": "KH_DoorPartition4_Frame_C",
+          "material": "Frame",
+          "collider": true
+        }
+      ],
+      "origin": "Floor bottom centre; front -Z; 4 x 3.7 x .18 m wall; clear portal X +/- .8, Y 0..2.6",
+      "triangles": 108,
+      "boundsMin": [
+        -2.0,
+        0.0,
+        -0.09000000357627869
+      ],
+      "boundsMax": [
+        2.0,
+        3.700000047683716,
+        0.09000000357627869
+      ]
+    },
+    {
+      "id": "KH_MeshPartition4",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_MeshPartition4.fbx",
+      "collection": "KH_MeshPartition4",
+      "sourceOffset": [
+        26.0,
+        0,
+        30.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_MeshPartition4_CreamPanel_C",
+          "material": "CreamPanel",
+          "collider": true
+        },
+        {
+          "name": "KH_MeshPartition4_Frame_C",
+          "material": "Frame",
+          "collider": true
+        }
+      ],
+      "origin": "Floor bottom centre; front -Z; 4 x 3.7 x .18 m steel grid with .6 m kick panel; no doorway",
+      "triangles": 480,
+      "boundsMin": [
+        -2.0,
+        0.0,
+        -0.09000000357627869
+      ],
+      "boundsMax": [
+        2.0,
+        3.700000047683716,
+        0.09000000357627869
+      ]
+    },
+    {
+      "id": "KH_DirectionBoard",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_DirectionBoard.fbx",
+      "collection": "KH_DirectionBoard",
+      "sourceOffset": [
+        39.0,
+        0,
+        30.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_DirectionBoard_CreamPanel_NC",
+          "material": "CreamPanel",
+          "collider": false
+        },
+        {
+          "name": "KH_DirectionBoard_Frame_NC",
+          "material": "Frame",
+          "collider": false
+        },
+        {
+          "name": "KH_DirectionBoard_Lettering_NC",
+          "material": "Lettering",
+          "collider": false
+        },
+        {
+          "name": "KH_DirectionBoard_MallBlue_NC",
+          "material": "MallBlue",
+          "collider": false
+        },
+        {
+          "name": "KH_DirectionBoard_SteelOxide_NC",
+          "material": "SteelOxide",
+          "collider": false
+        }
+      ],
+      "origin": "Sign bottom centre; front -Z; 3.6 x 1.8 m board; suspension top Y 2.15 m; no collision",
+      "triangles": 6136,
+      "boundsMin": [
+        -1.7999999523162842,
+        0.0,
+        -0.054999999701976776
+      ],
+      "boundsMax": [
+        1.7999999523162842,
+        2.1500000953674316,
+        0.05000000074505806
+      ]
+    },
+    {
+      "id": "KH_MedicalSign",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_MedicalSign.fbx",
+      "collection": "KH_MedicalSign",
+      "sourceOffset": [
+        0.0,
+        0,
+        40.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_MedicalSign_CreamPanel_NC",
+          "material": "CreamPanel",
+          "collider": false
+        },
+        {
+          "name": "KH_MedicalSign_Frame_NC",
+          "material": "Frame",
+          "collider": false
+        },
+        {
+          "name": "KH_MedicalSign_MallBlue_NC",
+          "material": "MallBlue",
+          "collider": false
+        },
+        {
+          "name": "KH_MedicalSign_SignRed_NC",
+          "material": "SignRed",
+          "collider": false
+        }
+      ],
+      "origin": "Sign bottom centre; front -Z; 2.4 x .9 m wall board; no collision",
+      "triangles": 796,
+      "boundsMin": [
+        -1.2000000476837158,
+        0.0,
+        -0.05700000002980232
+      ],
+      "boundsMax": [
+        1.2000000476837158,
+        0.8999999761581421,
+        0.029999999329447746
+      ]
+    }
+  ]
+}

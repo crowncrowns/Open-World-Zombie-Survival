@@ -38,7 +38,10 @@ namespace ZombieSurvival.Persistence
                 var go = Instantiate(type.Prefab, staging.transform); go.transform.SetPositionAndRotation(position, rotation);
                 var root = go.GetComponent<WorldSaveObject>(); root.BindSpawned(type, "runtime-" + Guid.NewGuid().ToString("N"));
                 creating=root;
-                BindChildIdentities(root); WorldRestorePlan.ValidateCaptured(root, CaptureObject(root)); spawned.Add(root.Id, root);
+                BindChildIdentities(root);
+                // A fresh spawned trader owns newly created goods. Capture/restore never seeds a catalog.
+                root.GetComponent<ZombieSurvival.Services.Trader>()?.InitializeStock();
+                WorldRestorePlan.ValidateCaptured(root, CaptureObject(root)); spawned.Add(root.Id, root);
                 UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(staging, gameObject.scene);
                 go.transform.SetParent(null, true);
                 var brain=root.GetComponent<ZombieSurvival.AI.EnemyBrain>();if(brain!=null)brain.RestoreAfterWorldLoad(position,brain.enabled);
@@ -104,7 +107,7 @@ namespace ZombieSurvival.Persistence
                 var retired = component.GetComponentInParent<WorldSaveObject>(true); if (retired != null && retired.IsRetired) continue;
                 if(component is WorldItem&&retired!=null)throw new InvalidOperationException("WorldItem уже сохраняется набором добычи; нельзя одновременно помещать его под WorldSaveObject.");
                 bool actor = component is Health && component.GetComponent<FirstPersonController>() == null;
-                string key = component is Wallet ? "wallet" : component is ActorIdentity ? "identity" : component is DoorInteractable ? "door" : component is ToggleInteractable ? "toggle" : actor ? "actor" : null;
+                string key = component is ZombieSurvival.Services.Trader ? "trader" : component is Wallet ? "wallet" : component is ActorIdentity ? "identity" : component is DoorInteractable ? "door" : component is ToggleInteractable ? "toggle" : actor ? "actor" : null;
                 if (key == null && !(component is ItemStorage)) continue;
                 var root = key == null ? component.GetComponent<WorldSaveObject>() ?? component.GetComponentInParent<WorldSaveObject>(true) : component.GetComponent<WorldSaveObject>();
                 if (root == null || !current.ContainsKey(root.Id) || key != null && !root.Adapters.Any(a => a.Key == key))

@@ -1,0 +1,293 @@
+#if UNITY_EDITOR
+using System;
+using System.Collections;
+using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
+using UnityEditor;
+using UnityEditor.SceneManagement;
+using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.SceneManagement;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
+using ZombieSurvival.Player;
+
+public static class KursHubVerification
+{
+    [Serializable] private sealed class InteriorZone { public string id; }
+    [Serializable] private sealed class InteriorData { public InteriorZone[] interiorZones; }
+    private static bool previewOnly;
+    public static void PreviewOnly() { previewOnly=true; Run(); }
+    public const string Results = "../audit7/play_validation.txt";
+    public static void CheckDeployed()
+    {
+        EditorSceneManager.OpenScene(KursHubSetup.ScenePath);
+        KursHubSetup.Check();
+        ActorContractValidation.Validate();
+        var world="WORLD_OK";
+        try { WorldSavingValidation.Run(); }
+        catch(Exception e)
+        {
+            var baseline=File.ReadAllText("../audit7/baseline_validation.txt");
+            var signature=CoverageSignature();
+            var baselineSignature=File.ReadAllText("../audit7/baseline_coverage.txt");
+            var prefix="Объект не зарегистрирован в области мира: ";
+            if(signature!=baselineSignature || !e.Message.StartsWith(prefix) || !signature.Split('\n').Any(line=>line.StartsWith(e.Message.Substring(prefix.Length)+"|")))throw;
+            var hub=AssetDatabase.LoadAssetAtPath<GameObject>(KursHubSetup.PrefabPath);
+            if(hub.GetComponentsInChildren<Rigidbody>(true).Length!=0)throw;
+            world="WORLD_BASELINE_FAILURE_UNCHANGED:"+e.Message;
+        }
+        File.WriteAllText("../audit7/scene_validation.txt","KURS_AUDIT7_SCENE_CHECK_OK: prefab, actor contracts and inputs. Unity " + Application.unityVersion + "\n"+world+"\nVERIFIED_LIBRARY_SHA256="+LibraryHash()+"\nVERIFIED_FBX_SHA256="+Hash(KursHubSetup.Folder+"/Models/KursHubShell.fbx")+"\nVERIFIED_PREFAB_SHA256="+Hash(KursHubSetup.PrefabPath)+"\nVERIFIED_MANIFEST_SHA256="+Hash(KursHubSetup.Folder+"/KursHubManifest.json")+"\n");
+        Debug.Log("KURS_AUDIT7_SCENE_CHECK_OK: "+world);
+    }
+    public static void FinalCheck() { CheckDeployed(); CaptureActualScene(); }
+    public static void BaselineCoverage()
+    {
+        EditorSceneManager.OpenScene(KursHubSetup.ScenePath);
+        ActorContractValidation.Validate();
+        File.WriteAllText("../audit7/baseline_coverage.txt",CoverageSignature());
+        var text="CURRENT_SCENE_BASELINE_ACTORS_OK\n";
+        try { WorldSavingValidation.Run();text+="WORLD_OK\n"; }
+        catch(Exception e) { text+="WORLD_FAIL:"+e.Message+"\n"; }
+        var hub=AssetDatabase.LoadAssetAtPath<GameObject>(KursHubSetup.PrefabPath);
+        text+="HUB_RIGIDBODIES="+hub.GetComponentsInChildren<Rigidbody>(true).Length+"\n";
+        File.WriteAllText("../audit7/baseline_validation.txt",text);
+        Debug.Log("KURS_BASELINE_CHECK_RECORDED");
+    }
+    public static void Run()
+    {
+        Application.SetStackTraceLogType(LogType.Log, StackTraceLogType.None);
+        File.WriteAllText(Results, "Unity " + Application.unityVersion + "\n");
+        BaselineCoverage();
+        EditorSceneManager.OpenScene(KursHubSetup.ScenePath); KursHubSetup.BuildPrefab(); KursHubSetup.Check();
+        var firstBuildIdentities = PrefabIdentities();
+        KursHubSetup.BuildPrefab();
+        AssetDatabase.SaveAssets();
+        KursHubQualitySetup.CreateDemo();
+        Require(PrefabIdentities() == firstBuildIdentities, "Two builds preserve every hub/library prefab GUID and local ID");
+        Pass("Reusable library GUID/local IDs and nested placement links preserved after second build");
+        Pass("VERIFIED_FBX_SHA256="+Hash(KursHubSetup.Folder+"/Models/KursHubShell.fbx"));
+        Pass("VERIFIED_PREFAB_SHA256="+Hash(KursHubSetup.PrefabPath));
+        Pass("VERIFIED_MANIFEST_SHA256="+Hash(KursHubSetup.Folder+"/KursHubManifest.json"));
+        Pass("INITIAL_LIBRARY_SHA256="+LibraryHash());
+        var before=File.ReadAllText("../audit7/baseline/Assets/Environment/KursHub/KursHub.prefab");
+        var after=File.ReadAllText(KursHubSetup.PrefabPath);
+        var idPattern=@"^--- !u!\d+ &(-?\d+)";
+        var oldIds=Regex.Matches(before,idPattern,RegexOptions.Multiline).Cast<Match>().Select(m=>m.Groups[1].Value).ToHashSet();
+        var newIds=Regex.Matches(after,idPattern,RegexOptions.Multiline).Cast<Match>().Select(m=>m.Groups[1].Value).ToHashSet();
+        var lost=oldIds.Where(id=>!newIds.Contains(id)).ToArray();
+        Require(lost.Length==0,"All existing baseline prefab IDs retained");
+        var sceneText=File.ReadAllText(KursHubSetup.ScenePath);
+        var refs=Regex.Matches(sceneText,@"\{fileID: (-?\d+), guid: ff5cdff5a433ef342ad7bf24aeafd8b8, type: 3\}").Cast<Match>().Select(m=>m.Groups[1].Value).Where(id=>id!="100100000").ToHashSet();
+        var effectiveIds=EffectivePrefabIds(AssetDatabase.LoadAssetAtPath<GameObject>(KursHubSetup.PrefabPath));
+        Require(refs.All(id=>newIds.Contains(id) || effectiveIds.Contains(id)),"All scene prefab targets preserved: "+refs.Count);
+        Pass("Retired unreferenced prefab IDs="+lost.Length);
+        Require(newIds.Contains("7181941858700996431") && newIds.Contains("4352749818230737907"),"Prefab root IDs preserved");
+        var builtHub=AssetDatabase.LoadAssetAtPath<GameObject>(KursHubSetup.PrefabPath);
+        Require(builtHub.GetComponentsInChildren<Transform>(true).All(t=>!t.name.StartsWith("Canopy") && !t.name.StartsWith("EntranceCanopy")),"No canopy, beams or canopy posts remain");
+        Require(builtHub.transform.Find("Interior settlement").childCount>=400,"Dense settlement placements present");
+        var nested=builtHub.transform.Find("Exterior props");
+        Require(nested!=null && nested.childCount>50,"Reusable nested prop placements present");
+        Require(Directory.GetFiles(KursHubSetup.Folder+"/Props/Prefabs","*.prefab").Length>=54,"Fifty-four reusable standalone prop prefabs");
+        foreach(var id in new[]{"KH_Partition4","KH_Shopfront6","KH_DoorPartition4","KH_MeshPartition4","KH_DirectionBoard","KH_MedicalSign"})
+            Require(AssetDatabase.LoadAssetAtPath<GameObject>(KursHubSetup.Folder+"/Props/Prefabs/"+id+".prefab")!=null,"Reusable interior module "+id);
+        var interior=builtHub.transform.Find("Interior architecture");
+        Require(interior!=null && interior.childCount>0,"Separate nested interior architecture placements present");
+        var interiorData=JsonUtility.FromJson<InteriorData>(File.ReadAllText(KursHubSetup.Folder+"/KursHubManifest.json"));
+        Require(interiorData.interiorZones!=null && interiorData.interiorZones.Length==11,"Eleven declared empty interior zones");
+        foreach(Transform child in interior)
+            Require(PrefabUtility.IsAnyPrefabInstanceRoot(child.gameObject),"Interior placement keeps a prefab source: "+child.name);
+        Require(interior.GetComponentsInChildren<MonoBehaviour>(true).Length==0 && interior.GetComponentsInChildren<Rigidbody>(true).Length==0,"Static interior has no runtime mechanics or Rigidbody");
+        Require(builtHub.GetComponentsInChildren<MeshRenderer>(true).All(r=>r.sharedMaterials.Length>0 && r.sharedMaterials.All(m=>m!=null)),"All native LOD and prop material slots present");
+        Require(AssetDatabase.LoadAssetAtPath<Material>(KursHubSetup.Folder+"/Materials/BlueCladding.mat").GetTexture("_BaseMap")!=null,"Blue paint texture assigned");
+        var tiled=builtHub.transform.Find("Shell").GetComponentsInChildren<MeshRenderer>(true).Where(r=>r.name.StartsWith("Floors_",StringComparison.Ordinal)).ToArray();
+        Require(tiled.Length==5,"Five floor pieces have independent top/underside materials");
+        foreach(var r in tiled)
+        {
+            Require(r.sharedMaterials.Length==2 && r.sharedMaterials[0].name=="CeramicTile" && r.sharedMaterials[1].name=="Floor","Ceramic top with neutral ceiling "+r.name);
+            var mesh=r.GetComponent<MeshFilter>().sharedMesh;var vertices=mesh.vertices;
+            Require(mesh.subMeshCount==2 && mesh.GetTriangles(0).All(i=>{var y=r.transform.TransformPoint(vertices[i]).y;return Mathf.Abs(y)<.001f || Mathf.Abs(y-5.5f)<.001f;}),"Ceramic slot contains only confirmed walking planes "+r.name);
+        }
+        var labScene = SceneManager.GetActiveScene();
+        var labParts = labScene.GetRootGameObjects().SelectMany(g=>g.GetComponentsInChildren<Transform>(true))
+            .Where(t=>t.name=="Boundary south" || t.name=="Floor 64 x 64 m" || t.name=="KursHub - access path")
+            .Select(t=>t.gameObject).ToArray();
+        Require(labParts.Length==3,"Actual scene floor, boundary and access path found");
+        var verificationScene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Additive);
+        SceneManager.SetActiveScene(verificationScene);
+        var approach = new GameObject("Temporary scene approach in hub-local coordinates");
+        approach.transform.SetPositionAndRotation(new Vector3(0,0,-155),Quaternion.Euler(0,180,0));
+        foreach(var part in labParts)
+        {
+            var clone=UnityEngine.Object.Instantiate(part);
+            SceneManager.MoveGameObjectToScene(clone,verificationScene);
+            clone.transform.SetParent(approach.transform,false);
+        }
+        EditorSceneManager.CloseScene(labScene,true);
+        var hub = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(KursHubSetup.PrefabPath));
+        hub.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
+        Physics.SyncTransforms();
+        foreach(var lod in hub.GetComponentsInChildren<LODGroup>(true))lod.ForceLOD(0);
+        var renderers = hub.transform.Find("Shell").GetComponentsInChildren<MeshRenderer>();
+        foreach(var r in renderers.Where(r=>r.name.StartsWith("Approach") || r.name.StartsWith("RoofAccess_Concrete"))) Pass("Chunk position " + r.name+" "+r.bounds);
+        Require(renderers.First(r=>r.name.StartsWith("Approach")).bounds.center.z < -74, "FBX entrance -Z orientation");
+        var architecture = renderers.Where(r => r.name.StartsWith("Floors_") || r.name.StartsWith("Facade_") || r.name.StartsWith("RoofDeck_")).ToArray();
+        var bounds = architecture[0].bounds;
+        foreach (var r in architecture.Skip(1)) bounds.Encapsulate(r.bounds);
+        Require(Mathf.Abs(bounds.size.x - 93) < .1f && Mathf.Abs(bounds.size.z - 130) < .1f,
+            "FBX render bounds (bounds tolerance 10 cm): " + bounds.ToString("F5"));
+        foreach (var pair in new[] { (new Vector3(25, 8, 0), 5.5f), (new Vector3(25, 14, 0), 11f), (new Vector3(0, 4, -10), 0f) })
+        {
+            Require(Physics.Raycast(pair.Item1, Vector3.down, out var hit, 20) && Mathf.Abs(hit.point.y - pair.Item2) < .03f,
+                "Floor raycast " + pair.Item1 + " expected Y=" + pair.Item2);
+        }
+        foreach(float z in new[]{-65f,-61f,-57f})
+        {
+            Require(Physics.Raycast(new Vector3(0,2,z),Vector3.down,out var floorHit,4) && Mathf.Abs(floorHit.point.y)<.03f,"Level vestibule floor Z="+z);
+            Require(Physics.Raycast(new Vector3(0,.03f,z),Vector3.up,out var ceilingHit,8) && ceilingHit.distance>3.4f,"Standing clearance through entrance Z="+z);
+        }
+        Require(Physics.Raycast(new Vector3(0,12,-50),Vector3.down,out var domeFloorHit,10) && Mathf.Abs(domeFloorHit.point.y-5.5f)<.03f,"Front cupola has a true roof opening");
+        Require(hub.GetComponentsInChildren<Transform>(true).All(t=>GameObjectUtility.GetMonoBehavioursWithMissingScriptCount(t.gameObject)==0),"No missing scripts on hub");
+        Require(hub.GetComponentsInChildren<MeshCollider>(true).All(c=>c.sharedMesh!=null),"No orphan mesh collider overrides after retired chunks");
+        long triangles = 0;
+        foreach (var mf in hub.GetComponentsInChildren<MeshFilter>())
+            for (int i = 0; i < mf.sharedMesh.subMeshCount; i++) triangles += (long)mf.sharedMesh.GetIndexCount(i)/3;
+        Pass($"Imported mesh: {renderers.Length} spatial chunks; {triangles} triangles; {hub.GetComponentsInChildren<Collider>().Length} colliders");
+        var metrics = "{\n  \"stage\": 7,\n  \"renderChunks\": " + renderers.Length
+            + ",\n  \"triangles\": " + triangles + ",\n  \"colliders\": " + hub.GetComponentsInChildren<Collider>().Length
+            + ",\n  \"exteriorPlacements\": " + hub.transform.Find("Exterior props").childCount
+            + ",\n  \"interiorPlacements\": " + hub.transform.Find("Interior architecture").childCount
+            + ",\n  \"libraryTypes\": " + Directory.GetFiles(KursHubSetup.Folder+"/Props/Prefabs","*.prefab").Length
+            + ",\n  \"sourceZones\": " + interiorData.interiorZones.Length + "\n}\n";
+        File.WriteAllText("../audit7/model_metrics.json", metrics);
+        var sun = new GameObject("Preview sun").AddComponent<Light>(); sun.type = LightType.Directional;
+        sun.intensity = .65f; sun.transform.rotation = Quaternion.Euler(40, -35, 0); sun.shadows = LightShadows.Soft;
+        RenderSettings.ambientMode = AmbientMode.Flat; RenderSettings.ambientLight = new Color(.12f,.14f,.18f);
+        var sh=new SphericalHarmonicsL2(); sh.AddAmbientLight(new Color(.12f,.14f,.18f)); RenderSettings.ambientProbe=sh;
+        var ground=GameObject.CreatePrimitive(PrimitiveType.Plane); ground.name="Preview ground only"; UnityEngine.Object.DestroyImmediate(ground.GetComponent<Collider>());
+        ground.transform.position=new Vector3(0,-.37f,0); ground.transform.localScale=new Vector3(45,1,45);
+        var groundMaterial=new Material(Shader.Find("Universal Render Pipeline/Lit"));groundMaterial.SetColor("_BaseColor",new Color(.35f,.37f,.38f,1));ground.GetComponent<Renderer>().sharedMaterial=groundMaterial;
+        var cam = new GameObject("Preview camera").AddComponent<Camera>(); cam.nearClipPlane = .08f; cam.farClipPlane = 500;
+        cam.clearFlags = CameraClearFlags.SolidColor; cam.backgroundColor = new Color(.36f,.40f,.45f);
+        cam.GetUniversalAdditionalCameraData().renderPostProcessing = false;
+        Preview(cam, "exterior", new Vector3(-90, 43, -115), new Vector3(0, 6, -1), 36);
+        Preview(cam, "front", new Vector3(-45, 5, -99), new Vector3(0, 8, -40), 50);
+        Preview(cam, "left", new Vector3(-90, 5, -67), new Vector3(-9, 6, -3), 50);
+        Preview(cam, "rear", new Vector3(95, 14, 115), new Vector3(0, 7, 31), 45);
+        Preview(cam, "entrance", new Vector3(23,9,-94),new Vector3(0,4.5f,-61),50);
+        Preview(cam,"market",new Vector3(0,1.7f,-37),new Vector3(0,3.1f,-3),76);
+        Preview(cam,"checkpoint",new Vector3(0,1.7f,-54),new Vector3(0,2.2f,-44),78);
+        Preview(cam,"commons",new Vector3(3.6f,1.7f,-14),new Vector3(-.5f,1.5f,-5),78);
+        Preview(cam,"gallery",new Vector3(-16.9f,7.15f,-29.5f),new Vector3(-18.4f,6.8f,-14),83);
+        Preview(cam,"alley",new Vector3(-22.5f,7.15f,-29),new Vector3(-24,6.7f,-12),80);
+        Preview(cam,"atrium",new Vector3(-17,7.15f,8),new Vector3(0,3.5f,-14),82);
+        Preview(cam,"floor",new Vector3(3.3f,1.7f,-39),new Vector3(.5f,0,-35),65);
+        hub.SetActive(false);
+        var display=new GameObject("Temporary reusable prop preview");
+        var entries=Directory.GetFiles(KursHubSetup.Folder+"/Props/Prefabs","*.prefab").OrderBy(p=>p).ToArray();
+        int catalogRows=(entries.Length+3)/4;
+        for(int i=0;i<entries.Length;i++)
+        {
+            var asset=AssetDatabase.LoadAssetAtPath<GameObject>(entries[i].Replace('\\','/'));
+            var instance=(GameObject)PrefabUtility.InstantiatePrefab(asset);
+            instance.transform.SetParent(display.transform,false);
+            instance.transform.localPosition=new Vector3((i%4-1.5f)*8,0,(i/4-(catalogRows-1)/2f)*7);
+        }
+        Preview(cam,"props",new Vector3(-34,28,-49),new Vector3(0,1,0),50);
+        UnityEngine.Object.DestroyImmediate(display);hub.SetActive(true);
+        UnityEngine.Object.DestroyImmediate(cam.gameObject); UnityEngine.Object.DestroyImmediate(ground); UnityEngine.Object.DestroyImmediate(groundMaterial);
+
+        if(previewOnly) { CaptureActualScene(); EditorApplication.Exit(0); return; }
+        // Use the shipped controller and its Input Actions/settings, without gameplay services.
+        var source = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/CharacterTesting/Prefabs/CharacterTestPlayer.prefab");
+        var player = new GameObject("Temporary actual-controller probe"); player.SetActive(false);
+        var cc = player.AddComponent<CharacterController>(); EditorUtility.CopySerialized(source.GetComponent<CharacterController>(), cc);
+        var cameraObject = new GameObject("Camera"); cameraObject.transform.SetParent(player.transform, false);
+        cameraObject.transform.localPosition = new Vector3(0,1.65f,0); cameraObject.AddComponent<Camera>();
+        var controller = player.AddComponent<FirstPersonController>(); EditorUtility.CopySerialized(source.GetComponent<FirstPersonController>(), controller);
+        var so = new SerializedObject(controller);
+        so.FindProperty("playerCamera").objectReferenceValue = cameraObject.transform;
+        foreach (var field in new[] { "requireCursorCapture", "captureCursorOnEnable", "requireApplicationFocus", "lookEnabled" })
+            so.FindProperty(field).boolValue = false;
+        so.ApplyModifiedPropertiesWithoutUndo();
+        player.transform.position = new Vector3(-27,.03f,-127);
+        player.AddComponent<KursHubProbe>(); player.SetActive(true);
+        EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene(), "Assets/KursVerification.unity");
+        EditorApplication.EnterPlaymode();
+    }
+    public static void CaptureActualScene()
+    {
+        EditorSceneManager.OpenScene(KursHubSetup.ScenePath);
+        var camera = new GameObject("Temporary actual scene preview").AddComponent<Camera>();
+        camera.nearClipPlane=.08f;camera.farClipPlane=500;
+        camera.GetUniversalAdditionalCameraData().renderPostProcessing=true;
+        var basis=Quaternion.Euler(0,180,0);
+        Preview(camera,"in_scene_market",KursHubSetup.ScenePosition+basis*new Vector3(0,1.7f,-35),KursHubSetup.ScenePosition+basis*new Vector3(0,3.1f,-3),76);
+        Preview(camera,"in_scene_gallery",KursHubSetup.ScenePosition+basis*new Vector3(-16.9f,7.15f,-29.5f),KursHubSetup.ScenePosition+basis*new Vector3(-18.4f,6.8f,-14),83);
+        UnityEngine.Object.DestroyImmediate(camera.gameObject);
+    }
+    private static string CoverageSignature()
+    {
+        var registry=UnityEngine.Object.FindObjectsByType<ZombieSurvival.Persistence.WorldSaveRegistry>(FindObjectsInactive.Include).Single();
+        var property=new SerializedObject(registry).FindProperty("sceneObjects");
+        var authored=new System.Collections.Generic.HashSet<UnityEngine.Object>();
+        for(int i=0;i<property.arraySize;i++)authored.Add(property.GetArrayElementAtIndex(i).objectReferenceValue);
+        return string.Join("\n",UnityEngine.Object.FindObjectsByType<ZombieSurvival.Persistence.WorldSaveObject>(FindObjectsInactive.Include).Where(r=>r.gameObject.scene==registry.gameObject.scene && !authored.Contains(r)).Select(r=>r.name+"|"+r.Id+"|"+GlobalObjectId.GetGlobalObjectIdSlow(r)).OrderBy(v=>v,StringComparer.Ordinal));
+    }
+    public static string LibraryHash()
+    {
+        var paths=Directory.GetFiles(KursHubSetup.Folder,"*",SearchOption.AllDirectories).Where(p=>!p.EndsWith(".meta") && p.Replace('\\','/')!=KursHubSetup.Folder+"/Models/KursHubShell.fbx" && !p.EndsWith("KursHub.prefab") && !p.EndsWith("KursHubManifest.json")).Select(p=>p.Replace('\\','/')).OrderBy(p=>p,StringComparer.Ordinal);
+        var text=string.Join("\n",paths.Select(p=>p.Replace('\\','/')+":"+Hash(p)));
+        using(var algorithm=System.Security.Cryptography.SHA256.Create())
+            return BitConverter.ToString(algorithm.ComputeHash(System.Text.Encoding.UTF8.GetBytes(text))).Replace("-","").ToLowerInvariant();
+    }
+    private static System.Collections.Generic.HashSet<string> EffectivePrefabIds(GameObject root)
+    {
+        var ids=new System.Collections.Generic.HashSet<string>();
+        foreach(var transform in root.GetComponentsInChildren<Transform>(true))
+        {
+            var objects=new UnityEngine.Object[]{transform.gameObject}.Concat(transform.GetComponents<Component>().Where(c=>c!=null).Cast<UnityEngine.Object>());
+            foreach(var obj in objects)
+                if(AssetDatabase.TryGetGUIDAndLocalFileIdentifier(obj,out string guid,out long id))ids.Add(id.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        }
+        File.WriteAllLines("../audit7/effective_prefab_ids.txt",ids.OrderBy(x=>x,StringComparer.Ordinal));
+        return ids;
+    }
+    private static string PrefabIdentities()
+    {
+        var paths=Directory.GetFiles(KursHubSetup.Folder+"/Props/Prefabs","*.prefab")
+            .Concat(Directory.GetFiles(KursHubSetup.Folder+"/InteriorMeshes","*.asset")).Append(KursHubSetup.PrefabPath).Select(p=>p.Replace('\\','/')).OrderBy(p=>p,StringComparer.Ordinal);
+        return string.Join("\n",paths.Select(path=>path+"|"+AssetDatabase.AssetPathToGUID(path)+"|"+
+            string.Join(",",Regex.Matches(File.ReadAllText(path),@"^--- !u!\d+ &(-?\d+)",RegexOptions.Multiline)
+                .Cast<Match>().Select(m=>m.Groups[1].Value).OrderBy(id=>id,StringComparer.Ordinal))));
+    }
+    private static string Hash(string path)
+    {
+        using(var algorithm=System.Security.Cryptography.SHA256.Create())
+            return BitConverter.ToString(algorithm.ComputeHash(File.ReadAllBytes(path))).Replace("-","").ToLowerInvariant();
+    }
+    public static void Require(bool value, string message) { if (!value) throw new Exception("KURS_TEST_FAILED: " + message); Pass(message); }
+    public static void Pass(string message) { File.AppendAllText(Results, "PASS " + message + "\n"); Debug.Log("KURS_PROBE " + message); }
+    private static void Preview(Camera camera, string name, Vector3 position, Vector3 target, float fov)
+    {
+        Directory.CreateDirectory("../audit7/previews");
+        camera.transform.position = position; camera.transform.LookAt(target); camera.fieldOfView = fov;
+        var rt = new RenderTexture(2400, 1500, 24, RenderTextureFormat.ARGB32);
+        rt.Create();
+        camera.targetTexture = rt;
+        camera.Render();
+        if (RenderPipeline.SupportsRenderRequest(camera, new UniversalRenderPipeline.SingleCameraRequest()))
+            RenderPipeline.SubmitRenderRequest(camera, new UniversalRenderPipeline.SingleCameraRequest { destination = rt });
+        var old = RenderTexture.active; RenderTexture.active = rt;
+        var image = new Texture2D(2400,1500,TextureFormat.RGB24,false); image.ReadPixels(new Rect(0,0,2400,1500),0,0); image.Apply();
+        File.WriteAllBytes("../audit7/previews/" + name + ".png", image.EncodeToPNG());
+        RenderTexture.active = old; camera.targetTexture = null;
+        UnityEngine.Object.DestroyImmediate(image); rt.Release(); UnityEngine.Object.DestroyImmediate(rt);
+    }
+}
+
+
+#endif
+

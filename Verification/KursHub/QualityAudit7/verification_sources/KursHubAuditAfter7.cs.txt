@@ -1,0 +1,87 @@
+using System;
+using System.IO;
+using System.Linq;
+using UnityEditor;
+using UnityEditor.SceneManagement;
+using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
+
+public static class KursHubAuditAfter7
+{
+    private const string Output = "../audit7/after";
+    public static void Run()
+    {
+        try
+        {
+            Directory.CreateDirectory(Output);
+            EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(KursHubSetup.PrefabPath);
+            if (prefab == null) throw new Exception("Missing baseline hub prefab");
+            var hub = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+            foreach(var lod in hub.GetComponentsInChildren<LODGroup>(true))lod.ForceLOD(0);
+            var sun = new GameObject("Temporary comparison sun").AddComponent<Light>();
+            sun.type = LightType.Directional; sun.intensity = .65f;
+            sun.transform.rotation = Quaternion.Euler(38, -35, 0); sun.shadows = LightShadows.Soft;
+            RenderSettings.ambientMode = AmbientMode.Flat;
+            RenderSettings.ambientLight = new Color(.12f, .14f, .18f);
+            var sh = new SphericalHarmonicsL2(); sh.AddAmbientLight(new Color(.12f, .14f, .18f)); RenderSettings.ambientProbe = sh;
+            var ground = GameObject.CreatePrimitive(PrimitiveType.Plane);
+            ground.transform.localScale = new Vector3(35, 1, 35); ground.transform.position = new Vector3(0, -.17f, 0);
+            var groundMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit"));
+            groundMaterial.SetColor("_BaseColor", new Color(.35f,.37f,.38f)); ground.GetComponent<Renderer>().sharedMaterial = groundMaterial;
+            var cam = new GameObject("Temporary comparison camera").AddComponent<Camera>();
+            cam.nearClipPlane = .08f; cam.farClipPlane = 600;
+            cam.clearFlags = CameraClearFlags.SolidColor; cam.backgroundColor = new Color(.36f,.40f,.45f);
+            cam.GetUniversalAdditionalCameraData().renderPostProcessing = false;
+            View(cam,"front",new Vector3(-45,5,-99),new Vector3(0,8,-40),50);
+            View(cam,"left",new Vector3(-90,5,-67),new Vector3(-9,6,-3),50);
+            View(cam,"right_assumed",new Vector3(105,12,-30),new Vector3(0,6,4),48);
+            View(cam,"rear",new Vector3(95,14,115),new Vector3(0,7,31),45);
+            View(cam,"top45",new Vector3(-90,70,-125),new Vector3(0,4,0),40);
+            View(cam,"market",new Vector3(0,1.7f,-37),new Vector3(0,3.1f,-3),76);
+            View(cam,"checkpoint",new Vector3(0,1.7f,-54),new Vector3(0,2.2f,-44),78);
+            View(cam,"gallery",new Vector3(-16.9f,7.15f,-29.5f),new Vector3(-18.4f,6.8f,-14),83);
+            View(cam,"detail_floor",new Vector3(3.3f,1.7f,-39),new Vector3(.5f,0,-35),65);
+            View(cam,"detail_stall",new Vector3(3.65f,1.6f,-31),new Vector3(7.5f,1.6f,-30),58);
+            sun.intensity=1.5f;sun.transform.rotation=Quaternion.Euler(48,-35,0);
+            View(cam,"material_sunny",new Vector3(3.65f,1.6f,-31),new Vector3(7.5f,1.6f,-30),58);
+            sun.intensity=.45f;sun.transform.rotation=Quaternion.Euler(6,70,0);
+            View(cam,"material_grazing",new Vector3(3.65f,1.6f,-31),new Vector3(7.5f,1.6f,-30),58);
+            View(cam,"floor_grazing",new Vector3(3.3f,.45f,-39),new Vector3(.5f,0,-35),65);
+            View(cam,"window_detail",new Vector3(-49,2.1f,-39),new Vector3(-46.3f,2.5f,-37),58);
+            sun.intensity=.65f;sun.transform.rotation=Quaternion.Euler(38,-35,0);
+            View(cam,"checkpoint_reference",new Vector3(0,1.7f,-40.5f),new Vector3(0,2.2f,-30.5f),78);
+            View(cam,"market_reference",new Vector3(0,1.7f,-28),new Vector3(0,3.1f,-3),76);
+            View(cam,"gallery_reference",new Vector3(-17,7.15f,8),new Vector3(0,3.5f,-14),82);
+            var rows = new System.Collections.Generic.List<string>();
+            rows.Add("path\tguid\trenderers\ttriangles\tmeshColliders\tboxColliders\tlodGroups\tinvalidScales\tmissingMaterials\tmissingScripts");
+            foreach (var path in Directory.GetFiles(KursHubSetup.Folder+"/Props/Prefabs","*.prefab").Select(p=>p.Replace('\\','/')).OrderBy(p=>p).Append(KursHubSetup.PrefabPath))
+            {
+                var asset=AssetDatabase.LoadAssetAtPath<GameObject>(path);
+                var renderers=asset.GetComponentsInChildren<MeshRenderer>(true);
+                long triangles=0;
+                foreach(var r in renderers) { var mesh=r.GetComponent<MeshFilter>().sharedMesh; for(int i=0;i<mesh.subMeshCount;i++)triangles+=(long)mesh.GetIndexCount(i)/3; }
+                rows.Add(string.Join("\t",path,AssetDatabase.AssetPathToGUID(path),renderers.Length,triangles,asset.GetComponentsInChildren<MeshCollider>(true).Length,asset.GetComponentsInChildren<BoxCollider>(true).Length,asset.GetComponentsInChildren<LODGroup>(true).Length,asset.GetComponentsInChildren<Transform>(true).Count(t=>t.localScale.x<=0||t.localScale.y<=0||t.localScale.z<=0),renderers.Sum(r=>r.sharedMaterials.Count(m=>m==null)),asset.GetComponentsInChildren<MonoBehaviour>(true).Count(c=>c==null)));
+            }
+            File.WriteAllLines(Output+"/unity_inventory.tsv",rows);
+            File.WriteAllLines(Output+"/dependencies.txt",AssetDatabase.GetDependencies(KursHubSetup.PrefabPath,true).OrderBy(p=>p));
+            File.WriteAllText(Output+"/capture_report.txt","AFTER_CAPTURE_OK\nUnity="+Application.unityVersion+"\nPipeline="+GraphicsSettings.currentRenderPipeline?.GetType().FullName+"\nSource prefab="+KursHubSetup.PrefabPath+"\nNo prefab/model/material/scene save or builder was invoked. Cameras approximate reference perspectives; right view is inferred.\n");
+            Debug.Log("KURS_AUDIT7_AFTER_OK"); EditorApplication.Exit(0);
+        }
+        catch(Exception e) { Debug.LogException(e); EditorApplication.Exit(1); }
+    }
+    private static void View(Camera camera,string name,Vector3 position,Vector3 target,float fov)
+    {
+        camera.transform.position=position; camera.transform.LookAt(target); camera.fieldOfView=fov;
+        var rt=new RenderTexture(2400,1500,24,RenderTextureFormat.ARGB32); rt.Create(); camera.targetTexture=rt;
+        camera.Render();
+        if(RenderPipeline.SupportsRenderRequest(camera,new UniversalRenderPipeline.SingleCameraRequest()))
+            RenderPipeline.SubmitRenderRequest(camera,new UniversalRenderPipeline.SingleCameraRequest{destination=rt});
+        var old=RenderTexture.active; RenderTexture.active=rt;
+        var image=new Texture2D(2400,1500,TextureFormat.RGB24,false); image.ReadPixels(new Rect(0,0,2400,1500),0,0); image.Apply();
+        File.WriteAllBytes(Output+"/"+name+".png",image.EncodeToPNG());
+        File.AppendAllText(Output+"/cameras.tsv",name+"\t"+position+"\t"+target+"\t"+fov+"\n");
+        RenderTexture.active=old;camera.targetTexture=null;UnityEngine.Object.DestroyImmediate(image);rt.Release();UnityEngine.Object.DestroyImmediate(rt);
+    }
+}

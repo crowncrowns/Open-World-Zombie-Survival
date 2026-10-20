@@ -18,11 +18,24 @@ public static class KursHubSetup
 
     [Serializable] private sealed class Chunk { public string name; public string material; public bool collider; public bool hidden; }
     [Serializable] private sealed class Guard { public string name; public float[] center; public float[] size; public float angle; }
-    [Serializable] private sealed class Palette { public string name; public float[] rgba; }
+    [Serializable] private sealed class Palette
+    {
+        public string name; public float[] rgba;
+        public string baseMap; public string normalMap; public string maskMap;
+        public float tile = 1; public float smoothness = .35f; public float metallic;
+        public float[] tint; public bool transparent; public bool emission;
+    }
     [Serializable] private sealed class Manifest
     {
         public int stage; public float width; public float depth; public float floorHeight;
         public Chunk[] chunks; public Guard[] guardColliders; public Palette[] palette;
+        public KursHubPropSetup.Placement[] propInstances;
+<<<<<<< Updated upstream
+        public KursHubPropSetup.Placement[] interiorInstances;
+        public KursHubPropSetup.Placement[] settlementInstances;
+        public KursHubInteriorFinishSetup.LightPlacement[] settlementLights;
+=======
+>>>>>>> Stashed changes
     }
     private static Vector3 V(float[] values) => new Vector3(values[0], values[1], values[2]);
     private static Manifest Read() => JsonUtility.FromJson<Manifest>(File.ReadAllText(Folder + "/KursHubManifest.json"));
@@ -56,6 +69,18 @@ public static class KursHubSetup
     [MenuItem("Tools/Character Lab/Set Up Kurs Hub Stage 3")]
     public static void RunStage3() => Run();
 
+    [MenuItem("Tools/Character Lab/Set Up Kurs Hub Stage 4")]
+    public static void RunStage4() => Run();
+
+<<<<<<< Updated upstream
+    [MenuItem("Tools/Character Lab/Set Up Kurs Hub Stage 5")]
+    public static void RunStage5() => Run();
+
+    [MenuItem("Tools/Character Lab/Set Up Kurs Hub Stage 6")]
+    public static void RunStage6() => Run();
+
+=======
+>>>>>>> Stashed changes
     public static void BuildPrefab()
     {
         if (Application.isPlaying) throw new InvalidOperationException("Создание префаба доступно только вне Play.");
@@ -70,10 +95,15 @@ public static class KursHubSetup
         importer.importAnimation = false;
         importer.materialImportMode = ModelImporterMaterialImportMode.None;
         importer.addCollider = false;
-        importer.isReadable = false;
+        importer.isReadable = manifest.stage >= 6;
         importer.SaveAndReimport();
         if (!AssetDatabase.IsValidFolder(Folder + "/Materials")) AssetDatabase.CreateFolder(Folder, "Materials");
         var materials = manifest.palette.ToDictionary(p => p.name, MaterialFor);
+<<<<<<< Updated upstream
+        if (manifest.stage >= 4) KursHubSurfaceSetup.Apply(materials);
+=======
+>>>>>>> Stashed changes
+        var propLibrary = manifest.stage >= 4 ? KursHubPropSetup.BuildLibrary(materials) : null;
         var chunks = manifest.chunks.ToDictionary(c => c.name);
         // The scene already has overrides on this prefab's children. Editing the
         // existing contents preserves their local IDs, including the working lights.
@@ -155,6 +185,16 @@ public static class KursHubSetup
                             light.shadows = LightShadows.None;
                         }
             }
+            if (propLibrary != null) KursHubPropSetup.Place(root, propLibrary, manifest.propInstances);
+<<<<<<< Updated upstream
+            if (manifest.stage >= 5) KursHubPropSetup.Place(root, propLibrary, manifest.interiorInstances, "Interior architecture");
+            if (manifest.stage >= 6)
+            {
+                KursHubPropSetup.Place(root, propLibrary, manifest.settlementInstances, "Interior settlement");
+                KursHubInteriorFinishSetup.Apply(root, materials, manifest.settlementLights);
+            }
+=======
+>>>>>>> Stashed changes
             PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
         }
         finally
@@ -162,6 +202,7 @@ public static class KursHubSetup
             if (loaded) PrefabUtility.UnloadPrefabContents(root);
             else UnityEngine.Object.DestroyImmediate(root);
         }
+        if (manifest.stage >= 6) { importer.isReadable = false; importer.SaveAndReimport(); }
     }
 
     private static Material MaterialFor(Palette entry)
@@ -178,6 +219,7 @@ public static class KursHubSetup
                 material.SetColor("_BaseColor", new Color(entry.rgba[0],entry.rgba[1],entry.rgba[2],entry.rgba[3]));
                 EditorUtility.SetDirty(material);
             }
+            ApplyFinish(material, entry);
             return material;
         }
         var shader = Shader.Find("Universal Render Pipeline/Lit");
@@ -197,8 +239,86 @@ public static class KursHubSetup
             material.SetShaderPassEnabled("ShadowCaster", false);
             material.renderQueue = (int)RenderQueue.Transparent;
         }
+        ApplyFinish(material, entry);
         AssetDatabase.CreateAsset(material, path);
         return material;
+    }
+
+    private static Texture2D SurfaceTexture(string path, bool normal = false, bool linear = false)
+    {
+        if (string.IsNullOrEmpty(path)) return null;
+        var importer = AssetImporter.GetAtPath(path) as TextureImporter;
+        if (importer == null) throw new InvalidOperationException("Нет карты поверхности: " + path);
+        var type = normal ? TextureImporterType.NormalMap : TextureImporterType.Default;
+        var dirty = importer.textureType != type || importer.sRGBTexture == (normal || linear)
+            || importer.maxTextureSize != 1024 || importer.wrapModeU != TextureWrapMode.Repeat
+            || importer.wrapModeV != (path.Contains("DirtStreaks") ? TextureWrapMode.Clamp : TextureWrapMode.Repeat)
+            || importer.alphaIsTransparency != (!normal && !linear && (path.Contains("GlassGrime") || path.Contains("DirtStreaks")));
+        if (dirty)
+        {
+            importer.textureType = type;
+            importer.sRGBTexture = !(normal || linear);
+            importer.maxTextureSize = 1024;
+            importer.wrapModeU = TextureWrapMode.Repeat;
+            importer.wrapModeV = path.Contains("DirtStreaks") ? TextureWrapMode.Clamp : TextureWrapMode.Repeat;
+            importer.alphaIsTransparency = !normal && !linear && (path.Contains("GlassGrime") || path.Contains("DirtStreaks"));
+            importer.mipmapEnabled = true;
+            importer.SaveAndReimport();
+        }
+        return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+    }
+
+    private static void ApplyFinish(Material material, Palette entry)
+    {
+        if (entry.emission && !material.IsKeywordEnabled("_EMISSION"))
+        {
+            material.EnableKeyword("_EMISSION");
+            material.SetColor("_EmissionColor", new Color(1,.58f,.23f) * 2);
+            EditorUtility.SetDirty(material);
+        }
+        if (string.IsNullOrEmpty(entry.baseMap)) return;
+        var albedo = SurfaceTexture(entry.baseMap);
+        var normal = SurfaceTexture(entry.normalMap, true);
+        var mask = SurfaceTexture(entry.maskMap, false, true);
+        // Assign authored surfaces once. Subsequent rebuilds keep artists' tint,
+        // tiling, roughness and alternate maps on the same material/GUID.
+        var assigned = material.GetTexture("_BaseMap");
+        if (assigned != null && AssetDatabase.GetAssetPath(assigned).StartsWith("Assets/", StringComparison.Ordinal)) return;
+        material.SetTexture("_BaseMap", albedo);
+        material.SetColor("_BaseColor", entry.tint != null && entry.tint.Length == 4
+            ? new Color(entry.tint[0],entry.tint[1],entry.tint[2],entry.tint[3]) : Color.white);
+        material.SetTextureScale("_BaseMap", Vector2.one * entry.tile);
+        if (normal != null)
+        {
+            material.SetTexture("_BumpMap", normal);
+            material.SetFloat("_BumpScale", .35f);
+            material.EnableKeyword("_NORMALMAP");
+        }
+        material.SetFloat("_Smoothness", entry.smoothness);
+        material.SetFloat("_Metallic", entry.metallic);
+        if (mask != null)
+        {
+            material.SetTexture("_MetallicGlossMap", mask);
+            material.EnableKeyword("_METALLICSPECGLOSSMAP");
+        }
+        if (entry.transparent)
+        {
+            material.SetFloat("_Surface", 1); material.SetFloat("_ZWrite", 0);
+            material.SetFloat("_SrcBlend", (float)BlendMode.SrcAlpha);
+            material.SetFloat("_DstBlend", (float)BlendMode.OneMinusSrcAlpha);
+            material.SetFloat("_SrcBlendAlpha", (float)BlendMode.One);
+            material.SetFloat("_DstBlendAlpha", (float)BlendMode.OneMinusSrcAlpha);
+            material.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            material.SetOverrideTag("RenderType", "Transparent");
+            material.SetShaderPassEnabled("ShadowCaster", false);
+            material.renderQueue = (int)RenderQueue.Transparent;
+        }
+        if (entry.emission)
+        {
+            material.EnableKeyword("_EMISSION");
+            material.SetColor("_EmissionColor", new Color(1,.58f,.23f) * 2);
+        }
+        EditorUtility.SetDirty(material);
     }
 
     private static GameObject Cube(string name, Transform parent, Vector3 center, Vector3 size, Material mat)
@@ -239,14 +359,15 @@ public static class KursHubSetup
         if (prefab == null) throw new InvalidOperationException("Нет префаба ТЦ Курс.");
         var manifest = Read();
         var chunks = manifest.chunks.ToDictionary(c => c.name);
-        var renderers = prefab.GetComponentsInChildren<MeshRenderer>(true);
+        var renderers = prefab.transform.Find("Shell").GetComponentsInChildren<MeshRenderer>(true);
         if (renderers.Length != manifest.chunks.Length) throw new InvalidOperationException("Число частей не совпадает с FBX.");
         var seen = new HashSet<string>();
         foreach (var renderer in renderers)
         {
             if (!chunks.TryGetValue(renderer.name, out var chunk) || !seen.Add(renderer.name))
                 throw new InvalidOperationException("FBX/manifest не совпадают: " + renderer.name);
-            if (renderer.sharedMaterials.Length != 1 || renderer.sharedMaterials[0] == null || renderer.sharedMaterials[0].shader.name != "Universal Render Pipeline/Lit")
+            if (renderer.sharedMaterials.Length != (manifest.stage >= 6 && renderer.name.StartsWith("Floors_", StringComparison.Ordinal) ? 2 : 1)
+                || renderer.sharedMaterials.Any(m => m == null || m.shader.name != "Universal Render Pipeline/Lit"))
                 throw new InvalidOperationException("Материалы: " + renderer.name);
             var mesh = renderer.GetComponent<MeshFilter>()?.sharedMesh;
             if (mesh == null || mesh.vertexCount == 0) throw new InvalidOperationException("Пустая геометрия: " + renderer.name);
@@ -258,6 +379,13 @@ public static class KursHubSetup
                 throw new InvalidOperationException("MeshCollider не совпадает с manifest: " + renderer.name);
         }
         if (seen.Count != chunks.Count) throw new InvalidOperationException("Не все части manifest найдены в префабе.");
+<<<<<<< Updated upstream
+        if (manifest.stage >= 4) { KursHubPropSetup.ValidateLibrary(); KursHubPropSetup.ValidatePlacements(prefab, manifest.propInstances); }
+        if (manifest.stage >= 5) KursHubPropSetup.ValidatePlacements(prefab, manifest.interiorInstances, "Interior architecture");
+        if (manifest.stage >= 6) KursHubPropSetup.ValidatePlacements(prefab, manifest.settlementInstances, "Interior settlement");
+=======
+        if (manifest.stage >= 4) KursHubPropSetup.ValidateLibrary();
+>>>>>>> Stashed changes
         var instances = SceneManager.GetActiveScene().GetRootGameObjects().Where(g => g.name == "KursHub").ToArray();
         if (instances.Length != 1 || !PrefabUtility.IsPartOfPrefabInstance(instances[0]))
             throw new InvalidOperationException("В сцене нужен один связанный экземпляр KursHub.");
@@ -271,6 +399,18 @@ public static class KursHubSetup
     [MenuItem("Tools/Character Lab/Check Kurs Hub Stage 3")]
     public static void CheckStage3() => Check();
 
+    [MenuItem("Tools/Character Lab/Check Kurs Hub Stage 4")]
+    public static void CheckStage4() => Check();
+
+<<<<<<< Updated upstream
+    [MenuItem("Tools/Character Lab/Check Kurs Hub Stage 5")]
+    public static void CheckStage5() => Check();
+
+    [MenuItem("Tools/Character Lab/Check Kurs Hub Stage 6")]
+    public static void CheckStage6() => Check();
+
+=======
+>>>>>>> Stashed changes
     public static void BatchBuild()
     {
         EditorSceneManager.OpenScene(ScenePath);

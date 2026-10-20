@@ -8,19 +8,50 @@ public static class ServiceSessionsT4Setup
 {
     private const string PlayerPath = "Assets/CharacterTesting/Prefabs/CharacterTestPlayer.prefab";
     private const string RootName = "T4 - Сессии сервисов";
+    public static void EnsurePlayerPrefab()
+    {
+        if (EditorApplication.isPlaying) throw new InvalidOperationException("Постоянную интеграцию выполняйте в Edit Mode.");
+        var player = PrefabUtility.LoadPrefabContents(PlayerPath);
+        try
+        {
+            if (player.GetComponent<PlayerServiceSession>() != null) return;
+            player.AddComponent<PlayerServiceSession>();
+            PrefabUtility.SaveAsPrefabAsset(player, PlayerPath);
+        }
+        finally { PrefabUtility.UnloadPrefabContents(player); }
+    }
+    public static int EnsureScenePlayers(UnityEngine.SceneManagement.Scene scene)
+    {
+        if (EditorApplication.isPlaying || !scene.isLoaded || scene.path != "Assets/CharacterTesting/CharacterTest.unity")
+            throw new InvalidOperationException("Нужна уже открытая CharacterTest в Edit Mode.");
+        int added = 0;
+        foreach (var actor in UnityEngine.Object.FindObjectsByType<ZombieSurvival.Interaction.PlayerInteractor>(FindObjectsInactive.Include))
+        {
+            if (actor.gameObject.scene != scene || actor.GetComponent<ZombieSurvival.Player.FirstPersonController>() == null
+                || actor.GetComponent<PlayerServiceSession>() != null) continue;
+            Undo.AddComponent<PlayerServiceSession>(actor.gameObject); added++;
+        }
+        if (added > 0) EditorSceneManager.MarkSceneDirty(scene);
+        return added;
+    }
+    [MenuItem("Tools/Character Lab/Repair Player Service Session (No Save)")]
+    public static void RepairPlayers()
+    {
+        EnsurePlayerPrefab();
+        for (int i = 0; i < UnityEngine.SceneManagement.SceneManager.sceneCount; i++)
+        {
+            var scene = UnityEngine.SceneManagement.SceneManager.GetSceneAt(i);
+            if (scene.path == "Assets/CharacterTesting/CharacterTest.unity") EnsureScenePlayers(scene);
+        }
+        Debug.Log("Сессия проверена у исходного и сценового игрока. Сцена не сохранялась; распакованный игрок требует отдельной записи сцены.");
+    }
     [MenuItem("Tools/Character Lab/Set Up T4 Service Sessions")]
     public static void Run()
     {
         var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
         if (EditorApplication.isPlaying || scene.path != "Assets/CharacterTesting/CharacterTest.unity")
             throw new InvalidOperationException("Откройте CharacterTest в Edit Mode. Другие сцены setup не изменяет.");
-        var player = PrefabUtility.LoadPrefabContents(PlayerPath);
-        try
-        {
-            if (player.GetComponent<PlayerServiceSession>() == null) player.AddComponent<PlayerServiceSession>();
-            PrefabUtility.SaveAsPrefabAsset(player, PlayerPath);
-        }
-        finally { PrefabUtility.UnloadPrefabContents(player); }
+        EnsurePlayerPrefab(); EnsureScenePlayers(scene);
         if (GameObject.Find(RootName) == null)
         {
             var root = new GameObject(RootName);

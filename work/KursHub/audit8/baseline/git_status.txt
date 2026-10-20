@@ -1,0 +1,676 @@
+ M AGENTS.md
+ M Assets/CharacterTesting/CharacterTest.unity
+ M Assets/Editor/KursHubInteriorFinishSetup.cs
+ M Assets/Editor/KursHubPropSetup.cs
+ M Assets/Editor/KursHubSetup.cs
+ M Assets/Editor/KursHubSurfaceSetup.cs
+ M Assets/Environment/KursHub/KursHub.prefab
+ M Assets/Environment/KursHub/KursHubManifest.json
+ M Assets/Environment/KursHub/Materials/BlueCladding.mat
+ M Assets/Environment/KursHub/Materials/Concrete.mat
+ M Assets/Environment/KursHub/Materials/CreamPanel.mat
+ M Assets/Environment/KursHub/Materials/Floor.mat
+ M Assets/Environment/KursHub/Materials/Frame.mat
+ M Assets/Environment/KursHub/Materials/Glass.mat
+ M Assets/Environment/KursHub/Materials/MallBlue.mat
+ M Assets/Environment/KursHub/Materials/Roof.mat
+ M Assets/Environment/KursHub/Materials/SandCanvas.mat
+ M Assets/Environment/KursHub/Materials/SteelOxide.mat
+ M Assets/Environment/KursHub/Materials/TarpGreen.mat
+ M Assets/Environment/KursHub/Materials/WornWood.mat
+ M Assets/Environment/KursHub/Models/KursHubShell.fbx
+ M Assets/Environment/KursHub/Models/KursHubShell.fbx.meta
+ M Assets/Environment/KursHub/Props/KursHubPropsManifest.json
+ M Assets/Environment/KursHub/Props/Models/KH_Barricade.fbx
+ M Assets/Environment/KursHub/Props/Models/KH_Barricade.fbx.meta
+ M Assets/Environment/KursHub/Props/Models/KH_CableSag.fbx
+ M Assets/Environment/KursHub/Props/Models/KH_CableSag.fbx.meta
+ M Assets/Environment/KursHub/Props/Models/KH_CorrugatedPatch.fbx
+ M Assets/Environment/KursHub/Props/Models/KH_CorrugatedPatch.fbx.meta
+ M Assets/Environment/KursHub/Props/Models/KH_DirectionBoard.fbx
+ M Assets/Environment/KursHub/Props/Models/KH_DirectionBoard.fbx.meta
+ M Assets/Environment/KursHub/Props/Models/KH_DoorPartition4.fbx
+ M Assets/Environment/KursHub/Props/Models/KH_DoorPartition4.fbx.meta
+ M Assets/Environment/KursHub/Props/Models/KH_Floodlight.fbx
+ M Assets/Environment/KursHub/Props/Models/KH_Floodlight.fbx.meta
+ M Assets/Environment/KursHub/Props/Models/KH_GrimePatch.fbx
+ M Assets/Environment/KursHub/Props/Models/KH_GrimePatch.fbx.meta
+ M Assets/Environment/KursHub/Props/Models/KH_MedicalSign.fbx
+ M Assets/Environment/KursHub/Props/Models/KH_MedicalSign.fbx.meta
+ M Assets/Environment/KursHub/Props/Models/KH_MeshPartition4.fbx
+ M Assets/Environment/KursHub/Props/Models/KH_MeshPartition4.fbx.meta
+ M Assets/Environment/KursHub/Props/Models/KH_Partition4.fbx
+ M Assets/Environment/KursHub/Props/Models/KH_Partition4.fbx.meta
+ M Assets/Environment/KursHub/Props/Models/KH_Railing.fbx
+ M Assets/Environment/KursHub/Props/Models/KH_Railing.fbx.meta
+ M Assets/Environment/KursHub/Props/Models/KH_Sandbag.fbx
+ M Assets/Environment/KursHub/Props/Models/KH_Sandbag.fbx.meta
+ M Assets/Environment/KursHub/Props/Models/KH_Shopfront6.fbx
+ M Assets/Environment/KursHub/Props/Models/KH_Shopfront6.fbx.meta
+ M Assets/Environment/KursHub/Props/Models/KH_TarpNarrow.fbx
+ M Assets/Environment/KursHub/Props/Models/KH_TarpNarrow.fbx.meta
+ M Assets/Environment/KursHub/Props/Models/KH_TarpWide.fbx
+ M Assets/Environment/KursHub/Props/Models/KH_TarpWide.fbx.meta
+ M Assets/Environment/KursHub/Props/Models/KH_WatchPost.fbx
+ M Assets/Environment/KursHub/Props/Models/KH_WatchPost.fbx.meta
+ M Assets/Environment/KursHub/Props/Models/KH_WindowBoards.fbx
+ M Assets/Environment/KursHub/Props/Models/KH_WindowBoards.fbx.meta
+ M Assets/Environment/KursHub/Props/Prefabs/KH_Barricade.prefab
+ M Assets/Environment/KursHub/Props/Prefabs/KH_CableSag.prefab
+ M Assets/Environment/KursHub/Props/Prefabs/KH_CorrugatedPatch.prefab
+ M Assets/Environment/KursHub/Props/Prefabs/KH_DirectionBoard.prefab
+ M Assets/Environment/KursHub/Props/Prefabs/KH_DoorPartition4.prefab
+ M Assets/Environment/KursHub/Props/Prefabs/KH_Floodlight.prefab
+ M Assets/Environment/KursHub/Props/Prefabs/KH_MedicalSign.prefab
+ M Assets/Environment/KursHub/Props/Prefabs/KH_MeshPartition4.prefab
+ M Assets/Environment/KursHub/Props/Prefabs/KH_Partition4.prefab
+ M Assets/Environment/KursHub/Props/Prefabs/KH_Railing.prefab
+ M Assets/Environment/KursHub/Props/Prefabs/KH_Sandbag.prefab
+ M Assets/Environment/KursHub/Props/Prefabs/KH_Shopfront6.prefab
+ M Assets/Environment/KursHub/Props/Prefabs/KH_TarpNarrow.prefab
+ M Assets/Environment/KursHub/Props/Prefabs/KH_TarpWide.prefab
+ M Assets/Environment/KursHub/Props/Prefabs/KH_WatchPost.prefab
+ M Assets/Environment/KursHub/Props/Prefabs/KH_WindowBoards.prefab
+ M Assets/Environment/KursHub/Textures/BluePaint_BaseColor.png
+ M Assets/Environment/KursHub/Textures/BluePaint_BaseColor.png.meta
+ M Assets/Environment/KursHub/Textures/BluePaint_MetallicSmoothness.png
+ M Assets/Environment/KursHub/Textures/BluePaint_MetallicSmoothness.png.meta
+ M Assets/Environment/KursHub/Textures/BluePaint_Normal.png
+ M Assets/Environment/KursHub/Textures/BluePaint_Normal.png.meta
+ M Assets/Environment/KursHub/Textures/CreamConcrete_BaseColor.png
+ M Assets/Environment/KursHub/Textures/CreamConcrete_BaseColor.png.meta
+ M Assets/Environment/KursHub/Textures/CreamConcrete_MetallicSmoothness.png
+ M Assets/Environment/KursHub/Textures/CreamConcrete_MetallicSmoothness.png.meta
+ M Assets/Environment/KursHub/Textures/CreamConcrete_Normal.png
+ M Assets/Environment/KursHub/Textures/CreamConcrete_Normal.png.meta
+ M Assets/Environment/KursHub/Textures/FloorConcrete_BaseColor.png
+ M Assets/Environment/KursHub/Textures/FloorConcrete_BaseColor.png.meta
+ M Assets/Environment/KursHub/Textures/FloorConcrete_MetallicSmoothness.png
+ M Assets/Environment/KursHub/Textures/FloorConcrete_MetallicSmoothness.png.meta
+ M Assets/Environment/KursHub/Textures/FloorConcrete_Normal.png
+ M Assets/Environment/KursHub/Textures/FloorConcrete_Normal.png.meta
+ M Assets/Environment/KursHub/Textures/GlassGrime_BaseColor.png
+ M Assets/Environment/KursHub/Textures/GlassGrime_BaseColor.png.meta
+ M Assets/Environment/KursHub/Textures/RoofMembrane_BaseColor.png
+ M Assets/Environment/KursHub/Textures/RoofMembrane_BaseColor.png.meta
+ M Assets/Environment/KursHub/Textures/RoofMembrane_MetallicSmoothness.png
+ M Assets/Environment/KursHub/Textures/RoofMembrane_MetallicSmoothness.png.meta
+ M Assets/Environment/KursHub/Textures/RoofMembrane_Normal.png
+ M Assets/Environment/KursHub/Textures/RoofMembrane_Normal.png.meta
+ M Assets/Environment/KursHub/Textures/RustedSteel_BaseColor.png
+ M Assets/Environment/KursHub/Textures/RustedSteel_BaseColor.png.meta
+ M Assets/Environment/KursHub/Textures/RustedSteel_MetallicSmoothness.png
+ M Assets/Environment/KursHub/Textures/RustedSteel_MetallicSmoothness.png.meta
+ M Assets/Environment/KursHub/Textures/RustedSteel_Normal.png
+ M Assets/Environment/KursHub/Textures/RustedSteel_Normal.png.meta
+ M Assets/Environment/KursHub/Textures/SandCanvas_BaseColor.png
+ M Assets/Environment/KursHub/Textures/SandCanvas_BaseColor.png.meta
+ M Assets/Environment/KursHub/Textures/SandCanvas_MetallicSmoothness.png
+ M Assets/Environment/KursHub/Textures/SandCanvas_MetallicSmoothness.png.meta
+ M Assets/Environment/KursHub/Textures/SandCanvas_Normal.png
+ M Assets/Environment/KursHub/Textures/SandCanvas_Normal.png.meta
+ M Assets/Environment/KursHub/Textures/TarpGreen_BaseColor.png
+ M Assets/Environment/KursHub/Textures/TarpGreen_BaseColor.png.meta
+ M Assets/Environment/KursHub/Textures/TarpGreen_MetallicSmoothness.png
+ M Assets/Environment/KursHub/Textures/TarpGreen_MetallicSmoothness.png.meta
+ M Assets/Environment/KursHub/Textures/TarpGreen_Normal.png
+ M Assets/Environment/KursHub/Textures/TarpGreen_Normal.png.meta
+ M Assets/Environment/KursHub/Textures/WornWood_BaseColor.png
+ M Assets/Environment/KursHub/Textures/WornWood_BaseColor.png.meta
+ M Assets/Environment/KursHub/Textures/WornWood_MetallicSmoothness.png
+ M Assets/Environment/KursHub/Textures/WornWood_MetallicSmoothness.png.meta
+ M Assets/Environment/KursHub/Textures/WornWood_Normal.png
+ M Assets/Environment/KursHub/Textures/WornWood_Normal.png.meta
+ M Docs/KursHub.md
+ M Sources/KursHub/KursHub.blend
+ M Sources/KursHub/KursHubProps.blend
+ M work/KursHub/.gitignore
+ M work/KursHub/UnityProject/Assets/CharacterTesting/CharacterTest.unity
+?? Assets/Editor/KursHubQualitySetup.cs
+?? Assets/Editor/KursHubQualitySetup.cs.meta
+?? Assets/Environment/KursHub/InteriorMeshes.meta
+?? Assets/Environment/KursHub/InteriorMeshes/
+?? Assets/Environment/KursHub/Materials/CanvasBeige.mat
+?? Assets/Environment/KursHub/Materials/CanvasBeige.mat.meta
+?? Assets/Environment/KursHub/Materials/CanvasBlue.mat
+?? Assets/Environment/KursHub/Materials/CanvasBlue.mat.meta
+?? Assets/Environment/KursHub/Materials/CanvasDark.mat
+?? Assets/Environment/KursHub/Materials/CanvasDark.mat.meta
+?? Assets/Environment/KursHub/Materials/CanvasRed.mat
+?? Assets/Environment/KursHub/Materials/CanvasRed.mat.meta
+?? Assets/Environment/KursHub/Materials/CeramicTile.mat
+?? Assets/Environment/KursHub/Materials/CeramicTile.mat.meta
+?? Assets/Environment/KursHub/Materials/ClothInk.mat
+?? Assets/Environment/KursHub/Materials/ClothInk.mat.meta
+?? Assets/Environment/KursHub/Materials/Copper.mat
+?? Assets/Environment/KursHub/Materials/Copper.mat.meta
+?? Assets/Environment/KursHub/Materials/Ember.mat
+?? Assets/Environment/KursHub/Materials/Ember.mat.meta
+?? Assets/Environment/KursHub/Materials/Enamel.mat
+?? Assets/Environment/KursHub/Materials/Enamel.mat.meta
+?? Assets/Environment/KursHub/Materials/FirNeedles.mat
+?? Assets/Environment/KursHub/Materials/FirNeedles.mat.meta
+?? Assets/Environment/KursHub/Materials/InkDark.mat
+?? Assets/Environment/KursHub/Materials/InkDark.mat.meta
+?? Assets/Environment/KursHub/Materials/LeafGreen.mat
+?? Assets/Environment/KursHub/Materials/LeafGreen.mat.meta
+?? Assets/Environment/KursHub/Materials/Paper.mat
+?? Assets/Environment/KursHub/Materials/Paper.mat.meta
+?? Assets/Environment/KursHub/Materials/PlasticDark.mat
+?? Assets/Environment/KursHub/Materials/PlasticDark.mat.meta
+?? Assets/Environment/KursHub/Materials/RugBlue.mat
+?? Assets/Environment/KursHub/Materials/RugBlue.mat.meta
+?? Assets/Environment/KursHub/Materials/RugRed.mat
+?? Assets/Environment/KursHub/Materials/RugRed.mat.meta
+?? Assets/Environment/KursHub/Materials/RugWoven.mat
+?? Assets/Environment/KursHub/Materials/RugWoven.mat.meta
+?? Assets/Environment/KursHub/Materials/TimberRaw.mat
+?? Assets/Environment/KursHub/Materials/TimberRaw.mat.meta
+?? Assets/Environment/KursHub/Models/LOD.meta
+?? Assets/Environment/KursHub/Models/LOD/
+?? Assets/Environment/KursHub/Props/KursHubColliderManifest.json
+?? Assets/Environment/KursHub/Props/KursHubColliderManifest.json.meta
+?? Assets/Environment/KursHub/Props/Models/KH_AtriumFir.fbx
+?? Assets/Environment/KursHub/Props/Models/KH_AtriumFir.fbx.meta
+?? Assets/Environment/KursHub/Props/Models/KH_Bedroll.fbx
+?? Assets/Environment/KursHub/Props/Models/KH_Bedroll.fbx.meta
+?? Assets/Environment/KursHub/Props/Models/KH_Bench.fbx
+?? Assets/Environment/KursHub/Props/Models/KH_Bench.fbx.meta
+?? Assets/Environment/KursHub/Props/Models/KH_BunkMakeshift.fbx
+?? Assets/Environment/KursHub/Props/Models/KH_BunkMakeshift.fbx.meta
+?? Assets/Environment/KursHub/Props/Models/KH_CampChair.fbx
+?? Assets/Environment/KursHub/Props/Models/KH_CampChair.fbx.meta
+?? Assets/Environment/KursHub/Props/Models/KH_CheckpointHeader.fbx
+?? Assets/Environment/KursHub/Props/Models/KH_CheckpointHeader.fbx.meta
+?? Assets/Environment/KursHub/Props/Models/KH_CheckpointRules.fbx
+?? Assets/Environment/KursHub/Props/Models/KH_CheckpointRules.fbx.meta
+?? Assets/Environment/KursHub/Props/Models/KH_FireBarrel.fbx
+?? Assets/Environment/KursHub/Props/Models/KH_FireBarrel.fbx.meta
+?? Assets/Environment/KursHub/Props/Models/KH_FloorDebris.fbx
+?? Assets/Environment/KursHub/Props/Models/KH_FloorDebris.fbx.meta
+?? Assets/Environment/KursHub/Props/Models/KH_GoodsFood.fbx
+?? Assets/Environment/KursHub/Props/Models/KH_GoodsFood.fbx.meta
+?? Assets/Environment/KursHub/Props/Models/KH_GoodsGear.fbx
+?? Assets/Environment/KursHub/Props/Models/KH_GoodsGear.fbx.meta
+?? Assets/Environment/KursHub/Props/Models/KH_GoodsTools.fbx
+?? Assets/Environment/KursHub/Props/Models/KH_GoodsTools.fbx.meta
+?? Assets/Environment/KursHub/Props/Models/KH_KursAtriumBanner.fbx
+?? Assets/Environment/KursHub/Props/Models/KH_KursAtriumBanner.fbx.meta
+?? Assets/Environment/KursHub/Props/Models/KH_LivingScreen.fbx
+?? Assets/Environment/KursHub/Props/Models/KH_LivingScreen.fbx.meta
+?? Assets/Environment/KursHub/Props/Models/KH_LowDisplay.fbx
+?? Assets/Environment/KursHub/Props/Models/KH_LowDisplay.fbx.meta
+?? Assets/Environment/KursHub/Props/Models/KH_MetalDetector.fbx
+?? Assets/Environment/KursHub/Props/Models/KH_MetalDetector.fbx.meta
+?? Assets/Environment/KursHub/Props/Models/KH_PalletCrates.fbx
+?? Assets/Environment/KursHub/Props/Models/KH_PalletCrates.fbx.meta
+?? Assets/Environment/KursHub/Props/Models/KH_PottedPlant.fbx
+?? Assets/Environment/KursHub/Props/Models/KH_PottedPlant.fbx.meta
+?? Assets/Environment/KursHub/Props/Models/KH_RailDrape.fbx
+?? Assets/Environment/KursHub/Props/Models/KH_RailDrape.fbx.meta
+?? Assets/Environment/KursHub/Props/Models/KH_RailDrapeBlue.fbx
+?? Assets/Environment/KursHub/Props/Models/KH_RailDrapeBlue.fbx.meta
+?? Assets/Environment/KursHub/Props/Models/KH_ResidentBundle.fbx
+?? Assets/Environment/KursHub/Props/Models/KH_ResidentBundle.fbx.meta
+?? Assets/Environment/KursHub/Props/Models/KH_RestTable.fbx
+?? Assets/Environment/KursHub/Props/Models/KH_RestTable.fbx.meta
+?? Assets/Environment/KursHub/Props/Models/KH_RugBlue.fbx
+?? Assets/Environment/KursHub/Props/Models/KH_RugBlue.fbx.meta
+?? Assets/Environment/KursHub/Props/Models/KH_RugRed.fbx
+?? Assets/Environment/KursHub/Props/Models/KH_RugRed.fbx.meta
+?? Assets/Environment/KursHub/Props/Models/KH_RugWoven.fbx
+?? Assets/Environment/KursHub/Props/Models/KH_RugWoven.fbx.meta
+?? Assets/Environment/KursHub/Props/Models/KH_SecurityFence.fbx
+?? Assets/Environment/KursHub/Props/Models/KH_SecurityFence.fbx.meta
+?? Assets/Environment/KursHub/Props/Models/KH_SignGear.fbx
+?? Assets/Environment/KursHub/Props/Models/KH_SignGear.fbx.meta
+?? Assets/Environment/KursHub/Props/Models/KH_SignMedicalTrade.fbx
+?? Assets/Environment/KursHub/Props/Models/KH_SignMedicalTrade.fbx.meta
+?? Assets/Environment/KursHub/Props/Models/KH_SignRepair.fbx
+?? Assets/Environment/KursHub/Props/Models/KH_SignRepair.fbx.meta
+?? Assets/Environment/KursHub/Props/Models/KH_SignWeapons.fbx
+?? Assets/Environment/KursHub/Props/Models/KH_SignWeapons.fbx.meta
+?? Assets/Environment/KursHub/Props/Models/KH_StallCounter.fbx
+?? Assets/Environment/KursHub/Props/Models/KH_StallCounter.fbx.meta
+?? Assets/Environment/KursHub/Props/Models/KH_StallPipe.fbx
+?? Assets/Environment/KursHub/Props/Models/KH_StallPipe.fbx.meta
+?? Assets/Environment/KursHub/Props/Models/KH_StallTimber.fbx
+?? Assets/Environment/KursHub/Props/Models/KH_StallTimber.fbx.meta
+?? Assets/Environment/KursHub/Props/Models/KH_Stool.fbx
+?? Assets/Environment/KursHub/Props/Models/KH_Stool.fbx.meta
+?? Assets/Environment/KursHub/Props/Models/KH_StringLights.fbx
+?? Assets/Environment/KursHub/Props/Models/KH_StringLights.fbx.meta
+?? Assets/Environment/KursHub/Props/Models/KH_SupplySackStack.fbx
+?? Assets/Environment/KursHub/Props/Models/KH_SupplySackStack.fbx.meta
+?? Assets/Environment/KursHub/Props/Models/KH_WeaponsDisplay.fbx
+?? Assets/Environment/KursHub/Props/Models/KH_WeaponsDisplay.fbx.meta
+?? Assets/Environment/KursHub/Props/Models/KH_WorkbenchStocked.fbx
+?? Assets/Environment/KursHub/Props/Models/KH_WorkbenchStocked.fbx.meta
+?? Assets/Environment/KursHub/Props/Models/LOD.meta
+?? Assets/Environment/KursHub/Props/Models/LOD/
+?? Assets/Environment/KursHub/Props/Prefabs/KH_AtriumFir.prefab
+?? Assets/Environment/KursHub/Props/Prefabs/KH_AtriumFir.prefab.meta
+?? Assets/Environment/KursHub/Props/Prefabs/KH_Bedroll.prefab
+?? Assets/Environment/KursHub/Props/Prefabs/KH_Bedroll.prefab.meta
+?? Assets/Environment/KursHub/Props/Prefabs/KH_Bench.prefab
+?? Assets/Environment/KursHub/Props/Prefabs/KH_Bench.prefab.meta
+?? Assets/Environment/KursHub/Props/Prefabs/KH_BunkMakeshift.prefab
+?? Assets/Environment/KursHub/Props/Prefabs/KH_BunkMakeshift.prefab.meta
+?? Assets/Environment/KursHub/Props/Prefabs/KH_CampChair.prefab
+?? Assets/Environment/KursHub/Props/Prefabs/KH_CampChair.prefab.meta
+?? Assets/Environment/KursHub/Props/Prefabs/KH_CheckpointHeader.prefab
+?? Assets/Environment/KursHub/Props/Prefabs/KH_CheckpointHeader.prefab.meta
+?? Assets/Environment/KursHub/Props/Prefabs/KH_CheckpointRules.prefab
+?? Assets/Environment/KursHub/Props/Prefabs/KH_CheckpointRules.prefab.meta
+?? Assets/Environment/KursHub/Props/Prefabs/KH_FireBarrel.prefab
+?? Assets/Environment/KursHub/Props/Prefabs/KH_FireBarrel.prefab.meta
+?? Assets/Environment/KursHub/Props/Prefabs/KH_FloorDebris.prefab
+?? Assets/Environment/KursHub/Props/Prefabs/KH_FloorDebris.prefab.meta
+?? Assets/Environment/KursHub/Props/Prefabs/KH_GoodsFood.prefab
+?? Assets/Environment/KursHub/Props/Prefabs/KH_GoodsFood.prefab.meta
+?? Assets/Environment/KursHub/Props/Prefabs/KH_GoodsGear.prefab
+?? Assets/Environment/KursHub/Props/Prefabs/KH_GoodsGear.prefab.meta
+?? Assets/Environment/KursHub/Props/Prefabs/KH_GoodsTools.prefab
+?? Assets/Environment/KursHub/Props/Prefabs/KH_GoodsTools.prefab.meta
+?? Assets/Environment/KursHub/Props/Prefabs/KH_KursAtriumBanner.prefab
+?? Assets/Environment/KursHub/Props/Prefabs/KH_KursAtriumBanner.prefab.meta
+?? Assets/Environment/KursHub/Props/Prefabs/KH_LivingScreen.prefab
+?? Assets/Environment/KursHub/Props/Prefabs/KH_LivingScreen.prefab.meta
+?? Assets/Environment/KursHub/Props/Prefabs/KH_LowDisplay.prefab
+?? Assets/Environment/KursHub/Props/Prefabs/KH_LowDisplay.prefab.meta
+?? Assets/Environment/KursHub/Props/Prefabs/KH_MetalDetector.prefab
+?? Assets/Environment/KursHub/Props/Prefabs/KH_MetalDetector.prefab.meta
+?? Assets/Environment/KursHub/Props/Prefabs/KH_PalletCrates.prefab
+?? Assets/Environment/KursHub/Props/Prefabs/KH_PalletCrates.prefab.meta
+?? Assets/Environment/KursHub/Props/Prefabs/KH_PottedPlant.prefab
+?? Assets/Environment/KursHub/Props/Prefabs/KH_PottedPlant.prefab.meta
+?? Assets/Environment/KursHub/Props/Prefabs/KH_RailDrape.prefab
+?? Assets/Environment/KursHub/Props/Prefabs/KH_RailDrape.prefab.meta
+?? Assets/Environment/KursHub/Props/Prefabs/KH_RailDrapeBlue.prefab
+?? Assets/Environment/KursHub/Props/Prefabs/KH_RailDrapeBlue.prefab.meta
+?? Assets/Environment/KursHub/Props/Prefabs/KH_ResidentBundle.prefab
+?? Assets/Environment/KursHub/Props/Prefabs/KH_ResidentBundle.prefab.meta
+?? Assets/Environment/KursHub/Props/Prefabs/KH_RestTable.prefab
+?? Assets/Environment/KursHub/Props/Prefabs/KH_RestTable.prefab.meta
+?? Assets/Environment/KursHub/Props/Prefabs/KH_RugBlue.prefab
+?? Assets/Environment/KursHub/Props/Prefabs/KH_RugBlue.prefab.meta
+?? Assets/Environment/KursHub/Props/Prefabs/KH_RugRed.prefab
+?? Assets/Environment/KursHub/Props/Prefabs/KH_RugRed.prefab.meta
+?? Assets/Environment/KursHub/Props/Prefabs/KH_RugWoven.prefab
+?? Assets/Environment/KursHub/Props/Prefabs/KH_RugWoven.prefab.meta
+?? Assets/Environment/KursHub/Props/Prefabs/KH_SecurityFence.prefab
+?? Assets/Environment/KursHub/Props/Prefabs/KH_SecurityFence.prefab.meta
+?? Assets/Environment/KursHub/Props/Prefabs/KH_SignGear.prefab
+?? Assets/Environment/KursHub/Props/Prefabs/KH_SignGear.prefab.meta
+?? Assets/Environment/KursHub/Props/Prefabs/KH_SignMedicalTrade.prefab
+?? Assets/Environment/KursHub/Props/Prefabs/KH_SignMedicalTrade.prefab.meta
+?? Assets/Environment/KursHub/Props/Prefabs/KH_SignRepair.prefab
+?? Assets/Environment/KursHub/Props/Prefabs/KH_SignRepair.prefab.meta
+?? Assets/Environment/KursHub/Props/Prefabs/KH_SignWeapons.prefab
+?? Assets/Environment/KursHub/Props/Prefabs/KH_SignWeapons.prefab.meta
+?? Assets/Environment/KursHub/Props/Prefabs/KH_StallCounter.prefab
+?? Assets/Environment/KursHub/Props/Prefabs/KH_StallCounter.prefab.meta
+?? Assets/Environment/KursHub/Props/Prefabs/KH_StallPipe.prefab
+?? Assets/Environment/KursHub/Props/Prefabs/KH_StallPipe.prefab.meta
+?? Assets/Environment/KursHub/Props/Prefabs/KH_StallTimber.prefab
+?? Assets/Environment/KursHub/Props/Prefabs/KH_StallTimber.prefab.meta
+?? Assets/Environment/KursHub/Props/Prefabs/KH_Stool.prefab
+?? Assets/Environment/KursHub/Props/Prefabs/KH_Stool.prefab.meta
+?? Assets/Environment/KursHub/Props/Prefabs/KH_StringLights.prefab
+?? Assets/Environment/KursHub/Props/Prefabs/KH_StringLights.prefab.meta
+?? Assets/Environment/KursHub/Props/Prefabs/KH_SupplySackStack.prefab
+?? Assets/Environment/KursHub/Props/Prefabs/KH_SupplySackStack.prefab.meta
+?? Assets/Environment/KursHub/Props/Prefabs/KH_WeaponsDisplay.prefab
+?? Assets/Environment/KursHub/Props/Prefabs/KH_WeaponsDisplay.prefab.meta
+?? Assets/Environment/KursHub/Props/Prefabs/KH_WorkbenchStocked.prefab
+?? Assets/Environment/KursHub/Props/Prefabs/KH_WorkbenchStocked.prefab.meta
+?? Assets/Environment/KursHub/Scenes.meta
+?? Assets/Environment/KursHub/Scenes/
+?? Assets/Environment/KursHub/Textures/Audit7PBRManifest.json
+?? Assets/Environment/KursHub/Textures/Audit7PBRManifest.json.meta
+?? Assets/Environment/KursHub/Textures/BluePaint_Height.png
+?? Assets/Environment/KursHub/Textures/BluePaint_Height.png.meta
+?? Assets/Environment/KursHub/Textures/BluePaint_Metallic.png
+?? Assets/Environment/KursHub/Textures/BluePaint_Metallic.png.meta
+?? Assets/Environment/KursHub/Textures/BluePaint_Occlusion.png
+?? Assets/Environment/KursHub/Textures/BluePaint_Occlusion.png.meta
+?? Assets/Environment/KursHub/Textures/BluePaint_Roughness.png
+?? Assets/Environment/KursHub/Textures/BluePaint_Roughness.png.meta
+?? Assets/Environment/KursHub/Textures/CanvasBeige_BaseColor.png
+?? Assets/Environment/KursHub/Textures/CanvasBeige_BaseColor.png.meta
+?? Assets/Environment/KursHub/Textures/CanvasBeige_Height.png
+?? Assets/Environment/KursHub/Textures/CanvasBeige_Height.png.meta
+?? Assets/Environment/KursHub/Textures/CanvasBeige_Metallic.png
+?? Assets/Environment/KursHub/Textures/CanvasBeige_Metallic.png.meta
+?? Assets/Environment/KursHub/Textures/CanvasBeige_MetallicSmoothness.png
+?? Assets/Environment/KursHub/Textures/CanvasBeige_MetallicSmoothness.png.meta
+?? Assets/Environment/KursHub/Textures/CanvasBeige_Normal.png
+?? Assets/Environment/KursHub/Textures/CanvasBeige_Normal.png.meta
+?? Assets/Environment/KursHub/Textures/CanvasBeige_Occlusion.png
+?? Assets/Environment/KursHub/Textures/CanvasBeige_Occlusion.png.meta
+?? Assets/Environment/KursHub/Textures/CanvasBeige_Roughness.png
+?? Assets/Environment/KursHub/Textures/CanvasBeige_Roughness.png.meta
+?? Assets/Environment/KursHub/Textures/CanvasBlue_BaseColor.png
+?? Assets/Environment/KursHub/Textures/CanvasBlue_BaseColor.png.meta
+?? Assets/Environment/KursHub/Textures/CanvasBlue_Height.png
+?? Assets/Environment/KursHub/Textures/CanvasBlue_Height.png.meta
+?? Assets/Environment/KursHub/Textures/CanvasBlue_Metallic.png
+?? Assets/Environment/KursHub/Textures/CanvasBlue_Metallic.png.meta
+?? Assets/Environment/KursHub/Textures/CanvasBlue_MetallicSmoothness.png
+?? Assets/Environment/KursHub/Textures/CanvasBlue_MetallicSmoothness.png.meta
+?? Assets/Environment/KursHub/Textures/CanvasBlue_Normal.png
+?? Assets/Environment/KursHub/Textures/CanvasBlue_Normal.png.meta
+?? Assets/Environment/KursHub/Textures/CanvasBlue_Occlusion.png
+?? Assets/Environment/KursHub/Textures/CanvasBlue_Occlusion.png.meta
+?? Assets/Environment/KursHub/Textures/CanvasBlue_Roughness.png
+?? Assets/Environment/KursHub/Textures/CanvasBlue_Roughness.png.meta
+?? Assets/Environment/KursHub/Textures/CanvasDark_BaseColor.png
+?? Assets/Environment/KursHub/Textures/CanvasDark_BaseColor.png.meta
+?? Assets/Environment/KursHub/Textures/CanvasDark_Height.png
+?? Assets/Environment/KursHub/Textures/CanvasDark_Height.png.meta
+?? Assets/Environment/KursHub/Textures/CanvasDark_Metallic.png
+?? Assets/Environment/KursHub/Textures/CanvasDark_Metallic.png.meta
+?? Assets/Environment/KursHub/Textures/CanvasDark_MetallicSmoothness.png
+?? Assets/Environment/KursHub/Textures/CanvasDark_MetallicSmoothness.png.meta
+?? Assets/Environment/KursHub/Textures/CanvasDark_Normal.png
+?? Assets/Environment/KursHub/Textures/CanvasDark_Normal.png.meta
+?? Assets/Environment/KursHub/Textures/CanvasDark_Occlusion.png
+?? Assets/Environment/KursHub/Textures/CanvasDark_Occlusion.png.meta
+?? Assets/Environment/KursHub/Textures/CanvasDark_Roughness.png
+?? Assets/Environment/KursHub/Textures/CanvasDark_Roughness.png.meta
+?? Assets/Environment/KursHub/Textures/CanvasRed_BaseColor.png
+?? Assets/Environment/KursHub/Textures/CanvasRed_BaseColor.png.meta
+?? Assets/Environment/KursHub/Textures/CanvasRed_Height.png
+?? Assets/Environment/KursHub/Textures/CanvasRed_Height.png.meta
+?? Assets/Environment/KursHub/Textures/CanvasRed_Metallic.png
+?? Assets/Environment/KursHub/Textures/CanvasRed_Metallic.png.meta
+?? Assets/Environment/KursHub/Textures/CanvasRed_MetallicSmoothness.png
+?? Assets/Environment/KursHub/Textures/CanvasRed_MetallicSmoothness.png.meta
+?? Assets/Environment/KursHub/Textures/CanvasRed_Normal.png
+?? Assets/Environment/KursHub/Textures/CanvasRed_Normal.png.meta
+?? Assets/Environment/KursHub/Textures/CanvasRed_Occlusion.png
+?? Assets/Environment/KursHub/Textures/CanvasRed_Occlusion.png.meta
+?? Assets/Environment/KursHub/Textures/CanvasRed_Roughness.png
+?? Assets/Environment/KursHub/Textures/CanvasRed_Roughness.png.meta
+?? Assets/Environment/KursHub/Textures/CeramicTile_BaseColor.png
+?? Assets/Environment/KursHub/Textures/CeramicTile_BaseColor.png.meta
+?? Assets/Environment/KursHub/Textures/CeramicTile_Height.png
+?? Assets/Environment/KursHub/Textures/CeramicTile_Height.png.meta
+?? Assets/Environment/KursHub/Textures/CeramicTile_Metallic.png
+?? Assets/Environment/KursHub/Textures/CeramicTile_Metallic.png.meta
+?? Assets/Environment/KursHub/Textures/CeramicTile_MetallicSmoothness.png
+?? Assets/Environment/KursHub/Textures/CeramicTile_MetallicSmoothness.png.meta
+?? Assets/Environment/KursHub/Textures/CeramicTile_Normal.png
+?? Assets/Environment/KursHub/Textures/CeramicTile_Normal.png.meta
+?? Assets/Environment/KursHub/Textures/CeramicTile_Occlusion.png
+?? Assets/Environment/KursHub/Textures/CeramicTile_Occlusion.png.meta
+?? Assets/Environment/KursHub/Textures/CeramicTile_Roughness.png
+?? Assets/Environment/KursHub/Textures/CeramicTile_Roughness.png.meta
+?? Assets/Environment/KursHub/Textures/ClothInk_BaseColor.png
+?? Assets/Environment/KursHub/Textures/ClothInk_BaseColor.png.meta
+?? Assets/Environment/KursHub/Textures/ClothInk_Height.png
+?? Assets/Environment/KursHub/Textures/ClothInk_Height.png.meta
+?? Assets/Environment/KursHub/Textures/ClothInk_Metallic.png
+?? Assets/Environment/KursHub/Textures/ClothInk_Metallic.png.meta
+?? Assets/Environment/KursHub/Textures/ClothInk_MetallicSmoothness.png
+?? Assets/Environment/KursHub/Textures/ClothInk_MetallicSmoothness.png.meta
+?? Assets/Environment/KursHub/Textures/ClothInk_Normal.png
+?? Assets/Environment/KursHub/Textures/ClothInk_Normal.png.meta
+?? Assets/Environment/KursHub/Textures/ClothInk_Occlusion.png
+?? Assets/Environment/KursHub/Textures/ClothInk_Occlusion.png.meta
+?? Assets/Environment/KursHub/Textures/ClothInk_Roughness.png
+?? Assets/Environment/KursHub/Textures/ClothInk_Roughness.png.meta
+?? Assets/Environment/KursHub/Textures/Copper_BaseColor.png
+?? Assets/Environment/KursHub/Textures/Copper_BaseColor.png.meta
+?? Assets/Environment/KursHub/Textures/Copper_Height.png
+?? Assets/Environment/KursHub/Textures/Copper_Height.png.meta
+?? Assets/Environment/KursHub/Textures/Copper_Metallic.png
+?? Assets/Environment/KursHub/Textures/Copper_Metallic.png.meta
+?? Assets/Environment/KursHub/Textures/Copper_MetallicSmoothness.png
+?? Assets/Environment/KursHub/Textures/Copper_MetallicSmoothness.png.meta
+?? Assets/Environment/KursHub/Textures/Copper_Normal.png
+?? Assets/Environment/KursHub/Textures/Copper_Normal.png.meta
+?? Assets/Environment/KursHub/Textures/Copper_Occlusion.png
+?? Assets/Environment/KursHub/Textures/Copper_Occlusion.png.meta
+?? Assets/Environment/KursHub/Textures/Copper_Roughness.png
+?? Assets/Environment/KursHub/Textures/Copper_Roughness.png.meta
+?? Assets/Environment/KursHub/Textures/CreamConcrete_Height.png
+?? Assets/Environment/KursHub/Textures/CreamConcrete_Height.png.meta
+?? Assets/Environment/KursHub/Textures/CreamConcrete_Metallic.png
+?? Assets/Environment/KursHub/Textures/CreamConcrete_Metallic.png.meta
+?? Assets/Environment/KursHub/Textures/CreamConcrete_Occlusion.png
+?? Assets/Environment/KursHub/Textures/CreamConcrete_Occlusion.png.meta
+?? Assets/Environment/KursHub/Textures/CreamConcrete_Roughness.png
+?? Assets/Environment/KursHub/Textures/CreamConcrete_Roughness.png.meta
+?? Assets/Environment/KursHub/Textures/Enamel_BaseColor.png
+?? Assets/Environment/KursHub/Textures/Enamel_BaseColor.png.meta
+?? Assets/Environment/KursHub/Textures/Enamel_Height.png
+?? Assets/Environment/KursHub/Textures/Enamel_Height.png.meta
+?? Assets/Environment/KursHub/Textures/Enamel_Metallic.png
+?? Assets/Environment/KursHub/Textures/Enamel_Metallic.png.meta
+?? Assets/Environment/KursHub/Textures/Enamel_MetallicSmoothness.png
+?? Assets/Environment/KursHub/Textures/Enamel_MetallicSmoothness.png.meta
+?? Assets/Environment/KursHub/Textures/Enamel_Normal.png
+?? Assets/Environment/KursHub/Textures/Enamel_Normal.png.meta
+?? Assets/Environment/KursHub/Textures/Enamel_Occlusion.png
+?? Assets/Environment/KursHub/Textures/Enamel_Occlusion.png.meta
+?? Assets/Environment/KursHub/Textures/Enamel_Roughness.png
+?? Assets/Environment/KursHub/Textures/Enamel_Roughness.png.meta
+?? Assets/Environment/KursHub/Textures/FirNeedles_BaseColor.png
+?? Assets/Environment/KursHub/Textures/FirNeedles_BaseColor.png.meta
+?? Assets/Environment/KursHub/Textures/FirNeedles_Height.png
+?? Assets/Environment/KursHub/Textures/FirNeedles_Height.png.meta
+?? Assets/Environment/KursHub/Textures/FirNeedles_Metallic.png
+?? Assets/Environment/KursHub/Textures/FirNeedles_Metallic.png.meta
+?? Assets/Environment/KursHub/Textures/FirNeedles_MetallicSmoothness.png
+?? Assets/Environment/KursHub/Textures/FirNeedles_MetallicSmoothness.png.meta
+?? Assets/Environment/KursHub/Textures/FirNeedles_Normal.png
+?? Assets/Environment/KursHub/Textures/FirNeedles_Normal.png.meta
+?? Assets/Environment/KursHub/Textures/FirNeedles_Occlusion.png
+?? Assets/Environment/KursHub/Textures/FirNeedles_Occlusion.png.meta
+?? Assets/Environment/KursHub/Textures/FirNeedles_Roughness.png
+?? Assets/Environment/KursHub/Textures/FirNeedles_Roughness.png.meta
+?? Assets/Environment/KursHub/Textures/FloorConcrete_Height.png
+?? Assets/Environment/KursHub/Textures/FloorConcrete_Height.png.meta
+?? Assets/Environment/KursHub/Textures/FloorConcrete_Metallic.png
+?? Assets/Environment/KursHub/Textures/FloorConcrete_Metallic.png.meta
+?? Assets/Environment/KursHub/Textures/FloorConcrete_Occlusion.png
+?? Assets/Environment/KursHub/Textures/FloorConcrete_Occlusion.png.meta
+?? Assets/Environment/KursHub/Textures/FloorConcrete_Roughness.png
+?? Assets/Environment/KursHub/Textures/FloorConcrete_Roughness.png.meta
+?? Assets/Environment/KursHub/Textures/GlassGrime_Height.png
+?? Assets/Environment/KursHub/Textures/GlassGrime_Height.png.meta
+?? Assets/Environment/KursHub/Textures/GlassGrime_Metallic.png
+?? Assets/Environment/KursHub/Textures/GlassGrime_Metallic.png.meta
+?? Assets/Environment/KursHub/Textures/GlassGrime_MetallicSmoothness.png
+?? Assets/Environment/KursHub/Textures/GlassGrime_MetallicSmoothness.png.meta
+?? Assets/Environment/KursHub/Textures/GlassGrime_Normal.png
+?? Assets/Environment/KursHub/Textures/GlassGrime_Normal.png.meta
+?? Assets/Environment/KursHub/Textures/GlassGrime_Occlusion.png
+?? Assets/Environment/KursHub/Textures/GlassGrime_Occlusion.png.meta
+?? Assets/Environment/KursHub/Textures/GlassGrime_Roughness.png
+?? Assets/Environment/KursHub/Textures/GlassGrime_Roughness.png.meta
+?? Assets/Environment/KursHub/Textures/InkDark_BaseColor.png
+?? Assets/Environment/KursHub/Textures/InkDark_BaseColor.png.meta
+?? Assets/Environment/KursHub/Textures/InkDark_Height.png
+?? Assets/Environment/KursHub/Textures/InkDark_Height.png.meta
+?? Assets/Environment/KursHub/Textures/InkDark_Metallic.png
+?? Assets/Environment/KursHub/Textures/InkDark_Metallic.png.meta
+?? Assets/Environment/KursHub/Textures/InkDark_MetallicSmoothness.png
+?? Assets/Environment/KursHub/Textures/InkDark_MetallicSmoothness.png.meta
+?? Assets/Environment/KursHub/Textures/InkDark_Normal.png
+?? Assets/Environment/KursHub/Textures/InkDark_Normal.png.meta
+?? Assets/Environment/KursHub/Textures/InkDark_Occlusion.png
+?? Assets/Environment/KursHub/Textures/InkDark_Occlusion.png.meta
+?? Assets/Environment/KursHub/Textures/InkDark_Roughness.png
+?? Assets/Environment/KursHub/Textures/InkDark_Roughness.png.meta
+?? Assets/Environment/KursHub/Textures/LeafGreen_BaseColor.png
+?? Assets/Environment/KursHub/Textures/LeafGreen_BaseColor.png.meta
+?? Assets/Environment/KursHub/Textures/LeafGreen_Height.png
+?? Assets/Environment/KursHub/Textures/LeafGreen_Height.png.meta
+?? Assets/Environment/KursHub/Textures/LeafGreen_Metallic.png
+?? Assets/Environment/KursHub/Textures/LeafGreen_Metallic.png.meta
+?? Assets/Environment/KursHub/Textures/LeafGreen_MetallicSmoothness.png
+?? Assets/Environment/KursHub/Textures/LeafGreen_MetallicSmoothness.png.meta
+?? Assets/Environment/KursHub/Textures/LeafGreen_Normal.png
+?? Assets/Environment/KursHub/Textures/LeafGreen_Normal.png.meta
+?? Assets/Environment/KursHub/Textures/LeafGreen_Occlusion.png
+?? Assets/Environment/KursHub/Textures/LeafGreen_Occlusion.png.meta
+?? Assets/Environment/KursHub/Textures/LeafGreen_Roughness.png
+?? Assets/Environment/KursHub/Textures/LeafGreen_Roughness.png.meta
+?? Assets/Environment/KursHub/Textures/Paper_BaseColor.png
+?? Assets/Environment/KursHub/Textures/Paper_BaseColor.png.meta
+?? Assets/Environment/KursHub/Textures/Paper_Height.png
+?? Assets/Environment/KursHub/Textures/Paper_Height.png.meta
+?? Assets/Environment/KursHub/Textures/Paper_Metallic.png
+?? Assets/Environment/KursHub/Textures/Paper_Metallic.png.meta
+?? Assets/Environment/KursHub/Textures/Paper_MetallicSmoothness.png
+?? Assets/Environment/KursHub/Textures/Paper_MetallicSmoothness.png.meta
+?? Assets/Environment/KursHub/Textures/Paper_Normal.png
+?? Assets/Environment/KursHub/Textures/Paper_Normal.png.meta
+?? Assets/Environment/KursHub/Textures/Paper_Occlusion.png
+?? Assets/Environment/KursHub/Textures/Paper_Occlusion.png.meta
+?? Assets/Environment/KursHub/Textures/Paper_Roughness.png
+?? Assets/Environment/KursHub/Textures/Paper_Roughness.png.meta
+?? Assets/Environment/KursHub/Textures/PlasticDark_BaseColor.png
+?? Assets/Environment/KursHub/Textures/PlasticDark_BaseColor.png.meta
+?? Assets/Environment/KursHub/Textures/PlasticDark_Height.png
+?? Assets/Environment/KursHub/Textures/PlasticDark_Height.png.meta
+?? Assets/Environment/KursHub/Textures/PlasticDark_Metallic.png
+?? Assets/Environment/KursHub/Textures/PlasticDark_Metallic.png.meta
+?? Assets/Environment/KursHub/Textures/PlasticDark_MetallicSmoothness.png
+?? Assets/Environment/KursHub/Textures/PlasticDark_MetallicSmoothness.png.meta
+?? Assets/Environment/KursHub/Textures/PlasticDark_Normal.png
+?? Assets/Environment/KursHub/Textures/PlasticDark_Normal.png.meta
+?? Assets/Environment/KursHub/Textures/PlasticDark_Occlusion.png
+?? Assets/Environment/KursHub/Textures/PlasticDark_Occlusion.png.meta
+?? Assets/Environment/KursHub/Textures/PlasticDark_Roughness.png
+?? Assets/Environment/KursHub/Textures/PlasticDark_Roughness.png.meta
+?? Assets/Environment/KursHub/Textures/RoofMembrane_Height.png
+?? Assets/Environment/KursHub/Textures/RoofMembrane_Height.png.meta
+?? Assets/Environment/KursHub/Textures/RoofMembrane_Metallic.png
+?? Assets/Environment/KursHub/Textures/RoofMembrane_Metallic.png.meta
+?? Assets/Environment/KursHub/Textures/RoofMembrane_Occlusion.png
+?? Assets/Environment/KursHub/Textures/RoofMembrane_Occlusion.png.meta
+?? Assets/Environment/KursHub/Textures/RoofMembrane_Roughness.png
+?? Assets/Environment/KursHub/Textures/RoofMembrane_Roughness.png.meta
+?? Assets/Environment/KursHub/Textures/RugBlue_BaseColor.png
+?? Assets/Environment/KursHub/Textures/RugBlue_BaseColor.png.meta
+?? Assets/Environment/KursHub/Textures/RugBlue_Height.png
+?? Assets/Environment/KursHub/Textures/RugBlue_Height.png.meta
+?? Assets/Environment/KursHub/Textures/RugBlue_Metallic.png
+?? Assets/Environment/KursHub/Textures/RugBlue_Metallic.png.meta
+?? Assets/Environment/KursHub/Textures/RugBlue_MetallicSmoothness.png
+?? Assets/Environment/KursHub/Textures/RugBlue_MetallicSmoothness.png.meta
+?? Assets/Environment/KursHub/Textures/RugBlue_Normal.png
+?? Assets/Environment/KursHub/Textures/RugBlue_Normal.png.meta
+?? Assets/Environment/KursHub/Textures/RugBlue_Occlusion.png
+?? Assets/Environment/KursHub/Textures/RugBlue_Occlusion.png.meta
+?? Assets/Environment/KursHub/Textures/RugBlue_Roughness.png
+?? Assets/Environment/KursHub/Textures/RugBlue_Roughness.png.meta
+?? Assets/Environment/KursHub/Textures/RugRed_BaseColor.png
+?? Assets/Environment/KursHub/Textures/RugRed_BaseColor.png.meta
+?? Assets/Environment/KursHub/Textures/RugRed_Height.png
+?? Assets/Environment/KursHub/Textures/RugRed_Height.png.meta
+?? Assets/Environment/KursHub/Textures/RugRed_Metallic.png
+?? Assets/Environment/KursHub/Textures/RugRed_Metallic.png.meta
+?? Assets/Environment/KursHub/Textures/RugRed_MetallicSmoothness.png
+?? Assets/Environment/KursHub/Textures/RugRed_MetallicSmoothness.png.meta
+?? Assets/Environment/KursHub/Textures/RugRed_Normal.png
+?? Assets/Environment/KursHub/Textures/RugRed_Normal.png.meta
+?? Assets/Environment/KursHub/Textures/RugRed_Occlusion.png
+?? Assets/Environment/KursHub/Textures/RugRed_Occlusion.png.meta
+?? Assets/Environment/KursHub/Textures/RugRed_Roughness.png
+?? Assets/Environment/KursHub/Textures/RugRed_Roughness.png.meta
+?? Assets/Environment/KursHub/Textures/RugWoven_BaseColor.png
+?? Assets/Environment/KursHub/Textures/RugWoven_BaseColor.png.meta
+?? Assets/Environment/KursHub/Textures/RugWoven_Height.png
+?? Assets/Environment/KursHub/Textures/RugWoven_Height.png.meta
+?? Assets/Environment/KursHub/Textures/RugWoven_Metallic.png
+?? Assets/Environment/KursHub/Textures/RugWoven_Metallic.png.meta
+?? Assets/Environment/KursHub/Textures/RugWoven_MetallicSmoothness.png
+?? Assets/Environment/KursHub/Textures/RugWoven_MetallicSmoothness.png.meta
+?? Assets/Environment/KursHub/Textures/RugWoven_Normal.png
+?? Assets/Environment/KursHub/Textures/RugWoven_Normal.png.meta
+?? Assets/Environment/KursHub/Textures/RugWoven_Occlusion.png
+?? Assets/Environment/KursHub/Textures/RugWoven_Occlusion.png.meta
+?? Assets/Environment/KursHub/Textures/RugWoven_Roughness.png
+?? Assets/Environment/KursHub/Textures/RugWoven_Roughness.png.meta
+?? Assets/Environment/KursHub/Textures/RustedSteel_Height.png
+?? Assets/Environment/KursHub/Textures/RustedSteel_Height.png.meta
+?? Assets/Environment/KursHub/Textures/RustedSteel_Metallic.png
+?? Assets/Environment/KursHub/Textures/RustedSteel_Metallic.png.meta
+?? Assets/Environment/KursHub/Textures/RustedSteel_Occlusion.png
+?? Assets/Environment/KursHub/Textures/RustedSteel_Occlusion.png.meta
+?? Assets/Environment/KursHub/Textures/RustedSteel_Roughness.png
+?? Assets/Environment/KursHub/Textures/RustedSteel_Roughness.png.meta
+?? Assets/Environment/KursHub/Textures/SandCanvas_Height.png
+?? Assets/Environment/KursHub/Textures/SandCanvas_Height.png.meta
+?? Assets/Environment/KursHub/Textures/SandCanvas_Metallic.png
+?? Assets/Environment/KursHub/Textures/SandCanvas_Metallic.png.meta
+?? Assets/Environment/KursHub/Textures/SandCanvas_Occlusion.png
+?? Assets/Environment/KursHub/Textures/SandCanvas_Occlusion.png.meta
+?? Assets/Environment/KursHub/Textures/SandCanvas_Roughness.png
+?? Assets/Environment/KursHub/Textures/SandCanvas_Roughness.png.meta
+?? Assets/Environment/KursHub/Textures/TarpGreen_Height.png
+?? Assets/Environment/KursHub/Textures/TarpGreen_Height.png.meta
+?? Assets/Environment/KursHub/Textures/TarpGreen_Metallic.png
+?? Assets/Environment/KursHub/Textures/TarpGreen_Metallic.png.meta
+?? Assets/Environment/KursHub/Textures/TarpGreen_Occlusion.png
+?? Assets/Environment/KursHub/Textures/TarpGreen_Occlusion.png.meta
+?? Assets/Environment/KursHub/Textures/TarpGreen_Roughness.png
+?? Assets/Environment/KursHub/Textures/TarpGreen_Roughness.png.meta
+?? Assets/Environment/KursHub/Textures/TimberRaw_BaseColor.png
+?? Assets/Environment/KursHub/Textures/TimberRaw_BaseColor.png.meta
+?? Assets/Environment/KursHub/Textures/TimberRaw_Height.png
+?? Assets/Environment/KursHub/Textures/TimberRaw_Height.png.meta
+?? Assets/Environment/KursHub/Textures/TimberRaw_Metallic.png
+?? Assets/Environment/KursHub/Textures/TimberRaw_Metallic.png.meta
+?? Assets/Environment/KursHub/Textures/TimberRaw_MetallicSmoothness.png
+?? Assets/Environment/KursHub/Textures/TimberRaw_MetallicSmoothness.png.meta
+?? Assets/Environment/KursHub/Textures/TimberRaw_Normal.png
+?? Assets/Environment/KursHub/Textures/TimberRaw_Normal.png.meta
+?? Assets/Environment/KursHub/Textures/TimberRaw_Occlusion.png
+?? Assets/Environment/KursHub/Textures/TimberRaw_Occlusion.png.meta
+?? Assets/Environment/KursHub/Textures/TimberRaw_Roughness.png
+?? Assets/Environment/KursHub/Textures/TimberRaw_Roughness.png.meta
+?? Assets/Environment/KursHub/Textures/WornWood_Height.png
+?? Assets/Environment/KursHub/Textures/WornWood_Height.png.meta
+?? Assets/Environment/KursHub/Textures/WornWood_Metallic.png
+?? Assets/Environment/KursHub/Textures/WornWood_Metallic.png.meta
+?? Assets/Environment/KursHub/Textures/WornWood_Occlusion.png
+?? Assets/Environment/KursHub/Textures/WornWood_Occlusion.png.meta
+?? Assets/Environment/KursHub/Textures/WornWood_Roughness.png
+?? Assets/Environment/KursHub/Textures/WornWood_Roughness.png.meta
+?? Docs/KursHubQualityAudit.md
+?? FINAL_ASSETS/
+?? Tools/KursHub/audit7_architecture.py
+?? Tools/KursHub/audit7_atmosphere.py
+?? Tools/KursHub/audit7_atrium_fir.py
+?? Tools/KursHub/audit7_checks.py
+?? Tools/KursHub/audit7_delivery.py
+?? Tools/KursHub/audit7_exterior.py
+?? Tools/KursHub/audit7_extra_merge.py
+?? Tools/KursHub/audit7_fir_surface.py
+?? Tools/KursHub/audit7_geometry.py
+?? Tools/KursHub/audit7_integrate.py
+?? Tools/KursHub/audit7_layout.py
+?? Tools/KursHub/audit7_leaf_surface.py
+?? Tools/KursHub/audit7_materials.py
+?? Tools/KursHub/audit7_plant.py
+?? Tools/KursHub/audit7_prepare.py
+?? Tools/KursHub/audit7_printed_cloth.py
+?? Tools/KursHub/audit7_publish.py
+?? Tools/KursHub/audit7_repair_lods.py
+?? Tools/KursHub/audit7_soft_shading.py
+?? Tools/KursHub/audit7_surfaces.py
+?? Tools/KursHub/audit7_text_geometry.py
+?? Tools/KursHub/audit7_verify_props.py
+?? Tools/KursHub/audit7_verify_sources.py
+?? Tools/KursHub/audit8_inspect_source.py
+?? Tools/KursHub/audit8_prepare.py
+?? Tools/KursHub/deploy_stage6.py
+?? Tools/KursHub/verify_pbr7.py
+?? Verification/KursHub/QualityAudit7/
+?? Verification/KursHub/Stage6/
+?? work/KursHub/audit8/

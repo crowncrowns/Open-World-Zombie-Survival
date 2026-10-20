@@ -1,0 +1,18 @@
+{
+  "status": "AUDIT7_LOD_REPAIRS_EXPORTED",
+  "fixes": [
+    {
+      "id": "KH_WindowBoards",
+      "level": 2,
+      "fromLevel": 1,
+      "restoredChunks": [
+        "KH_WindowBoards_SteelOxide_NC"
+      ],
+      "oldTriangles": 222,
+      "triangles": 250,
+      "beforeSHA256": "376cc214e58db7755e08730a127c98217b06e6090538e1348b8490d5d011e651",
+      "afterSHA256": "deba7de8610e8b9c34872030cfd9b5ce742a031a0bc4a0233df635339f7e175c",
+      "reason": "Actual FBX roundtrip exposed collapsed nonmanifold small solids; restore only failed chunks from validated previous LOD"
+    }
+  ]
+}

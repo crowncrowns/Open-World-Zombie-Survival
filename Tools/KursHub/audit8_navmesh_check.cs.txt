@@ -1,0 +1,347 @@
+// Temporary isolated-project audit. Copy into the validation copy's Assets/Editor
+// only; this is deliberately a .cs.txt outside product Assets.
+// Newtonsoft.Json 3.2.2 is already present in this checkout's packages-lock.json.
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Security.Cryptography;
+using Newtonsoft.Json;
+using UnityEditor;
+using UnityEditor.SceneManagement;
+using UnityEngine;
+using UnityEngine.AI;
+using UnityEngine.SceneManagement;
+
+public static class KursHubNavMeshAudit8
+{
+    const string PrefabPath = "Assets/Environment/KursHub/KursHub.prefab";
+    const float SampleRadius = 0.45f;
+    const float ClearanceRadius = 0.29f;
+    const float FootLift = 0.06f;
+    const float TopAboveFloor = 1.74f;
+
+    [Serializable] sealed class Layout
+    {
+        public Zone[] zones { get; set; }
+        public Route[] routes { get; set; }
+    }
+    [Serializable] sealed class Zone
+    {
+        public string id { get; set; }
+        public float floorY { get; set; }
+        public float[] bounds { get; set; }
+        public float[][] inspectionPoints { get; set; }
+    }
+    [Serializable] sealed class Route
+    {
+        public string id { get; set; }
+        public float[][] points { get; set; }
+    }
+    sealed class PointCheck
+    {
+        public string id;
+        public float[] requested;
+        public bool sampled;
+        public float[] navPosition;
+        public float sampleDistance;
+        public bool capsuleClear;
+        public float[] capsuleLowerCenter;
+        public float[] capsuleUpperCenter;
+        public string[] blockingColliders;
+        [JsonIgnore] public Vector3 Nav;
+        [JsonIgnore] public bool Usable { get { return sampled && capsuleClear; } }
+    }
+    sealed class SegmentCheck
+    {
+        public string id;
+        public bool calculateReturned;
+        public string status;
+        public float length;
+        public float[][] corners;
+        public bool complete;
+    }
+    sealed class RouteCheck
+    {
+        public string id;
+        public PointCheck[] points;
+        public SegmentCheck[] segments;
+        public SegmentCheck connectionToPrimaryRoute;
+        public string status;
+    }
+    sealed class ZoneCheck
+    {
+        public string id;
+        public float floorY;
+        public float[] bounds;
+        public PointCheck[] inspectionPoints;
+        public SegmentCheck[] connectionsToRoutes;
+        public string status;
+    }
+
+    static float[] V(Vector3 value) { return new[] { value.x, value.y, value.z }; }
+    static bool Finite(float value) { return !float.IsNaN(value) && !float.IsInfinity(value); }
+    static Vector3 Position(float[] value, string id)
+    {
+        if (value == null || value.Length != 3 || value.Any(x => !Finite(x)))
+            throw new InvalidDataException(id + ": expected three finite metre coordinates");
+        return new Vector3(value[0], value[1], value[2]);
+    }
+    static string HashFile(string path)
+    {
+        using (var hash = SHA256.Create())
+        using (var stream = File.OpenRead(path))
+            return BitConverter.ToString(hash.ComputeHash(stream)).Replace("-", "").ToLowerInvariant();
+    }
+    static string ColliderPath(Collider collider, Transform hub)
+    {
+        var names = new List<string>();
+        for (var t = collider.transform; t != null; t = t.parent)
+        {
+            names.Add(t.name);
+            if (t == hub) break;
+        }
+        names.Reverse();
+        return string.Join("/", names.ToArray()) + " [" + collider.GetType().Name + "]";
+    }
+    static PointCheck CheckPoint(string id, float[] coordinates, Transform hub,
+        NavMeshQueryFilter filter, List<string> problems)
+    {
+        Vector3 requested = Position(coordinates, id);
+        var result = new PointCheck { id = id, requested = coordinates };
+        NavMeshHit hit;
+        result.sampled = NavMesh.SamplePosition(requested, out hit, SampleRadius, filter);
+        if (result.sampled)
+        {
+            result.Nav = hit.position;
+            result.navPosition = V(hit.position);
+            result.sampleDistance = Vector3.Distance(requested, hit.position);
+        }
+        else problems.Add(id + ": no NavMesh sample within " + SampleRadius + " m");
+
+        // Capsule endpoints are sphere CENTRES. Its lowest point is floor+0.06,
+        // not floor+0.06-radius; this avoids falsely colliding with its own floor.
+        var lower = requested + Vector3.up * (FootLift + ClearanceRadius);
+        var upper = requested + Vector3.up * (TopAboveFloor - ClearanceRadius);
+        result.capsuleLowerCenter = V(lower);
+        result.capsuleUpperCenter = V(upper);
+        result.capsuleClear = !Physics.CheckCapsule(lower, upper, ClearanceRadius,
+            Physics.AllLayers, QueryTriggerInteraction.Ignore);
+        var blockers = result.capsuleClear ? new Collider[0] : Physics.OverlapCapsule(
+            lower, upper, ClearanceRadius, Physics.AllLayers, QueryTriggerInteraction.Ignore);
+        result.blockingColliders = blockers.Where(c => c != null)
+            .Select(c => ColliderPath(c, hub)).Distinct().OrderBy(x => x).ToArray();
+        if (!result.capsuleClear)
+            problems.Add(id + ": standing capsule is blocked by " +
+                string.Join("; ", result.blockingColliders));
+        return result;
+    }
+    static SegmentCheck CheckPath(string id, PointCheck start, PointCheck end,
+        NavMeshQueryFilter filter, List<string> problems)
+    {
+        var result = new SegmentCheck { id = id, status = "EndpointsUnavailable", corners = new float[0][] };
+        if (start == null || end == null || !start.sampled || !end.sampled)
+        {
+            problems.Add(id + ": path cannot be evaluated because an endpoint has no sample");
+            return result;
+        }
+        var path = new NavMeshPath();
+        result.calculateReturned = NavMesh.CalculatePath(start.Nav, end.Nav, filter, path);
+        result.status = path.status.ToString();
+        result.corners = path.corners.Select(V).ToArray();
+        for (int i = 1; i < path.corners.Length; ++i)
+            result.length += Vector3.Distance(path.corners[i - 1], path.corners[i]);
+        result.complete = result.calculateReturned && path.status == NavMeshPathStatus.PathComplete;
+        if (!result.complete) problems.Add(id + ": " + result.status);
+        return result;
+    }
+
+    public static void Run()
+    {
+        string projectRoot = Directory.GetParent(Application.dataPath).FullName;
+        string normalizedRoot = projectRoot.Replace('\\', '/');
+        // Refuse the user's live checkout even if this temporary file is copied there.
+        if (normalizedRoot.IndexOf("/work/KursHub/", StringComparison.OrdinalIgnoreCase) < 0)
+            throw new InvalidOperationException("KursHubNavMeshAudit8 runs only inside a work/KursHub validation project.");
+        string auditRoot = Path.GetFullPath(Path.Combine(projectRoot, "../audit8"));
+        string inputPath = Path.Combine(auditRoot, "functional_layout.json");
+        string outputPath = Path.Combine(auditRoot, "navmesh_validation.json");
+        var problems = new List<string>();
+        var engineErrors = new List<string>();
+        var engineWarnings = new List<string>();
+        var routeResults = new List<RouteCheck>();
+        var zoneResults = new List<ZoneCheck>();
+        var report = new Dictionary<string, object>
+        {
+            { "status", "FAIL" }, { "unityVersion", Application.unityVersion },
+            { "utc", DateTime.UtcNow.ToString("o") }, { "projectRoot", projectRoot },
+            { "prefab", PrefabPath }, { "input", inputPath },
+            { "scope", "Static authored-hub NavMesh feasibility and standing clearance only; no NPC AI, avoidance, animation, runtime obstacles or FPS claim." },
+            { "sampleRadius", SampleRadius },
+            { "capsule", new { radius = ClearanceRadius, bottomAboveFloor = FootLift,
+                topAboveFloor = TopAboveFloor, bottomCenterAboveFloor = FootLift + ClearanceRadius,
+                topCenterAboveFloor = TopAboveFloor - ClearanceRadius,
+                note = "The requested clearance probe is distinct from the 1.8 m NavMesh agent." } }
+        };
+        GameObject hub = null;
+        NavMeshData data = null;
+        NavMeshDataInstance installed = default(NavMeshDataInstance);
+        Scene ownedScene = default(Scene);
+        Application.LogCallback capture = (message, trace, kind) =>
+        {
+            if (kind == LogType.Error || kind == LogType.Exception || kind == LogType.Assert)
+                engineErrors.Add(message + "\n" + trace);
+            else if (kind == LogType.Warning) engineWarnings.Add(message);
+        };
+        Application.logMessageReceived += capture;
+        int exitCode = 1;
+        try
+        {
+            if (!File.Exists(inputPath)) throw new FileNotFoundException("Functional layout is required", inputPath);
+            report["inputSHA256"] = HashFile(inputPath);
+            var layout = JsonConvert.DeserializeObject<Layout>(File.ReadAllText(inputPath));
+            if (layout == null || layout.routes == null || layout.routes.Length == 0 ||
+                layout.zones == null || layout.zones.Length == 0)
+                throw new InvalidDataException("The functional layout must contain nonempty zones and routes.");
+            if (layout.routes.Any(r => r == null || string.IsNullOrWhiteSpace(r.id)) ||
+                layout.zones.Any(z => z == null || string.IsNullOrWhiteSpace(z.id)))
+                throw new InvalidDataException("Every zone and route needs an id.");
+            if (layout.routes.Select(r => r.id).Distinct().Count() != layout.routes.Length ||
+                layout.zones.Select(z => z.id).Distinct().Count() != layout.zones.Length)
+                throw new InvalidDataException("Zone/route ids must be unique within each category.");
+            ownedScene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath);
+            if (prefab == null) throw new FileNotFoundException("KursHub prefab missing", PrefabPath);
+            report["prefabSHA256"] = HashFile(Path.Combine(projectRoot, PrefabPath));
+            report["prefabDependencyHash128"] = AssetDatabase.GetAssetDependencyHash(PrefabPath).ToString();
+            hub = (GameObject)PrefabUtility.InstantiatePrefab(prefab, ownedScene);
+            hub.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
+            hub.transform.localScale = Vector3.one;
+            Physics.SyncTransforms();
+            int preexistingTriangles = NavMesh.CalculateTriangulation().indices.Length / 3;
+            report["preexistingNavmeshTriangles"] = preexistingTriangles;
+            if (preexistingTriangles != 0)
+                throw new InvalidOperationException("An unrelated NavMesh persisted in the empty audit scene; refusing mixed-data queries.");
+            var sources = new List<NavMeshBuildSource>();
+            NavMeshBuilder.CollectSources(hub.transform, ~0, NavMeshCollectGeometry.PhysicsColliders,
+                0, new List<NavMeshBuildMarkup>(), sources);
+            report["sourceCount"] = sources.Count;
+            report["sourceShapes"] = sources.GroupBy(s => s.shape.ToString())
+                .ToDictionary(g => g.Key, g => g.Count());
+            int foreignSources = sources.Count(s => s.component != null &&
+                s.component.transform != hub.transform && !s.component.transform.IsChildOf(hub.transform));
+            report["foreignSourceCount"] = foreignSources;
+            if (foreignSources != 0) throw new InvalidOperationException("Collected a collider outside the authored hub.");
+            if (sources.Count == 0) throw new InvalidOperationException("No authored-hub collider sources were collected.");
+            if (NavMesh.GetSettingsCount() < 1) throw new InvalidOperationException("No valid default NavMesh agent type exists.");
+            var settings = NavMesh.GetSettingsByIndex(0);
+            settings.agentRadius = .30f; settings.agentHeight = 1.80f;
+            settings.agentSlope = 45f; settings.agentClimb = .30f;
+            settings.overrideVoxelSize = true; settings.voxelSize = .10f;
+            settings.overrideTileSize = true; settings.tileSize = 128;
+            var buildBounds = new Bounds(new Vector3(0, 10, 0), new Vector3(180, 40, 200));
+            report["agentSettings"] = new { settings.agentTypeID, settings.agentRadius,
+                settings.agentHeight, settings.agentSlope, settings.agentClimb,
+                settings.overrideVoxelSize, settings.voxelSize, settings.overrideTileSize,
+                settings.tileSize, settings.minRegionArea, settings.buildHeightMesh };
+            report["buildBounds"] = new { center = V(buildBounds.center), size = V(buildBounds.size) };
+            report["buildSettingsWarnings"] = settings.ValidationReport(buildBounds);
+            data = NavMeshBuilder.BuildNavMeshData(settings, sources, buildBounds, Vector3.zero, Quaternion.identity);
+            if (data == null) throw new InvalidOperationException("BuildNavMeshData returned null.");
+            installed = NavMesh.AddNavMeshData(data);
+            if (!installed.valid) throw new InvalidOperationException("NavMeshData could not be installed for queries.");
+            var triangulation = NavMesh.CalculateTriangulation();
+            report["navmeshTriangles"] = triangulation.indices.Length / 3;
+            report["navmeshVertices"] = triangulation.vertices.Length;
+            if (triangulation.indices.Length == 0) throw new InvalidOperationException("The built NavMesh has no triangles.");
+            var filter = new NavMeshQueryFilter { agentTypeID = settings.agentTypeID, areaMask = NavMesh.AllAreas };
+            PointCheck primaryAnchor = null;
+            foreach (var route in layout.routes)
+            {
+                if (route.points == null || route.points.Length < 2)
+                    throw new InvalidDataException(route.id + ": route requires at least two waypoints");
+                int before = problems.Count;
+                var result = new RouteCheck { id = route.id };
+                result.points = route.points.Select((p, i) => CheckPoint(route.id + "/point" + i,
+                    p, hub.transform, filter, problems)).ToArray();
+                result.segments = Enumerable.Range(1, result.points.Length - 1)
+                    .Select(i => CheckPath(route.id + "/segment" + (i - 1), result.points[i - 1],
+                        result.points[i], filter, problems)).ToArray();
+                if (primaryAnchor == null) primaryAnchor = result.points.FirstOrDefault(p => p.Usable);
+                if (primaryAnchor != null)
+                    result.connectionToPrimaryRoute = CheckPath(route.id + "/toPrimaryRoute",
+                        primaryAnchor, result.points[0], filter, problems);
+                result.status = before == problems.Count ? "PASS" : "FAIL";
+                routeResults.Add(result);
+            }
+            var anchors = routeResults.SelectMany(r => r.points).Where(p => p.Usable).ToArray();
+            foreach (var zone in layout.zones)
+            {
+                if (!Finite(zone.floorY) || zone.bounds == null || zone.bounds.Length != 4 ||
+                    zone.bounds.Any(x => !Finite(x)) || zone.bounds[0] >= zone.bounds[1] || zone.bounds[2] >= zone.bounds[3])
+                    throw new InvalidDataException(zone.id + ": invalid floorY/bounds [x0,x1,z0,z1]");
+                if (zone.inspectionPoints == null || zone.inspectionPoints.Length == 0)
+                    throw new InvalidDataException(zone.id + ": explicit inspectionPoints are required; no guessed centre fallback");
+                int before = problems.Count;
+                var result = new ZoneCheck { id = zone.id, floorY = zone.floorY, bounds = zone.bounds };
+                result.inspectionPoints = zone.inspectionPoints.Select((p, i) => CheckPoint(zone.id + "/inspection" + i,
+                    p, hub.transform, filter, problems)).ToArray();
+                var connections = new List<SegmentCheck>();
+                foreach (var point in result.inspectionPoints)
+                {
+                    var nearest = anchors.OrderBy(a => Vector3.SqrMagnitude(a.Nav - (point.sampled ? point.Nav : Position(point.requested, point.id)))).FirstOrDefault();
+                    connections.Add(CheckPath(point.id + "/toNearestRoute", nearest, point, filter, problems));
+                }
+                result.connectionsToRoutes = connections.ToArray();
+                result.status = before == problems.Count ? "PASS" : "FAIL";
+                zoneResults.Add(result);
+            }
+            if (engineErrors.Count != 0) problems.Add("Unity emitted " + engineErrors.Count + " error/assert/exception messages during this audit.");
+            report["status"] = problems.Count == 0 ? "PASS" : "FAIL";
+            exitCode = problems.Count == 0 ? 0 : 1;
+        }
+        catch (Exception ex)
+        {
+            problems.Add(ex.ToString());
+            report["status"] = "FAIL";
+        }
+        finally
+        {
+            Application.logMessageReceived -= capture;
+            try
+            {
+                if (installed.valid) installed.Remove();
+                if (data != null) UnityEngine.Object.DestroyImmediate(data);
+                if (hub != null) UnityEngine.Object.DestroyImmediate(hub);
+            }
+            catch (Exception ex) { problems.Add("Owned object cleanup: " + ex); report["status"] = "FAIL"; exitCode = 1; }
+            try
+            {
+                if (ownedScene.IsValid() && ownedScene.isLoaded)
+                {
+                    // A replacement empty scene permits removal of the last audit
+                    // scene without saving it or touching any scene asset.
+                    EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Additive);
+                    if (!EditorSceneManager.CloseScene(ownedScene, true))
+                        throw new InvalidOperationException("Could not close the unsaved audit scene.");
+                }
+            }
+            catch (Exception ex) { problems.Add("Cleanup: " + ex); report["status"] = "FAIL"; exitCode = 1; }
+            report["routes"] = routeResults;
+            report["zones"] = zoneResults;
+            report["problems"] = problems;
+            report["engineErrors"] = engineErrors;
+            report["engineWarnings"] = engineWarnings.Distinct().ToArray();
+            report["completedUTC"] = DateTime.UtcNow.ToString("o");
+            try
+            {
+                Directory.CreateDirectory(auditRoot);
+                File.WriteAllText(outputPath, JsonConvert.SerializeObject(report, Formatting.Indented));
+            }
+            catch (Exception ex) { Debug.LogError("Cannot write NavMesh audit: " + ex); exitCode = 1; }
+            if (exitCode == 0) Debug.Log("KURS_HUB_NAVMESH_AUDIT8_PASS " + outputPath);
+            else Debug.LogError("KURS_HUB_NAVMESH_AUDIT8_FAIL " + outputPath + " (" + problems.Count + " problems)");
+            EditorApplication.Exit(exitCode);
+        }
+    }
+}
