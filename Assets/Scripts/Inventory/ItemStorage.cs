@@ -8,13 +8,15 @@ namespace ZombieSurvival.Inventory
     [DisallowMultipleComponent]
     public sealed class ItemStorage : MonoBehaviour
     {
-        [Tooltip("Количество слотов. Уменьшение не удаляет занятые слоты; legacy-миграция может расширить список ради сохранности предметов.")]
+        [InspectorName("Слоты обычного контейнера"), Tooltip("Количество слотов обычного хранилища, шт. На игроке с PlayerEquipment вместимость задают его базовые карманы и надетый рюкзак; это поле не дублирует их настройки. Занятый legacy overflow не удаляется.")]
         [SerializeField, Range(1, 64)] private int slotCount = 12;
         [Tooltip("Начальное содержимое. Не менять список вручную во время операций с предметами.")]
         [SerializeField] private List<ItemStack> slots = new List<ItemStack>();
         public event Action Changed;
         private bool tradeLocked;
         private static int weaponUsesInProgress;
+        private static int layoutMovesInProgress;
+        public static bool IsLayoutBusy=>layoutMovesInProgress>0;
         public static bool IsWeaponUseBusy => weaponUsesInProgress > 0;
         internal bool TryLockTrade() { if (tradeLocked) return false; tradeLocked = true; return true; }
         internal void UnlockTrade() => tradeLocked = false;
@@ -125,6 +127,7 @@ namespace ZombieSurvival.Inventory
         internal bool TryPrepareTrade(ItemStorage destination, ItemStack item, int amount, out TradeTransfer plan)
         {
             plan = null;
+            if(GetComponent<EquipmentStorage>()!=null)return false;
             if (tradeLocked || destination == null || destination.tradeLocked || destination == this || amount <= 0
                 || !Contains(item) || item.IsSnapshot || amount > item.Quantity || destination.FreeCapacity(item.Definition) < amount) return false;
             foreach (var other in destination.slots) if (other != null && !other.IsEmpty && other.InstanceId == item.InstanceId) return false;
@@ -153,7 +156,11 @@ namespace ZombieSurvival.Inventory
         private void EnsureSlots()
         {
             if (slots == null) slots = new List<ItemStack>();
-            while (slots.Count < slotCount) slots.Add(null);
+            var equipment=GetComponent<PlayerEquipment>();
+            int desired=equipment!=null?equipment.Capacity:slotCount;
+            while (slots.Count < desired) slots.Add(null);
+            // Старые занятые overflow-слоты никогда не удаляем из GetSlot. Снятие рюкзака — только проверенной транзакцией.
+            if(equipment!=null)while(slots.Count>desired && (slots[slots.Count-1]==null || slots[slots.Count-1].IsEmpty))slots.RemoveAt(slots.Count-1);
             bool migrated = false;
             for (int i = 0; i < slots.Count; i++)
             {
@@ -195,7 +202,7 @@ namespace ZombieSurvival.Inventory
         internal void NotifySavedRestore() => Changed?.Invoke();
         public int FreeCapacity(ItemDefinition item)
         {
-            if (item == null) return 0;
+            if (item == null || GetComponent<EquipmentStorage>()!=null) return 0;
             EnsureSlots(); int capacity = 0;
             foreach (var slot in slots)
             {
@@ -253,6 +260,40 @@ namespace ZombieSurvival.Inventory
             if (empty < 0) throw new InvalidOperationException("Capacity must be checked before insertion.");
             slots[empty] = stack; stack.Owner = this;
         }
+        /// <summary>Перенос в конкретный слот, merge либо полный swap. Оригиналы и оба владельца фиксируются до Changed.</summary>
+        public bool MoveToSlot(ItemStorage destination,int sourceIndex,int targetIndex,int amount=int.MaxValue)
+        {
+            if(destination==null || tradeLocked || destination.tradeLocked || !isActiveAndEnabled || !destination.isActiveAndEnabled
+                || GetComponent<EquipmentStorage>()!=null || destination.GetComponent<EquipmentStorage>()!=null)return false;
+            var source=GetSlot(sourceIndex);var target=destination.GetSlot(targetIndex);
+            if(source==null || source.IsEmpty || amount<=0 || targetIndex<0 || targetIndex>=destination.SlotCount || destination==this&&sourceIndex==targetIndex)return false;
+            int n=Math.Min(amount,source.Quantity);
+            if(target!=null&&!target.IsEmpty && (target.Definition!=source.Definition || source.Definition.IsIndividual) && n!=source.Quantity)return false;
+            tradeLocked=true;destination.tradeLocked=true;layoutMovesInProgress++;
+            try
+            {
+                if(target==null || target.IsEmpty){var moved=ExtractInternal(sourceIndex,n);destination.slots[targetIndex]=moved;moved.Owner=destination;}
+                else if(target.Definition==source.Definition && !source.Definition.IsIndividual)
+                {
+                    n=Math.Min(n,Math.Max(0,target.Definition.MaxStack-target.Quantity));if(n==0)return false;
+                    target.SetQuantity(target.Quantity+n);source.SetQuantity(source.Quantity-n);
+                    if(source.IsEmpty){slots[sourceIndex]=null;source.Owner=null;}
+                }
+                else {slots[sourceIndex]=target;target.Owner=this;destination.slots[targetIndex]=source;source.Owner=destination;}
+                PublishTrade();if(destination!=this)destination.PublishTrade();return true;
+            }
+            finally{layoutMovesInProgress--;tradeLocked=false;destination.tradeLocked=false;}
+        }
+        public bool TrySplit(int sourceIndex,int amount,out int newIndex)
+        {
+            newIndex=-1;var item=GetSlot(sourceIndex);
+            if(item==null || item.IsEmpty || item.Definition.IsIndividual || amount<=0 || amount>=item.Quantity)return false;
+            for(int i=0;i<SlotCount;i++)if(GetSlot(i)==null || GetSlot(i).IsEmpty){if(MoveToSlot(this,sourceIndex,i,amount)){newIndex=i;return true;}break;}
+            return false;
+        }
+        // Только PlayerEquipment после проверки двух будущих списков. Не restore-only: исходные живые экземпляры не инвалидируются.
+        internal List<ItemStack> EquipmentLayout() { EnsureSlots();return new List<ItemStack>(slots); }
+        internal void CommitEquipmentLayout(List<ItemStack> layout) { slots=layout;foreach(var item in slots)if(item!=null&&!item.IsEmpty)item.Owner=this; }
         public bool TrySetDurability(int index, float value)
         {
             if (tradeLocked) return false;
@@ -308,6 +349,7 @@ namespace ZombieSurvival.Inventory
         }
         public int TransferTo(ItemStorage destination, int index, int requested = int.MaxValue)
         {
+            if(GetComponent<EquipmentStorage>()!=null)return 0;
             if (tradeLocked || destination != null && destination.tradeLocked) return 0;
             var slot = GetSlot(index);
             if (destination == null || destination == this || slot == null || slot.IsEmpty || requested <= 0) return 0;
@@ -319,6 +361,7 @@ namespace ZombieSurvival.Inventory
         }
         public bool TryExtract(int index, int amount, out ItemStack extracted)
         {
+            if(GetComponent<EquipmentStorage>()!=null){extracted=null;return false;}
             if (tradeLocked) { extracted = null; return false; }
             extracted = null; var stack = GetSlot(index);
             if (stack == null || stack.IsEmpty || amount <= 0 || amount > stack.Quantity) return false;
@@ -344,6 +387,7 @@ namespace ZombieSurvival.Inventory
         }
         internal bool Remove(int index, int amount)
         {
+            if(GetComponent<EquipmentStorage>()!=null)return false;
             if (tradeLocked) return false;
             var slot = GetSlot(index); if (slot == null || slot.IsEmpty || amount <= 0 || amount > slot.Quantity) return false;
             RemoveInternal(index, amount); Changed?.Invoke(); return true;

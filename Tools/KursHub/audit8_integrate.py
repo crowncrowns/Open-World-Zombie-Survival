@@ -226,7 +226,11 @@ def integrate(root=AUTHORING, work=WORK, building_only=False):
     old_collections = {identifier: bpy.data.collections.get(identifier) for identifier in ids}
     controlled = {collection for collection in old_collections.values() if collection}
     controlled_objects = {obj for collection in controlled for obj in collection.all_objects}
-    unrelated = {obj.name: obj for obj in bpy.data.objects if obj not in controlled_objects}
+    previews = bpy.data.collections.get("Revision8 native floodlight preview")
+    generated_previews = {obj for obj in previews.objects
+                          if obj.type == 'LIGHT' and obj.get("KursHub8PreviewOnly")} if previews else set()
+    unrelated = {obj.name: obj for obj in bpy.data.objects
+                 if obj not in controlled_objects and obj not in generated_previews}
     unrelated_collection_names = {collection.name for collection in bpy.data.collections if collection not in controlled}
     saved = {obj.name: (obj, obj.instance_collection.name) for obj in bpy.data.objects
              if obj.instance_collection and obj.instance_collection.name in ids}
@@ -344,14 +348,33 @@ def integrate(root=AUTHORING, work=WORK, building_only=False):
         source_spots = bpy.data.collections.new("Revision8 native floodlight preview")
         bpy.context.scene.collection.children.link(source_spots)
     spot_count = 0
+    removed_duplicate_previews = []
     for identifier, (instance, placement) in placement_by_id.items():
         if placement["prop"] != "KH_Floodlight":
             continue
         name = "Hub8 source Spot "+identifier
-        obj = bpy.data.objects.get(name)
+        obj = bpy.data.objects.get(_native_name(name))
+        # A previous source preview may carry Blender's 63-byte truncation.
+        # Its exact native instance parent is a stable identity, so reopening
+        # and integrating again must reuse that light rather than duplicate it.
+        owned = [candidate for candidate in source_spots.objects
+                 if candidate.parent == instance]
+        if len(owned) > 1:
+            if any(candidate.type != 'LIGHT' or candidate.data.type != 'SPOT'
+                   or not candidate.get("KursHub8PreviewOnly") for candidate in owned):
+                raise AssertionError("Authored light overlaps generated preview ownership: "+identifier)
+            keeper = obj if obj in owned else owned[0]
+            for candidate in owned:
+                if candidate != keeper:
+                    removed_duplicate_previews.append(dict(owner=identifier, name=candidate.name))
+                    bpy.data.objects.remove(candidate, do_unlink=True)
+            owned = [keeper]
+            obj = keeper
+        if obj is None and owned:
+            obj = owned[0]
         if obj is None:
             light = bpy.data.lights.new(name, 'SPOT')
-            obj = bpy.data.objects.new(name, light)
+            obj = bpy.data.objects.new(_native_name(name), light)
             source_spots.objects.link(obj)
         elif obj.type != 'LIGHT' or obj.data.type != 'SPOT':
             raise AssertionError("Source-only Spot name collision: "+name)
@@ -398,6 +421,7 @@ def integrate(root=AUTHORING, work=WORK, building_only=False):
                   retainedUnrelatedCollections=len(unrelated_collection_names), sharedLibraryObjectsRetained=shared,
                   propCollections=len(library), **counts, manifestPointLights=len(light_ids),
                   sourceOnlyNativeSpotPreviews=spot_count, unifiedMaterialSlots=len(unified),
+                  removedOwnedDuplicateSpotPreviews=removed_duplicate_previews,
                   retainedBaselineInstanceIds=len(old_ids), nativePoseValidation=native_poses,
                   nativeReopenedPoseValidation=reopened_poses,
                   propsGlyphArchives=props_archives, buildingGlyphArchives=building_archives,

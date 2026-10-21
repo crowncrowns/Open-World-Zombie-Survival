@@ -25,5 +25,8 @@ scene_guard=W/'main_scene_snapshot8.json'
 record=dict(path=scene.relative_to(R).as_posix(),sha256=sha(scene),copied=False)
 if scene_guard.exists():assert json.loads(scene_guard.read_text(encoding='utf8'))==record,'Main scene changed concurrently; inspect without replacing it'
 else:scene_guard.write_text(json.dumps(record,indent=2),encoding='utf8')
-(W/'engine_input8.json').write_text(json.dumps(dict(copiedFiles=changes,sceneCopied=False,inputFiles={p.relative_to(A).as_posix():sha(p) for p in (A/D).rglob('*') if p.is_file()}),indent=2),encoding='utf8')
+inputs={p.relative_to(A).as_posix():sha(p) for p in (A/D).rglob('*') if p.is_file()}
+inputs.update({p.relative_to(T).as_posix():sha(p) for p in (T/'Assets/Editor').glob('KursHub*.cs')
+               if (R/p.relative_to(T)).exists()})
+(W/'engine_input8.json').write_text(json.dumps(dict(copiedFiles=changes,sceneCopied=False,inputFiles=inputs),indent=2),encoding='utf8')
 print('AUDIT8_ENGINE_STAGED',len(changes),'changed asset files; main scene not copied')

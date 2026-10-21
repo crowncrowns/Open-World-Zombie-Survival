@@ -1,0 +1,136 @@
+// Read-only isolated follow-up after the completed core export's scene guard failed.
+// Never copy to main; no BuildPrefab, export, SaveAssets or SaveScene call.
+using System;
+using System.IO;
+using System.Linq;
+using System.Collections.Generic;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.RegularExpressions;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using UnityEditor;
+using UnityEditor.SceneManagement;
+using UnityEngine;
+
+public static class KursHubFinalizeNative8
+{
+    const string Folder="Assets/Environment/KursHub";
+    const string RootGuid="ff5cdff5a433ef342ad7bf24aeafd8b8";
+    static string Hash(string path)
+    {
+        using(var h=SHA256.Create())using(var s=File.OpenRead(path))
+            return BitConverter.ToString(h.ComputeHash(s)).Replace("-","").ToLowerInvariant();
+    }
+    static void Need(bool condition,string message){if(!condition)throw new InvalidOperationException(message);}
+    static string MapHash(IDictionary<string,string> values)
+    {
+        var text=string.Join("\n",values.Keys.OrderBy(p=>p,StringComparer.Ordinal).Select(p=>p+":"+values[p]));
+        using(var h=SHA256.Create())return BitConverter.ToString(h.ComputeHash(Encoding.UTF8.GetBytes(text))).Replace("-","").ToLowerInvariant();
+    }
+    static Dictionary<string,string> Assets()
+    {
+        return Directory.GetFiles(Folder,"*",SearchOption.AllDirectories).ToDictionary(p=>p.Replace('\\','/'),p=>Hash(p),StringComparer.Ordinal);
+    }
+    static string LibraryHash(Dictionary<string,string> assets)
+    {
+        return MapHash(assets.Where(p=>!p.Key.EndsWith(".meta",StringComparison.Ordinal) &&
+            p.Key!=Folder+"/Models/KursHubShell.fbx" && p.Key!=Folder+"/KursHub.prefab" && p.Key!=Folder+"/KursHubManifest.json")
+            .ToDictionary(p=>p.Key,p=>p.Value,StringComparer.Ordinal));
+    }
+    static HashSet<string> SerializedIds(string path)
+    {
+        return Regex.Matches(File.ReadAllText(path),@"^--- !u!\d+ &(-?\d+)",RegexOptions.Multiline)
+            .Cast<Match>().Select(m=>m.Groups[1].Value).ToHashSet();
+    }
+    public static void Run()
+    {
+        try
+        {
+            var project=Directory.GetParent(Application.dataPath).FullName;
+            Need(project.Replace('\\','/').EndsWith("/work/KursHub/UnityProject",StringComparison.OrdinalIgnoreCase),"Isolated project only");
+            Need(Application.unityVersion=="6000.6.3f1","Wrong target engine");
+            var audit=Path.GetFullPath(Path.Combine(project,"../audit8"));
+            var main=Path.GetFullPath(Path.Combine(project,"../../.."));
+            var receiptPath=Path.Combine(audit,"native_core_receipt8.json");
+            var receiptSha=Hash(receiptPath);
+            var core=JObject.Parse(File.ReadAllText(receiptPath));
+            Need((string)core["status"]=="CORE_BUILD_COMPLETED_FINAL_SCENE_GUARD_FAILED","Unrecognized core receipt");
+            Need((bool)core["twoBuildIdentityGuardPassedByControlFlow"],"Missing explicit historical stability evidence");
+            var logPath=Path.Combine(audit,(string)core["buildLogPath"]);
+            Need(Hash(logPath)==(string)core["buildLogSha256"],"Core log changed");
+            Need(Hash(Path.Combine(main,(string)core["sourceBuildPath"]))==(string)core["sourceBuildSha256"],"Core build template changed");
+            Need(Hash((string)core["compiledBuildSourcePath"])==(string)core["compiledBuildSourceSha256"],"Actual core source changed");
+            Need(Hash(Path.Combine(audit,(string)core["auditPath"]))==(string)core["auditSha256"],"Archived core asset audit changed");
+            var packagePath=Path.Combine(audit,"delivery/KursHub_Final.unitypackage");
+            Need(Hash(packagePath)==(string)core["packageSha256"],"Completed package changed");
+            var expected=core["assets"].ToObject<Dictionary<string,string>>();
+            var before=Assets();
+            Need(MapHash(before)==(string)core["assetInventorySha256"] && before.Count==expected.Count &&
+                before.All(p=>expected.TryGetValue(p.Key,out var h) && h==p.Value),"Assets changed after completed core build");
+            Need(LibraryHash(before)==(string)core["librarySha256"],"Core library changed");
+            var editors=core["mainEditors"].ToObject<Dictionary<string,string>>();
+            foreach(var p in editors)
+                Need(Hash(Path.Combine(main,p.Key))==p.Value && Hash(p.Key)==p.Value,"Main/tested Kurs editor changed: "+p.Key);
+            var scenePath=Path.Combine(main,"Assets/CharacterTesting/CharacterTest.unity");
+            var sceneSha=Hash(scenePath);
+            var snapshot=JObject.Parse(File.ReadAllText(Path.Combine(audit,"main_scene_snapshot8.json")));
+            Need(sceneSha==(string)snapshot["sha256"] && (string)snapshot["path"]=="Assets/CharacterTesting/CharacterTest.unity","Current scene snapshot is stale");
+            var sceneText=File.ReadAllText(scenePath);
+            var refs=Regex.Matches(sceneText,@"\{fileID: (-?\d+), guid: ff5cdff5a433ef342ad7bf24aeafd8b8, type: 3\}")
+                .Cast<Match>().Select(m=>long.Parse(m.Groups[1].Value)).Where(id=>id!=100100000).Distinct().ToArray();
+            Need(refs.Length>0,"No current scene native targets");
+            var rootPath=Folder+"/KursHub.prefab";
+            Need(AssetDatabase.AssetPathToGUID(rootPath)==RootGuid,"Root GUID changed");
+            var old=SerializedIds(Path.Combine(audit,"baseline",rootPath));
+            Need(old.IsSubsetOf(SerializedIds(rootPath)),"Baseline root IDs were lost");
+            var effective=new HashSet<long>();
+            var native=AssetDatabase.LoadAssetAtPath<GameObject>(rootPath);
+            Need(native!=null,"Native root could not load");
+            foreach(var t in native.GetComponentsInChildren<Transform>(true))
+                foreach(var obj in new UnityEngine.Object[]{t.gameObject}.Concat(t.GetComponents<Component>().Cast<UnityEngine.Object>()))
+                    if(obj!=null && AssetDatabase.TryGetGUIDAndLocalFileIdentifier(obj,out string g,out long id) && g==RootGuid)effective.Add(id);
+            Need(refs.All(id=>effective.Contains(id)),"A current main scene native target is unresolved");
+            // Owned, unsaved scene is required by the existing Check contract.
+            EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Single);
+            PrefabUtility.InstantiatePrefab(native);
+            KursHubSetup.Check();
+            Environment.SetEnvironmentVariable("KURS_FINAL_OUTPUT",Path.Combine(audit,"native_finalizer8"));
+            KursHubQualitySetup.Audit();
+            var after=Assets();
+            Need(MapHash(after)==MapHash(before),"Read-only finalizer changed an authored asset");
+            Need(Hash(packagePath)==(string)core["packageSha256"] && Hash(scenePath)==sceneSha,"Package/main scene changed during finalizer");
+            Need(Hash(receiptPath)==receiptSha,"Core receipt changed during finalizer");
+            foreach(var p in editors)
+                Need(Hash(Path.Combine(main,p.Key))==p.Value && Hash(p.Key)==p.Value,"Kurs editor changed during finalizer");
+            var idsPath=Path.Combine(audit,"effective_prefab_ids8.txt");
+            File.WriteAllLines(idsPath,effective.OrderBy(id=>id).Select(id=>id.ToString()));
+            var templatePath=Path.Combine(main,"Tools/KursHub/audit8_finalize_native.cs.txt");
+            var ownSource="Assets/Editor/KursHubFinalizeNative8.cs";
+            Need(Hash(templatePath)==Hash(ownSource),"Finalizer compiled source differs from reviewed template");
+            var final=new {
+                status="PASS_READONLY_NATIVE_FINALIZER8",unityVersion=Application.unityVersion,generatedUtc=DateTime.UtcNow.ToString("o"),
+                coreReceiptSha256=receiptSha,coreBuildLogSha256=(string)core["buildLogSha256"],
+                historicalCoreStabilityEvidence=(string)core["stabilityEvidence"],twoBuildsRerun=false,
+                freshSetupAndQualityChecksPassed=true,mainSceneSha256=sceneSha,mainSceneNativeTargets=refs.Length,
+                oldRootIdsPreserved=old.Count,effectivePrefabIdsSha256=Hash(idsPath),
+                prefabSha256=Hash(rootPath),manifestSha256=Hash(Folder+"/KursHubManifest.json"),shellSha256=Hash(Folder+"/Models/KursHubShell.fbx"),
+                packageSha256=Hash(packagePath),librarySha256=LibraryHash(after),assetInventorySha256=MapHash(after),
+                finalizerSourceSha256=Hash(ownSource),mainSceneSaved=false,ownedSceneSaved=false,assetsChanged=false,packageReExported=false
+            };
+            var finalPath=Path.Combine(audit,"native_finalize8.json");
+            File.WriteAllText(finalPath,JsonConvert.SerializeObject(final,Formatting.Indented));
+            var proof="KURS8_NATIVE_BUILD_PASS\nUnity="+Application.unityVersion+
+                "\nBuildEvidenceMode=CompletedCoreWithFreshReadonlyFinalizer\nTwoBuildIdentitiesStable=HistoricalCoreControlFlow"+
+                "\nOldRootIdsPreserved="+old.Count+"\nMainSceneSaved=False\nOwnedAuthoringAndDemoScenesSaved=HistoricalCoreOnly"+
+                "\nMainSceneNativeTargets="+refs.Length+"\nMainSceneSHA256="+sceneSha+
+                "\nPACKAGE_SHA256="+Hash(packagePath)+"\nFBXSHA256="+Hash(Folder+"/Models/KursHubShell.fbx")+
+                "\nPREFABSHA256="+Hash(rootPath)+"\nMANIFESTSHA256="+Hash(Folder+"/KursHubManifest.json")+
+                "\nCORE_RECEIPT_SHA256="+receiptSha+"\nCORE_BUILD_LOG_SHA256="+(string)core["buildLogSha256"]+
+                "\nFINALIZER_SHA256="+Hash(finalPath)+"\nLIBRARY_SHA256="+LibraryHash(after)+"\n";
+            File.WriteAllText(Path.Combine(audit,"native_build8.txt"),proof);
+            Debug.Log(proof);EditorApplication.Exit(0);
+        }
+        catch(Exception error){Debug.LogException(error);EditorApplication.Exit(1);}
+    }
+}

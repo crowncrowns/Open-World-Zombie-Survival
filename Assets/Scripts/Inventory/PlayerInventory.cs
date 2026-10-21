@@ -50,6 +50,7 @@ namespace ZombieSurvival.Inventory
             if (IsOpen && (!motor.IsAlive || requireApplicationFocus && !Application.isFocused || hadContainer && (container == null || !container.isActiveAndEnabled
                 || Vector3.Distance(transform.position, container.transform.position) > containerDistance))) { Close(); return; }
             if (IsOpen && close.WasPressedThisFrame()) { Close(); return; }
+            if(IsOpen)presentation?.ProcessPointer();
             if (!toggle.WasPressedThisFrame()) return;
             if (IsOpen) Close(); else if (motor.AcceptingGameplayInput) Open(null);
         }
@@ -105,9 +106,40 @@ namespace ZombieSurvival.Inventory
         internal void EquipSelected()
         {
             if(!IsOpen || selectedContainer)return;
+            if(SelectedStack!=null&&!SelectedStack.IsEmpty && SelectedStack.Definition.WearSlot!=WearSlot.None)
+            {var equipment=GetComponent<PlayerEquipment>();if(equipment!=null){equipment.TryEquip(selected);feedback=equipment.Status;}return;}
             var weapons=GetComponent<ZombieSurvival.Weapons.PlayerWeapons>();
             feedback=weapons!=null && weapons.Equip(selected)?"Оружие выбрано":"Нельзя экипировать этот предмет";
         }
+        internal void UseSelected()
+        {
+            var item=SelectedStack;if(!IsOpen || selectedContainer || item==null || item.IsEmpty)return;
+            if(item.Definition.WearSlot!=WearSlot.None || item.Definition.Weapon!=null){EquipSelected();return;}
+            var needs=GetComponent<PlayerNeeds>();if(needs!=null&&needs.CanConsume(item.Definition)){ConsumeSelected();return;}
+            if(item.Definition.Flashlight!=null)
+            {
+                var hotbar=GetComponent<PlayerHotbar>();if(hotbar==null)return;
+                int target=-1;for(int i=0;i<hotbar.SlotCount;i++)if(hotbar.GetAssignedItem(i)?.InstanceId==item.InstanceId){target=i;break;}
+                if(target<0)for(int i=0;i<hotbar.SlotCount;i++)if(hotbar.GetAssignedItem(i)==null){target=i;break;}
+                if(target<0 || !hotbar.Assign(target,selected)){feedback="Освободите быстрый слот для фонарика";return;}
+                hotbar.Select(target);Close();hotbar.TryUsePrimary();return;
+            }
+            feedback="У предмета пока нет действия";
+        }
+        internal void SplitSelected(int amount)
+        {
+            var source=selectedContainer?Container:Storage;
+            if(!IsOpen || source==null)return;
+            if(source.TrySplit(selected,amount,out int index)){selected=index;feedback="Стопка разделена";}else feedback="Нужен свободный слот и делимая стопка";
+        }
+        internal bool MoveItem(ItemStorage source,int sourceIndex,string instanceId,ItemStorage destination,int targetIndex)
+        {
+            if(!IsOpen || source==null || destination==null || source!=Storage&&source!=Container || destination!=Storage&&destination!=Container)return false;
+            var item=source.GetSlot(sourceIndex);if(item==null || item.IsEmpty || item.InstanceId!=instanceId)return false;
+            bool moved=source.MoveToSlot(destination,sourceIndex,targetIndex);feedback=moved?"Предмет перемещён":"Нельзя переместить предмет в этот слот";
+            if(moved){selected=targetIndex;selectedContainer=destination==Container;}return moved;
+        }
+        internal void Report(string message)=>feedback=message;
         internal void DropSelected(bool all)
         {
             if(!IsOpen || selectedContainer)return;

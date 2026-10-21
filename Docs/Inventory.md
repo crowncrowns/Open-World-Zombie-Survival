@@ -69,3 +69,5 @@ ItemDefinition.Category/Subcategory имеют стабильные enum ID; Wea
 ## Т6: торговый перенос
 
 TradeService использует internal prepare/commit/publish ItemStorage вместе с Wallet: всё выбранное количество и оба баланса изменяются до Changed. Общие TransferTo/Reload/Drop остаются прежними API, но повторные изменения участвующих storage во время публикации сделки отклоняются. Не переносить Copy и не создавать предмет повторно при продаже; ID/прочность/магазин сохраняются. Оружие в руках сначала убрать. См. [TradeTransactions.md](TradeTransactions.md).
+
+Новая носимая экипировка/5 карманов и точечные перестановки — [InventoryEquipment.md](InventoryEquipment.md): реальное дочернее ItemStorage, без клонирования оригиналов. Внешние системы не извлекают надетый рюкзак напрямую; только PlayerEquipment с проверкой будущей вместимости.
