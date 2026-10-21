@@ -132,6 +132,8 @@ namespace ZombieSurvival.Player
         [SerializeField, Range(1f, 89f)] private float downwardLookLimit = 85f;
         [Tooltip("Смещение камеры вперёд при взгляде вниз после 25°, м. Только представление; ограничено радиусом капсулы. 0 сохраняет прежнюю камеру.")]
         [SerializeField, Min(0f)] private float downwardCameraShift;
+        [Tooltip("Локальное смещение камеры X/Z в полном приседе, м. Плавно исчезает при вставании и переходе в ползание; ограничено сечением капсулы. Ноль сохраняет прежнее положение.")]
+        [SerializeField] private Vector2 crouchCameraOffset;
 
         [Header("Курсор и фокус окна")]
         [Tooltip("Захватывать курсор при включении управления и возвращении в игру.")]
@@ -210,10 +212,17 @@ namespace ZombieSurvival.Player
         public float VerticalSpeed => verticalVelocity;
         public float MaximumDownwardLook => Mathf.Min(verticalLookLimit, downwardLookLimit);
         public float DownwardCameraShift => Mathf.Max(0f, downwardCameraShift);
+        public Vector2 CrouchCameraOffset => crouchCameraOffset;
         private float ClampViewPitch(float value) => Mathf.Clamp(value, -verticalLookLimit, MaximumDownwardLook);
         private Vector3 ApplyDownwardCameraShift(Vector3 position)
         {
-            if (DownwardCameraShift <= 0f) return position;
+            if (DownwardCameraShift <= 0f && crouchCameraOffset == Vector2.zero) return position;
+            float crouchFraction = controller.height >= CrouchHeight
+                ? Mathf.InverseLerp(StandingHeight, CrouchHeight, controller.height)
+                : Mathf.InverseLerp(SavedPoseHeight(true, false), CrouchHeight, controller.height);
+            crouchFraction = Mathf.SmoothStep(0f, 1f, crouchFraction);
+            position.x += crouchCameraOffset.x * crouchFraction;
+            position.z += crouchCameraOffset.y * crouchFraction;
             float fraction = MaximumDownwardLook > 25f ? Mathf.InverseLerp(25f, MaximumDownwardLook, pitch) : 0f;
             position.z += DownwardCameraShift * Mathf.SmoothStep(0f, 1f, fraction);
             float radius = controller.radius;

@@ -23,6 +23,21 @@ namespace ZombieSurvival.Player
         [SerializeField, Tooltip("Имя необязательного masked слоя рук контроллера UAL.")] private string upperBodyLayer = "Upper Body";
         [SerializeField, Tooltip("Приближённо перенаправлять шаги вперёд для бокового/обратного движения, без разворота тела.")] private bool directionalFootIK = true;
         [SerializeField, Tooltip("Прицеливание руками относительно камеры; действует только с огнестрельным оружием.")] private bool firearmAimIK = true;
+        [Header("Руки и пистолет — положение относительно камеры")]
+        [SerializeField, Tooltip("Без ПКМ, метры: X вправо, Y вверх, Z вперёд от камеры. Цель ограничена длиной рук.")]
+        private Vector3 firearmHipPosition = new Vector3(.11f,-.16f,.4f);
+        [SerializeField, Tooltip("Прицеливание с ПКМ, метры: X вправо, Y вверх, Z вперёд от камеры.")]
+        private Vector3 firearmAimPosition = new Vector3(0,-.04f,.44f);
+        [SerializeField, Tooltip("Точка левой кисти в локальных осях модели пистолета, метры. У текущего пистолета +X вдоль ствола.")]
+        private Vector3 leftFirearmGrip = new Vector3(-.12f,-.055f,.035f);
+        [SerializeField, Range(0,1), Tooltip("Сила коррекции рук: 1 — полный хват, 0 — исходная анимация.")]
+        private float aimWeight = 1f;
+        [SerializeField, Tooltip("Сгиб локтей относительно плеча и корпуса, метры: X наружу, Y вверх, Z вперёд.")]
+        private Vector3 firearmElbowHint = new Vector3(.6f,.2f,.2f);
+        [Header("Рука с оружием ближнего боя — готовность")]
+        [SerializeField, Tooltip("Правая кисть относительно камеры, метры. Коррекция освобождается на время удара.")]
+        private Vector3 meleeReadyPosition = new Vector3(.18f,-.2f,.25f);
+        [SerializeField, Range(0,1)] private float meleeReadyWeight = 1f;
         private FirstPersonController motor;
         private CharacterController capsule;
         private PlayerVisual visual;
@@ -43,6 +58,14 @@ namespace ZombieSurvival.Player
         public bool DirectionalFootIK => directionalFootIK;
         public bool FirearmAimIK => firearmAimIK;
         public int UpperBodyLayerIndex => upperLayer;
+
+        // Read the root's serialized values on every IK pass, including edits made during Play.
+        // The Animator bridge is transient and is never the authoring source for hand poses.
+        internal void ApplyHandSettings(PlayerUALAnimatorIK target)
+        {
+            target.SetHandSettings(firearmHipPosition, firearmAimPosition, leftFirearmGrip,
+                aimWeight, firearmElbowHint, meleeReadyPosition, meleeReadyWeight);
+        }
 
         private void OnEnable() => Initialize();
         private void Initialize()
@@ -122,7 +145,8 @@ namespace ZombieSurvival.Player
         {
             ResolveAnimator(); if(animator==null || controller==null || motor==null)return;
             var parkour=motor.Parkour; bool traversal=parkour!=null && parkour.OwnsMovement;
-            bool blocked=!motor.AcceptingGameplayInput;
+            // Cursor/focus only stops gameplay; owner/base locks also suspend the presentation.
+            bool blocked=!motor.GameplayInputEnabled || !motor.isActiveAndEnabled;
             if(blocked && !wasBlocked)ClearTriggers(); wasBlocked=blocked;
             bool suspended=blocked || traversal || motor.IsProne || motor.IsSprinting || !motor.IsAlive;
             if(suspended && !upperSuspended)ResetUpperBody();

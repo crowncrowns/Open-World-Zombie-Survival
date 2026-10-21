@@ -1468,6 +1468,7 @@ MonoBehaviour:
   verticalLookLimit: 85
   downwardLookLimit: 70
   downwardCameraShift: 0.13
+  crouchCameraOffset: {x: 0.08, y: 0.02}
   captureCursorOnEnable: 1
   requireCursorCapture: 1
   requireApplicationFocus: 1
@@ -1506,7 +1507,7 @@ MonoBehaviour:
   parkourStateParameter: ParkourState
   proneParameter: Prone
   deadParameter: Dead
-  modelInstance: {fileID: 4495813681638699350}
+  modelInstance: {fileID: 3252731860206948682}
   appliedPrefab: {fileID: 1545485943208377442, guid: afb0351084989b84295aaf0679272d96, type: 3}
 --- !u!114 &3602991536808268414
 MonoBehaviour:
@@ -2366,6 +2367,13 @@ MonoBehaviour:
   upperBodyLayer: Upper Body
   directionalFootIK: 1
   firearmAimIK: 1
+  firearmHipPosition: {x: 0.11, y: -0.16, z: 0.4}
+  firearmAimPosition: {x: 0, y: -0.04, z: 0.44}
+  leftFirearmGrip: {x: -0.12, y: -0.055, z: 0.035}
+  aimWeight: 1
+  firearmElbowHint: {x: 0.6, y: 0.2, z: 0.2}
+  meleeReadyPosition: {x: 0.18, y: -0.2, z: 0.25}
+  meleeReadyWeight: 1
 --- !u!114 &2577178923194009394
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2571,7 +2579,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1952394473877116145}
+  - {fileID: 601262108057859309}
   m_Father: {fileID: 2634397558274703783}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &4686739050926257575
@@ -3729,7 +3737,7 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!1001 &3104948268335959348
+--- !u!1001 &4059622476994342184
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -3786,13 +3794,13 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: afb0351084989b84295aaf0679272d96, type: 3}
---- !u!4 &1952394473877116145 stripped
+--- !u!4 &601262108057859309 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3462900403325147589, guid: afb0351084989b84295aaf0679272d96, type: 3}
-  m_PrefabInstance: {fileID: 3104948268335959348}
+  m_PrefabInstance: {fileID: 4059622476994342184}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &4495813681638699350 stripped
+--- !u!1 &3252731860206948682 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1545485943208377442, guid: afb0351084989b84295aaf0679272d96, type: 3}
-  m_PrefabInstance: {fileID: 3104948268335959348}
+  m_PrefabInstance: {fileID: 4059622476994342184}
   m_PrefabAsset: {fileID: 0}

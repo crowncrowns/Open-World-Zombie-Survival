@@ -35,7 +35,9 @@ public static class PlayerUALVisualChecks
             floor=GameObject.CreatePrimitive(PrimitiveType.Cube);floor.name="Temporary visual checks floor";floor.transform.position=new Vector3(600,-.5f,600);floor.transform.localScale=new Vector3(50,1,50);
             p.ResetForRespawn(new Vector3(600,.02f,600),Quaternion.identity);Physics.SyncTransforms();Keys();yield return new WaitForSeconds(.4f);
             var weapons=p.GetComponent<ZombieSurvival.Weapons.PlayerWeapons>();weapons.Unequip();yield return new WaitForSeconds(.3f);
-            Capture("final-body-down",85);Capture("final-idle-external",0,true);
+            var bodyPitch=typeof(FirstPersonController).GetField("pitch",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic);
+            bodyPitch.SetValue(p,p.MaximumDownwardLook);yield return new WaitForSeconds(.2f);Capture("final-body-down");
+            bodyPitch.SetValue(p,0f);yield return new WaitForSeconds(.1f);Capture("final-idle-external",0,true);
             Keys(Key.W);yield return new WaitForSeconds(.45f);if(p.PlanarVelocity.magnitude<.1f)throw new InvalidOperationException("Visual keyboard did not move real motor");Capture("final-walk-external",0,true);yield return new WaitForSeconds(.15f);Capture("final-walk-next",0,true);
             Keys(Key.A);yield return new WaitForSeconds(.45f);Capture("final-left-external",0,true);
             Keys(Key.S);yield return new WaitForSeconds(.45f);Capture("final-back-external",0,true);
@@ -91,15 +93,22 @@ public static class PlayerUALVisualChecks
         }
         var rotation=camera.transform.localRotation;var target=camera.targetTexture;var active=RenderTexture.active;float aspect=camera.aspect;
         var rt=new RenderTexture(960,720,24);var image=new Texture2D(960,720,TextureFormat.RGB24,false);
+        int renderingCallbacks=0;
+        void Observe(UnityEngine.Rendering.ScriptableRenderContext context,Camera rendered){if(rendered==camera)renderingCallbacks++;}
+        UnityEngine.Rendering.RenderPipelineManager.beginCameraRendering+=Observe;
         try
         {
             if(!external&&!float.IsNaN(pitch))camera.transform.localRotation=Quaternion.Euler(pitch,0,0);
-            camera.targetTexture=rt;camera.aspect=960f/720;camera.Render();RenderTexture.active=rt;
+            camera.aspect=960f/720;
+            UnityEngine.Rendering.RenderPipeline.SubmitRenderRequest(camera,new UnityEngine.Rendering.Universal.UniversalRenderPipeline.SingleCameraRequest{destination=rt});
+            if(renderingCallbacks!=1)throw new InvalidOperationException("UAL capture bypassed camera rendering callbacks");
+            RenderTexture.active=rt;
             image.ReadPixels(new Rect(0,0,960,720),0,0);image.Apply();string path=Evidence+"/"+name+".png";
             File.WriteAllBytes(path,image.EncodeToPNG());return path;
         }
         finally
         {
+            UnityEngine.Rendering.RenderPipelineManager.beginCameraRendering-=Observe;
             camera.transform.localRotation=rotation;camera.targetTexture=target;camera.aspect=aspect;RenderTexture.active=active;
             UnityEngine.Object.DestroyImmediate(image);UnityEngine.Object.DestroyImmediate(rt);if(temporary!=null)UnityEngine.Object.DestroyImmediate(temporary);
         }

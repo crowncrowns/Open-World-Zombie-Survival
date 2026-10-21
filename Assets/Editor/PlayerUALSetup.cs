@@ -86,6 +86,7 @@ public static class PlayerUALSetup
         if (p == null) throw new InvalidOperationException(owner.name + ": " + name);
         if (value is bool flag) p.boolValue = flag;
         else if (value is Vector3 vector) p.vector3Value = vector;
+        else if (value is Vector2 vector2) p.vector2Value = vector2;
         else if (value is float scalar) p.floatValue = scalar;
         else p.objectReferenceValue = value as UnityEngine.Object;
         so.ApplyModifiedPropertiesWithoutUndo();
@@ -245,7 +246,7 @@ public static class PlayerUALSetup
             Set(weapons,"meleeHandEuler",new Vector3(90,35,0));
             Set(weapons,"meleeHandPosition",new Vector3(.16f,0,.13f));
         }
-        var motor=player.GetComponent<FirstPersonController>();if(motor!=null){Set(motor,"downwardLookLimit",70f);Set(motor,"downwardCameraShift",.13f);}
+        var motor=player.GetComponent<FirstPersonController>();if(motor!=null){Set(motor,"downwardLookLimit",70f);Set(motor,"downwardCameraShift",.13f);Set(motor,"crouchCameraOffset",new Vector2(.08f,.02f));}
         var camera=player.GetComponentInChildren<Camera>();if(camera!=null)
         {
             camera.transform.localPosition=new Vector3(0,1.65f,.1f);

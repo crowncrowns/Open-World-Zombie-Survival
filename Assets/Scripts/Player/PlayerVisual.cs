@@ -200,7 +200,9 @@ namespace ZombieSurvival.Player
             foreach (var renderer in firstPersonOnlyRenderers)
             {
                 if (renderer == null) continue;
-                renderer.enabled = true;
+                // Edit-time model swaps must not persist a second visible shirt/arms renderer.
+                // In Play the camera callback gates this renderer through forceRenderingOff.
+                renderer.enabled = Application.isPlaying;
                 renderer.forceRenderingOff = true;
                 if (renderer is SkinnedMeshRenderer skinned) skinned.updateWhenOffscreen = true;
             }

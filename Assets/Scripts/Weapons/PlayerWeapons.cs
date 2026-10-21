@@ -73,6 +73,10 @@ namespace ZombieSurvival.Weapons
         private void EndCommit() { attacksInProgress--; committingAttack=false; }
         public bool IsAiming { get; private set; }
         public string Status { get; private set; } = "";
+        // Presentation survives cursor release/focus loss, but never an owner/base gameplay lock.
+        private bool CanPresent => motor != null && motor.IsAlive && motor.isActiveAndEnabled && motor.GameplayInputEnabled && viewCamera != null
+            && (motor.Parkour == null || !motor.Parkour.OwnsMovement) && !motor.IsSprinting
+            && (hotbar == null || !hotbar.isActiveAndEnabled || equipped == hotbar.ActiveStack);
         private bool CanAct => motor != null && motor.AcceptingGameplayInput && viewCamera != null
             && (motor.Parkour == null || !motor.Parkour.OwnsMovement) && !motor.IsSprinting
             && (hotbar == null || !hotbar.isActiveAndEnabled || equipped == hotbar.ActiveStack);
@@ -146,7 +150,14 @@ namespace ZombieSurvival.Weapons
         {
             var current=motor.FindGameplayAction("Attack");
             if(current!=attack) { Cancel(); armed=false; attack=current; reload=motor.FindGameplayAction("Reload"); aim=motor.FindGameplayAction("Aim"); previous=motor.FindGameplayAction("Previous"); next=motor.FindGameplayAction("Next"); }
-            if(!CanAct) { Cancel(); armed=false; if(view!=null) view.SetActive(false); return; }
+            if(!CanAct)
+            {
+                bool keepPresentation=CanPresent; bool retainedAim=IsAiming;
+                Cancel(); armed=false;
+                if(keepPresentation)IsAiming=retainedAim;
+                if(view!=null)view.SetActive(keepPresentation);
+                return;
+            }
             bool hotbarOwnsInput=hotbar!=null && hotbar.isActiveAndEnabled;
             if(hotbarOwnsInput && equipped!=hotbar.ActiveStack) { if(equipped!=null) Unequip(); }
             if(!hotbarOwnsInput && previous!=null && previous.WasPressedThisFrame()) Cycle(-1);
@@ -268,12 +279,12 @@ namespace ZombieSurvival.Weapons
                     view.transform.localScale=Vector3.Scale(equipped.Definition.Weapon.viewScale,handVisualScale);
                     // Visual-only near-wall suppression; hit query, muzzle and damage remain authoritative.
                     bool obstructed=viewCamera!=null && WeaponHitQuery.Cast(viewCamera.transform.position,viewCamera.transform.forward,.55f,.05f,transform,hitMask,out _);
-                    view.SetActive(CanAct && !obstructed);
+                    view.SetActive(CanPresent && !obstructed);
                 }
                 return;
             }
             if(view==null || equipped==null) return;
-            view.SetActive(CanAct); if(!CanAct) return;
+            view.SetActive(CanPresent); if(!CanPresent) return;
             var data=equipped.Definition.Weapon;
             Vector3 position=Vector3.Lerp(data.holdPosition,data.aimPosition,aimWeight);
             Vector3 rotation=data.holdEuler;
