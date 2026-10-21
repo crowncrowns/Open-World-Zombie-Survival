@@ -123,6 +123,8 @@ public static class KursHubCapture8
             if (phase != "before" && phase != "after")
                 throw new InvalidOperationException("KURS8_CAPTURE_PHASE must be exactly before or after");
             var project = Directory.GetParent(Application.dataPath).FullName;
+            if (project.Replace('\\', '/').IndexOf("/work/KursHub/", StringComparison.OrdinalIgnoreCase) < 0)
+                throw new InvalidOperationException("Capture8 is restricted to the isolated KursHub validation project");
             var auditRoot = Path.GetFullPath(Path.Combine(project, "..", "audit8"));
             var layoutPath = Path.Combine(auditRoot, "functional_layout.json");
             output = Path.Combine(auditRoot, phase);
@@ -248,7 +250,7 @@ public static class KursHubCapture8
             report.limitations = new[] {
                 "Images are native target-URP captures of the actual current prefab; identical camera/light constants apply to before and after. No builder, scene/asset save or light/reflection bake was invoked.",
                 "Native UnityStats counters are editor-global values observed after each explicit render request. Other editor work and counter update timing may affect them; they are not an isolated GPU measurement.",
-                "Unity 6000.6 exposes no UnityStats.batches property. The report records its real dynamicBatches/staticBatches/instancedBatches, srpBatcherDrawCalls and unmodified batchStats text separately rather than inventing a total.",
+                "The report uses public dynamicBatches/staticBatches/instancedBatches, srpBatcherDrawCalls and triangles counters. Internal batchStats/trianglesLong are unavailable in target Unity; no combined batch total is inferred.",
                 "Stopwatch measures CPU elapsed time around the render submission method only, after one warm-up render and before ReadPixels/PNG encoding. This is NOT FPS, frame time, GPU time or a gameplay performance guarantee.",
                 "Mesh and texture bytes use Profiler.GetRuntimeMemorySizeLong for distinct resources referenced by the instantiated whole prefab across every LOD. They are not total process memory, peak memory, VRAM residency or a streaming budget.",
                 "All existing prefab fixture Light components and their settings are preserved. The night exterior supplement uses a fixed elevated camera, while all layout tour eyes remain as supplied.",
@@ -338,8 +340,8 @@ public static class KursHubCapture8
                 nativeEditorStaticBatches=UnityStats.staticBatches,
                 nativeEditorInstancedBatches=UnityStats.instancedBatches,
                 nativeEditorSrpBatcherDrawCalls=UnityStats.srpBatcherDrawCalls,
-                nativeEditorBatchStats=UnityStats.batchStats,
-                nativeEditorTriangles=UnityStats.trianglesLong,
+                nativeEditorBatchStats="Public UnityStats counters; batchStats is not exposed by Unity 6000.6.3f1",
+                nativeEditorTriangles=UnityStats.triangles,
                 renderSubmissionCpuMsBeforeReadback=watch.Elapsed.TotalMilliseconds
             };
             RenderTexture.active = texture;

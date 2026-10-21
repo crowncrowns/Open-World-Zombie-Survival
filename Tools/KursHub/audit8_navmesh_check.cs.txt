@@ -319,11 +319,9 @@ public static class KursHubNavMeshAudit8
             {
                 if (ownedScene.IsValid() && ownedScene.isLoaded)
                 {
-                    // A replacement empty scene permits removal of the last audit
-                    // scene without saving it or touching any scene asset.
-                    EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Additive);
-                    if (!EditorSceneManager.CloseScene(ownedScene, true))
-                        throw new InvalidOperationException("Could not close the unsaved audit scene.");
+                    // Unity refuses additive creation beside an untitled dirty
+                    // scene. Single replaces only this isolated owned scene.
+                    EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
                 }
             }
             catch (Exception ex) { problems.Add("Cleanup: " + ex); report["status"] = "FAIL"; exitCode = 1; }

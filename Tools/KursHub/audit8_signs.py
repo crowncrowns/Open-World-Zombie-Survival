@@ -304,17 +304,24 @@ def textures(root, work):
                              emission=False))
         print("SIGN_ATLAS_OK", identifier, flush=True)
     names = {s["family"] for s in SIGNS.values()}
+    # Other staging passes own unrelated families. Raster generation takes
+    # time, so merge into the current file rather than the early snapshot.
+    pbr = json.loads(manifest_path.read_text(encoding="utf-8"))
     pbr["families"] = [p for p in pbr["families"] if p["name"] not in names] + families
     pbr["maps"] = [p for p in pbr["maps"] if not any(
         p["file"].startswith(name + "_") for name in names)] + records
     _json(manifest_path, pbr)
-    root_manifest = root / HUB / "KursHubManifest.json"
-    _backup(root_manifest, root, work)
-    manifest = json.loads(root_manifest.read_text(encoding="utf-8"))
-    manifest["palette"] = [p for p in manifest["palette"] if p["name"] not in names]
-    manifest["palette"] += [dict(name=name, rgba=[1, 1, 1, 1])
-                            for name in sorted(names)]
-    _json(root_manifest, manifest)
+    # Both manifests carry an explicit LIST palette, including in revision 8.
+    # Keep the library portable independently of the building manifest.
+    for relative in ("KursHubManifest.json", "Props/KursHubPropsManifest.json"):
+        palette_path = root / HUB / relative
+        _backup(palette_path, root, work)
+        manifest = json.loads(palette_path.read_text(encoding="utf-8"))
+        assert isinstance(manifest["palette"], list), palette_path
+        manifest["palette"] = [p for p in manifest["palette"] if p["name"] not in names]
+        manifest["palette"] += [dict(name=name, rgba=[1, 1, 1, 1])
+                                for name in sorted(names)]
+        _json(palette_path, manifest)
     report = dict(status="HUB8_SIGN_ATLASES_OK", families=7, maps=49,
                   resolution=2048, previews=previews, materialFamilies=families,
                   source="Original raster typography and schematic icons; not scans",
@@ -550,7 +557,16 @@ def _source(root, work, filename, props):
         "Original glyph history hidden; raster printing on the actual closed "
         "folded fabric, 0.7 mm expanded face clearance and unique front/back UV")
     assert _sha(path) == before_file, "Concurrent native source edit"
-    bpy.ops.wm.save_as_mainfile(filepath=str(path))
+    # Blender's Windows .blend1 rotation can fail even when the source itself
+    # is writable (for example, a backup is still open in another process).
+    # We already retain the exact before file. Save beside our proof instead
+    # and replace the staged source only after a second concurrency check.
+    native_work = work / "native" / filename
+    native_work.parent.mkdir(parents=True, exist_ok=True)
+    bpy.context.preferences.filepaths.save_version = 0
+    bpy.ops.wm.save_as_mainfile(filepath=str(native_work), relative_remap=False)
+    assert _sha(path) == before_file, "Concurrent native edit during save"
+    native_work.replace(path)
     return dict(source=filename, beforeSHA256=before_file,
                 afterSHA256=_sha(path), signs=records)
 
@@ -563,6 +579,7 @@ def _element(name, props=(), types=b"", children=()):
 
 def _geometry_payload(mesh):
     """Independent valid FBX geometry payload, keeping the original object UID."""
+    from io_scene_fbx import data_types
     def field(name, value, kind):
         return _element(name, [value], kind)
 
@@ -570,14 +587,17 @@ def _geometry_payload(mesh):
         return field(name, value.encode(), b"S")
 
     mesh.update()
-    indices = array.array("i")
+    # Blender's encoder selects the platform's exact 32-bit array type. On
+    # Windows it can be 'l'; hard-coded array('i') has the same width but is
+    # rejected by the official encoder's strict typecode contract.
+    indices = array.array(data_types.ARRAY_INT32)
     for polygon in mesh.polygons:
         vertices = list(polygon.vertices)
         indices.extend(vertices[:-1])
         indices.append(-vertices[-1] - 1)
     uv = mesh.uv_layers.active
-    uv_values = array.array("d", (c for loop in uv.data for c in loop.uv))
-    normals = array.array("d", (c for normal in mesh.corner_normals
+    uv_values = array.array(data_types.ARRAY_FLOAT64, (c for loop in uv.data for c in loop.uv))
+    normals = array.array(data_types.ARRAY_FLOAT64, (c for normal in mesh.corner_normals
                                 for c in normal.vector))
     common = lambda mapping, reference: [field("Version", 101, b"I"),
         string("Name", ""), string("MappingInformationType", mapping),
@@ -587,16 +607,16 @@ def _geometry_payload(mesh):
     uv_layer = _element("LayerElementUV", [0], b"I", [
         *common("ByPolygonVertex", "IndexToDirect"),
         field("UV", uv_values, b"d"),
-        field("UVIndex", array.array("i", range(len(mesh.loops))), b"i")])
+        field("UVIndex", array.array(data_types.ARRAY_INT32, range(len(mesh.loops))), b"i")])
     material_layer = _element("LayerElementMaterial", [0], b"I", [
         *common("AllSame", "IndexToDirect"),
-        field("Materials", array.array("i", [0]), b"i")])
+        field("Materials", array.array(data_types.ARRAY_INT32, [0]), b"i")])
     layer = _element("Layer", [0], b"I", [field("Version", 100, b"I")])
     for kind in ("LayerElementNormal", "LayerElementUV", "LayerElementMaterial"):
         layer.elems.append(_element("LayerElement", children=[
             string("Type", kind), field("TypedIndex", 0, b"I")]))
     return [field("GeometryVersion", 124, b"I"),
-            field("Vertices", array.array("d", (c for v in mesh.vertices
+            field("Vertices", array.array(data_types.ARRAY_FLOAT64, (c for v in mesh.vertices
                                                   for c in v.co)), b"d"),
             field("PolygonVertexIndex", indices, b"i"), normal_layer,
             material_layer, uv_layer, layer]
@@ -685,7 +705,14 @@ def _fbx(root, work, prop, spec, level):
                     field.props[0] = str(albedo_path).replace("\\", "/").encode()
                 elif field.id in (b"RelativeFilename", b"RelativeFileName"):
                     field.props[0] = relative_albedo.encode()
+                elif asset.id == b"Video" and field.id == b"Content":
+                    # Embedded files take precedence over the filename in
+                    # some importers. Keep their UID/link, replace old artwork.
+                    field.props[0] = albedo_path.read_bytes()
     assert tree_hash(child(tree, b"Connections")) == connection_hash
+    assert {uid: tree_hash(model) for uid, model in models.items()} == {
+        obj.props[0]: tree_hash(obj) for obj in child(parsed, b"Objects").elems
+        if obj.id == b"Model"}, "An existing FBX Model UID/name/transform changed"
     assert all(tree_hash(geometries[name]) == value
                for name, value in contracts.items()), "Unrelated FBX geometry changed"
     temporary = path.with_suffix(".printed8.fbx")

@@ -39,6 +39,9 @@ namespace ZombieSurvival.Inventory
         private float statusUntil;
         private int layoutSize;
         public event Action Changed;
+        // Selecting the current slot is a UI action too; it must not masquerade as inventory mutation.
+        public event Action PresentationActivity;
+        public string PresentationFeedback => Time.unscaledTime < statusUntil ? status : "";
         public int SlotCount => Mathf.Clamp(slotCount, 1, 10);
         public int SelectedIndex => selectedIndex;
         public ItemStorage Storage => storage != null ? storage : GetComponent<ItemStorage>();
@@ -134,6 +137,7 @@ namespace ZombieSurvival.Inventory
         public bool Select(int slot)
         {
             EnsureLayout(); if (slot < 0 || slot >= SlotCount) return false;
+            PresentationActivity?.Invoke();
             if (selectedIndex == slot) { SyncWeapon(); return true; }
             selectedIndex = slot; armed = false; SyncWeapon(); Changed?.Invoke(); return true;
         }
@@ -235,6 +239,7 @@ namespace ZombieSurvival.Inventory
         public bool TryUsePrimary()
         {
             if (!CanUse) return false; var item = ActiveStack;
+            PresentationActivity?.Invoke();
             if (item == null) { Feedback("Слот пуст — назначь предмет в Tab"); return false; }
             if (item.Definition.Weapon != null) { SyncWeapon(); return weapons != null && weapons.TryAttack(); }
             if (weapons != null && (weapons.IsAttacking || weapons.IsReloading)) return false;
@@ -258,6 +263,7 @@ namespace ZombieSurvival.Inventory
         public bool TryUseSecondary()
         {
             if (!CanUse) return false; var item = ActiveStack;
+            PresentationActivity?.Invoke();
             if (item == null || item.Definition.Weapon != null || Time.time < useReadyAt) return false;
             foreach (var component in GetComponents<MonoBehaviour>())
                 if (component != null && component.isActiveAndEnabled && component is IPlayerItemUseHandler handler && handler.CanHandle(item))
@@ -275,9 +281,10 @@ namespace ZombieSurvival.Inventory
             bool dropped = inventory != null && inventory.Drop(slot, 1);
             Feedback(dropped ? "Предмет выброшен" : "Нельзя выбросить: нет свободного места перед игроком"); return dropped;
         }
-        private void Feedback(string text) { status = text; statusUntil = Time.unscaledTime + 2.5f; }
+        private void Feedback(string text) { status = text; statusUntil = Time.unscaledTime + 2.5f; PresentationActivity?.Invoke(); }
         private void OnGUI()
         {
+            if (ZombieSurvival.Presentation.SurvivorHUD.Owns(this)) return;
             if (!showHud || motor == null || !motor.IsAlive || !motor.GameplayInputEnabled) return;
             float scale = Mathf.Min(Screen.width / 1000f, Screen.height / 700f); var matrix = GUI.matrix;
             GUI.matrix = Matrix4x4.Scale(Vector3.one * scale); float width = Screen.width / scale, height = Screen.height / scale;

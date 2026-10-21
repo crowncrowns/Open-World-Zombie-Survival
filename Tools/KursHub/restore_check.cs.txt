@@ -1,0 +1,58 @@
+// Recovery-only checker; never copy into the product Assets.
+using System;
+using System.IO;
+using System.Linq;
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
+using UnityEditor;
+using UnityEditor.SceneManagement;
+using UnityEngine;
+public static class KursHubRestoreCheck8
+{
+    public static void Run()
+    {
+        try
+        {
+            var project = Directory.GetParent(Application.dataPath).FullName;
+            if (!project.Replace('\\','/').EndsWith("/work/KursHub/UnityProject", StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("Recovery project only");
+            var main = Path.GetFullPath(Path.Combine(project,"../../.."));
+            const string path = "Assets/Environment/KursHub/KursHub.prefab";
+            const string guid = "ff5cdff5a433ef342ad7bf24aeafd8b8";
+            var source = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            if (source == null || AssetDatabase.AssetPathToGUID(path) != guid) throw new Exception("Missing hub/GUID");
+            EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            var root = (GameObject)PrefabUtility.InstantiatePrefab(source);
+            root.transform.SetPositionAndRotation(new Vector3(0,0,-155),Quaternion.Euler(0,180,0));
+            foreach (var lod in root.GetComponentsInChildren<LODGroup>(true)) lod.ForceLOD(0);
+            KursHubSetup.Check();
+            KursHubQualitySetup.ValidateBuilding(source);
+            var renderers = root.GetComponentsInChildren<MeshRenderer>(true);
+            foreach (var r in renderers)
+            {
+                var mesh = r.GetComponent<MeshFilter>()?.sharedMesh;
+                if (mesh == null || mesh.vertexCount == 0 || mesh.normals.Length != mesh.vertexCount) throw new Exception("Bad mesh "+r.name);
+                if (r.sharedMaterials.Length == 0 || r.sharedMaterials.Any(m => m == null || m.shader == null || m.shader.name != "Universal Render Pipeline/Lit")) throw new Exception("Bad material "+r.name);
+            }
+            var effective = new HashSet<long>();
+            foreach (var t in source.GetComponentsInChildren<Transform>(true))
+                foreach (var obj in new UnityEngine.Object[]{t.gameObject}.Concat(t.GetComponents<Component>().Cast<UnityEngine.Object>()))
+                    if (obj != null && AssetDatabase.TryGetGUIDAndLocalFileIdentifier(obj,out string g,out long id) && g == guid) effective.Add(id);
+            var scene = File.ReadAllText(Path.Combine(main,"Assets/CharacterTesting/CharacterTest.unity"));
+            var references = Regex.Matches(scene,@"\{fileID: (-?\d+), guid: ff5cdff5a433ef342ad7bf24aeafd8b8, type: 3\}")
+                .Cast<Match>().Select(m => long.Parse(m.Groups[1].Value)).Where(id => id != 100100000).Distinct().ToArray();
+            var unresolved = references.Where(id => !effective.Contains(id)).ToArray();
+            if (unresolved.Length > 0) throw new Exception("Unresolved current scene targets: "+string.Join(",",unresolved));
+            var shell = root.transform.Find("Shell");
+            if (shell == null || shell.GetComponentsInChildren<MeshRenderer>().Count(r => r.enabled) < 300) throw new Exception("Missing visible architecture");
+            var bounds = new Bounds(root.transform.position,Vector3.zero);
+            foreach(var r in shell.GetComponentsInChildren<MeshRenderer>().Where(r => r.enabled)) bounds.Encapsulate(r.bounds);
+            if (bounds.size.x < 92 || bounds.size.z < 129 || bounds.size.y < 20) throw new Exception("Incorrect architecture bounds");
+            var report = "KURS_RESTORATION_NATIVE_PASS\nUnity="+Application.unityVersion+"\nSceneNativeTargets="+references.Length+"\nRenderers="+renderers.Length+"\nLODGroups="+root.GetComponentsInChildren<LODGroup>(true).Length+"\nVisibleShellBounds="+bounds+"\nSceneSaved=False\nGameplayPlayTest=False\n";
+            var output = Path.Combine(main,"Verification/KursHub/Restoration20261021/native_validation.txt");
+            Directory.CreateDirectory(Path.GetDirectoryName(output));File.WriteAllText(output,report);
+            Debug.Log(report);EditorApplication.Exit(0);
+        }
+        catch (Exception e) { Debug.LogException(e);EditorApplication.Exit(1); }
+    }
+}

@@ -1,5 +1,7 @@
 # Игрок Survivalist и анимации UAL
 
+Предпросмотр рюкзака (21.10.2026): [InventoryPresentation.md](InventoryPresentation.md). Используется только отдельная визуальная копия `PlayerVisual.ModelPrefab` с тем же Avatar и явным Idle_Loop. Все игровые MonoBehaviour/физика/звук удаляются до активации, AnimationEvents/root motion выключены; основной PlayerUALAnimationDriver и HeldWeapon не клонируются. Эта витрина не меняет HIP/ADS и анимацию настоящего игрока.
+
 Изменение от 20.10.2026, калибровка пистолета обновлена 21.10.2026: [PlayerPistolPresentation.md](PlayerPistolPresentation.md). Рабочие объекты: игроки CharacterTest, Maps/Interior/Interiors и `Assets/CharacterTesting/Prefabs/CharacterTestPlayer.prefab`. Внешний вид — `Assets/Characters/PlayerUAL/SurvivalistPlayer.prefab`, контроллер — `SurvivalistUAL.controller` в той же папке. Подключены 22 различных клипа UAL и три вспомогательные позы пальцев. Остальные сцены автоматически на новую модель не переводятся.
 
 ## Подключённые действия

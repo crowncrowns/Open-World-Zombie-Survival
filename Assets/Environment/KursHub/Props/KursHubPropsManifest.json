@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "stage": 5,
+  "stage": 7,
   "coordinates": "Unity metres; X right, Y up, front -Z",
   "palette": [
     {
@@ -119,6 +119,159 @@
         0.065,
         1
       ]
+    },
+    {
+      "name": "CeramicTile",
+      "rgba": [
+        0.67,
+        0.61,
+        0.5,
+        1
+      ]
+    },
+    {
+      "name": "TimberRaw",
+      "rgba": [
+        0.31,
+        0.2,
+        0.1,
+        1
+      ]
+    },
+    {
+      "name": "CanvasBlue",
+      "rgba": [
+        0.075,
+        0.14,
+        0.23,
+        1
+      ]
+    },
+    {
+      "name": "CanvasBeige",
+      "rgba": [
+        0.49,
+        0.42,
+        0.29,
+        1
+      ]
+    },
+    {
+      "name": "CanvasRed",
+      "rgba": [
+        0.32,
+        0.085,
+        0.055,
+        1
+      ]
+    },
+    {
+      "name": "CanvasDark",
+      "rgba": [
+        0.07,
+        0.075,
+        0.065,
+        1
+      ]
+    },
+    {
+      "name": "PlasticDark",
+      "rgba": [
+        0.105,
+        0.13,
+        0.075,
+        1
+      ]
+    },
+    {
+      "name": "Enamel",
+      "rgba": [
+        0.66,
+        0.63,
+        0.49,
+        1
+      ]
+    },
+    {
+      "name": "Copper",
+      "rgba": [
+        0.35,
+        0.19,
+        0.075,
+        1
+      ]
+    },
+    {
+      "name": "Paper",
+      "rgba": [
+        0.64,
+        0.59,
+        0.43,
+        1
+      ]
+    },
+    {
+      "name": "RugRed",
+      "rgba": [
+        0.34,
+        0.075,
+        0.045,
+        1
+      ]
+    },
+    {
+      "name": "RugBlue",
+      "rgba": [
+        0.065,
+        0.13,
+        0.18,
+        1
+      ]
+    },
+    {
+      "name": "RugWoven",
+      "rgba": [
+        0.42,
+        0.29,
+        0.15,
+        1
+      ]
+    },
+    {
+      "name": "Ember",
+      "rgba": [
+        1,
+        0.22,
+        0.025,
+        1
+      ]
+    },
+    {
+      "name": "LeafGreen",
+      "rgba": [
+        0.13,
+        0.22,
+        0.075,
+        1
+      ]
+    },
+    {
+      "name": "ClothInk",
+      "rgba": [
+        0.78,
+        0.75,
+        0.64,
+        1
+      ]
+    },
+    {
+      "name": "InkDark",
+      "rgba": [
+        0.028,
+        0.025,
+        0.02,
+        1
+      ]
     }
   ],
   "props": [
@@ -154,6 +307,23 @@
         0.42500001192092896,
         0.3499999940395355,
         0.25
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 640,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_Sandbag.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 466,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_Sandbag_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 336,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_Sandbag_LOD2.fbx"
+        }
       ]
     },
     {
@@ -178,7 +348,7 @@
         }
       ],
       "origin": "Ground centre; 2.4 x 1.2 m reclaimed plank barricade",
-      "triangles": 204,
+      "triangles": 1260,
       "boundsMin": [
         -1.2000000476837158,
         0.0,
@@ -186,8 +356,25 @@
       ],
       "boundsMax": [
         1.2000000476837158,
-        1.2600663900375366,
+        1.258541464805603,
         0.30000001192092896
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 1260,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_Barricade.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 756,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_Barricade_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 378,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_Barricade_LOD2.fbx"
+        }
       ]
     },
     {
@@ -222,7 +409,7 @@
         }
       ],
       "origin": "Platform bottom centre; 4 x 4 m floor, rear +Z opening 1.2 m",
-      "triangles": 1748,
+      "triangles": 5876,
       "boundsMin": [
         -2.2200000286102295,
         0.0,
@@ -232,6 +419,23 @@
         2.2200000286102295,
         3.6649999618530273,
         2.2200000286102295
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 5876,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_WatchPost.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 3522,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_WatchPost_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 1760,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_WatchPost_LOD2.fbx"
+        }
       ]
     },
     {
@@ -266,6 +470,23 @@
         3.0,
         2.390216588973999,
         0.10588236898183823
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 1488,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_TarpWide.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 892,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_TarpWide_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 446,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_TarpWide_LOD2.fbx"
+        }
       ]
     },
     {
@@ -300,6 +521,23 @@
         1.5,
         2.5902163982391357,
         0.10588236898183823
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 1488,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_TarpNarrow.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 892,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_TarpNarrow_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 446,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_TarpNarrow_LOD2.fbx"
+        }
       ]
     },
     {
@@ -324,16 +562,36 @@
         }
       ],
       "origin": "Bottom centre; front faces local -Z; 2.8 x 2 m boarded patch",
-      "triangles": 168,
+      "triangles": 744,
       "boundsMin": [
         -1.399999976158142,
-        -0.005231834948062897,
+        -0.0027670611161738634,
         -0.18250000476837158
       ],
       "boundsMax": [
         1.399999976158142,
-        2.0652318000793457,
+        2.062767267227173,
         0.06750000268220901
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 744,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_WindowBoards.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 444,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_WindowBoards_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 250,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_WindowBoards_LOD2.fbx",
+          "roundtripRestoredChunks": [
+            "KH_WindowBoards_SteelOxide_NC"
+          ]
+        }
       ]
     },
     {
@@ -368,6 +626,26 @@
         1.2999999523162842,
         2.4000000953674316,
         0.036310888826847076
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 1984,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_CorrugatedPatch.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 1188,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_CorrugatedPatch_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 608,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_CorrugatedPatch_LOD2.fbx",
+          "roundtripRestoredChunks": [
+            "KH_CorrugatedPatch_Frame_NC"
+          ]
+        }
       ]
     },
     {
@@ -392,7 +670,7 @@
         }
       ],
       "origin": "Midpoint at endpoints height; 10 m span local X, sag 1 m, no collision",
-      "triangles": 676,
+      "triangles": 868,
       "boundsMin": [
         -5.050000190734863,
         -1.0210000276565552,
@@ -402,6 +680,23 @@
         5.050000190734863,
         0.05999999865889549,
         0.0949999988079071
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 868,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_CableSag.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 518,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_CableSag_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 258,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_CableSag_LOD2.fbx"
+        }
       ]
     },
     {
@@ -431,16 +726,33 @@
         }
       ],
       "origin": "Wall bracket centre; forward -Z, lens pitched down 35 degrees",
-      "triangles": 96,
+      "triangles": 1092,
       "boundsMin": [
         -0.3100000023841858,
-        -0.3355274498462677,
-        -0.5271092653274536
+        -0.33430367708206177,
+        -0.5258854627609253
       ],
       "boundsMax": [
         0.3100000023841858,
-        0.13552746176719666,
+        0.13430370390415192,
         0.035999998450279236
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 1092,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_Floodlight.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 652,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_Floodlight_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 334,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_Floodlight_LOD2.fbx"
+        }
       ]
     },
     {
@@ -470,6 +782,13 @@
         2.0,
         3.0,
         0.0010000000474974513
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 12,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_GrimePatch.fbx"
+        }
       ]
     },
     {
@@ -494,7 +813,7 @@
         }
       ],
       "origin": "Ground centre; 2 m metal section, 1.15 m top, continuous collision",
-      "triangles": 84,
+      "triangles": 756,
       "boundsMin": [
         -1.0,
         0.0,
@@ -504,6 +823,23 @@
         1.0,
         1.149999976158142,
         0.05000000074505806
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 756,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_Railing.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 452,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_Railing_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 226,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_Railing_LOD2.fbx"
+        }
       ]
     },
     {
@@ -538,7 +874,7 @@
         }
       ],
       "origin": "Floor bottom centre; front -Z; 4 x 3.7 x .18 m opaque cream partition",
-      "triangles": 84,
+      "triangles": 564,
       "boundsMin": [
         -2.0,
         0.0,
@@ -548,6 +884,23 @@
         2.0,
         3.700000047683716,
         0.09000000357627869
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 564,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_Partition4.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 334,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_Partition4_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 184,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_Partition4_LOD2.fbx"
+        }
       ]
     },
     {
@@ -592,7 +945,7 @@
         }
       ],
       "origin": "Floor bottom centre; front -Z; 6 x 3.7 m shopfront; clear portal X +/-1.2, Y 0..2.8",
-      "triangles": 792,
+      "triangles": 1656,
       "boundsMin": [
         -3.0,
         0.0,
@@ -602,6 +955,27 @@
         3.0,
         3.700000047683716,
         0.09000000357627869
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 1656,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_Shopfront6.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 988,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_Shopfront6_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 508,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_Shopfront6_LOD2.fbx",
+          "roundtripRestoredChunks": [
+            "KH_Shopfront6_Frame_NC",
+            "KH_Shopfront6_Glass_C"
+          ]
+        }
       ]
     },
     {
@@ -626,7 +1000,7 @@
         }
       ],
       "origin": "Floor bottom centre; front -Z; 4 x 3.7 x .18 m wall; clear portal X +/- .8, Y 0..2.6",
-      "triangles": 108,
+      "triangles": 972,
       "boundsMin": [
         -2.0,
         0.0,
@@ -636,6 +1010,23 @@
         2.0,
         3.700000047683716,
         0.09000000357627869
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 972,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_DoorPartition4.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 582,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_DoorPartition4_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 290,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_DoorPartition4_LOD2.fbx"
+        }
       ]
     },
     {
@@ -660,7 +1051,7 @@
         }
       ],
       "origin": "Floor bottom centre; front -Z; 4 x 3.7 x .18 m steel grid with .6 m kick panel; no doorway",
-      "triangles": 480,
+      "triangles": 1056,
       "boundsMin": [
         -2.0,
         0.0,
@@ -670,6 +1061,23 @@
         2.0,
         3.700000047683716,
         0.09000000357627869
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 1056,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_MeshPartition4.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 632,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_MeshPartition4_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 316,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_MeshPartition4_LOD2.fbx"
+        }
       ]
     },
     {
@@ -709,7 +1117,7 @@
         }
       ],
       "origin": "Sign bottom centre; front -Z; 3.6 x 1.8 m board; suspension top Y 2.15 m; no collision",
-      "triangles": 6136,
+      "triangles": 6424,
       "boundsMin": [
         -1.7999999523162842,
         0.0,
@@ -719,6 +1127,26 @@
         1.7999999523162842,
         2.1500000953674316,
         0.05000000074505806
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 6424,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_DirectionBoard.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 3850,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_DirectionBoard_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 1940,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_DirectionBoard_LOD2.fbx",
+          "roundtripRestoredChunks": [
+            "KH_DirectionBoard_CreamPanel_NC"
+          ]
+        }
       ]
     },
     {
@@ -753,7 +1181,7 @@
         }
       ],
       "origin": "Sign bottom centre; front -Z; 2.4 x .9 m wall board; no collision",
-      "triangles": 796,
+      "triangles": 892,
       "boundsMin": [
         -1.2000000476837158,
         0.0,
@@ -763,7 +1191,2807 @@
         1.2000000476837158,
         0.8999999761581421,
         0.029999999329447746
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 892,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_MedicalSign.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 532,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_MedicalSign_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 286,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_MedicalSign_LOD2.fbx",
+          "roundtripRestoredChunks": [
+            "KH_MedicalSign_MallBlue_NC",
+            "KH_MedicalSign_SignRed_NC"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "KH_StallTimber",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_StallTimber.fbx",
+      "collection": "KH_StallTimber",
+      "sourceOffset": [
+        13.0,
+        0,
+        40.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_StallTimber_CanvasBeige_NC",
+          "material": "CanvasBeige",
+          "collider": false
+        },
+        {
+          "name": "KH_StallTimber_CanvasBlue_NC",
+          "material": "CanvasBlue",
+          "collider": false
+        },
+        {
+          "name": "KH_StallTimber_CanvasRed_NC",
+          "material": "CanvasRed",
+          "collider": false
+        },
+        {
+          "name": "KH_StallTimber_Copper_NC",
+          "material": "Copper",
+          "collider": false
+        },
+        {
+          "name": "KH_StallTimber_Enamel_NC",
+          "material": "Enamel",
+          "collider": false
+        },
+        {
+          "name": "KH_StallTimber_Frame_NC",
+          "material": "Frame",
+          "collider": false
+        },
+        {
+          "name": "KH_StallTimber_Frame_C",
+          "material": "Frame",
+          "collider": true
+        },
+        {
+          "name": "KH_StallTimber_SandCanvas_NC",
+          "material": "SandCanvas",
+          "collider": false
+        },
+        {
+          "name": "KH_StallTimber_SteelOxide_NC",
+          "material": "SteelOxide",
+          "collider": false
+        },
+        {
+          "name": "KH_StallTimber_TimberRaw_NC",
+          "material": "TimberRaw",
+          "collider": false
+        },
+        {
+          "name": "KH_StallTimber_TimberRaw_C",
+          "material": "TimberRaw",
+          "collider": true
+        },
+        {
+          "name": "KH_StallTimber_WornWood_NC",
+          "material": "WornWood",
+          "collider": false
+        },
+        {
+          "name": "KH_StallTimber_WornWood_C",
+          "material": "WornWood",
+          "collider": true
+        }
+      ],
+      "origin": "Floor centre; customer side -Z; 4.2 x 3.1 x 2.8 m; counter top Y 1.05; rear shelf Y 1.55/2.08; separate stock fits on top",
+      "triangles": 14130,
+      "boundsMin": [
+        -2.0999999046325684,
+        -0.007505060639232397,
+        -1.399999976158142
+      ],
+      "boundsMax": [
+        2.1323485374450684,
+        3.1122992038726807,
+        1.4243254661560059
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 14130,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_StallTimber.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 8468,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_StallTimber_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 4788,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_StallTimber_LOD2.fbx",
+          "roundtripRestoredChunks": [
+            "KH_StallTimber_Frame_NC"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "KH_StallPipe",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_StallPipe.fbx",
+      "collection": "KH_StallPipe",
+      "sourceOffset": [
+        26.0,
+        0,
+        40.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_StallPipe_CanvasBeige_NC",
+          "material": "CanvasBeige",
+          "collider": false
+        },
+        {
+          "name": "KH_StallPipe_CanvasBlue_NC",
+          "material": "CanvasBlue",
+          "collider": false
+        },
+        {
+          "name": "KH_StallPipe_CanvasRed_NC",
+          "material": "CanvasRed",
+          "collider": false
+        },
+        {
+          "name": "KH_StallPipe_Copper_NC",
+          "material": "Copper",
+          "collider": false
+        },
+        {
+          "name": "KH_StallPipe_Enamel_NC",
+          "material": "Enamel",
+          "collider": false
+        },
+        {
+          "name": "KH_StallPipe_Frame_NC",
+          "material": "Frame",
+          "collider": false
+        },
+        {
+          "name": "KH_StallPipe_Frame_C",
+          "material": "Frame",
+          "collider": true
+        },
+        {
+          "name": "KH_StallPipe_SandCanvas_NC",
+          "material": "SandCanvas",
+          "collider": false
+        },
+        {
+          "name": "KH_StallPipe_SteelOxide_NC",
+          "material": "SteelOxide",
+          "collider": false
+        },
+        {
+          "name": "KH_StallPipe_TarpGreen_NC",
+          "material": "TarpGreen",
+          "collider": false
+        },
+        {
+          "name": "KH_StallPipe_TimberRaw_NC",
+          "material": "TimberRaw",
+          "collider": false
+        },
+        {
+          "name": "KH_StallPipe_TimberRaw_C",
+          "material": "TimberRaw",
+          "collider": true
+        },
+        {
+          "name": "KH_StallPipe_WornWood_NC",
+          "material": "WornWood",
+          "collider": false
+        },
+        {
+          "name": "KH_StallPipe_WornWood_C",
+          "material": "WornWood",
+          "collider": true
+        }
+      ],
+      "origin": "Floor centre; customer side -Z; 4.2 x 3.1 x 2.8 m; counter top Y 1.05; rear shelf Y 1.55/2.08; separate stock fits on top",
+      "triangles": 14626,
+      "boundsMin": [
+        -2.0999999046325684,
+        -0.007505060639232397,
+        -1.399999976158142
+      ],
+      "boundsMax": [
+        2.1323485374450684,
+        3.1122992038726807,
+        1.4243254661560059
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 14626,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_StallPipe.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 8766,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_StallPipe_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 5004,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_StallPipe_LOD2.fbx",
+          "roundtripRestoredChunks": [
+            "KH_StallPipe_Frame_NC"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "KH_StallCounter",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_StallCounter.fbx",
+      "collection": "KH_StallCounter",
+      "sourceOffset": [
+        39.0,
+        0,
+        40.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_StallCounter_CanvasBeige_NC",
+          "material": "CanvasBeige",
+          "collider": false
+        },
+        {
+          "name": "KH_StallCounter_Frame_NC",
+          "material": "Frame",
+          "collider": false
+        },
+        {
+          "name": "KH_StallCounter_SandCanvas_NC",
+          "material": "SandCanvas",
+          "collider": false
+        },
+        {
+          "name": "KH_StallCounter_SteelOxide_NC",
+          "material": "SteelOxide",
+          "collider": false
+        },
+        {
+          "name": "KH_StallCounter_TimberRaw_C",
+          "material": "TimberRaw",
+          "collider": true
+        },
+        {
+          "name": "KH_StallCounter_WornWood_C",
+          "material": "WornWood",
+          "collider": true
+        }
+      ],
+      "origin": "Floor centre; customer side -Z; 3 x 1.08 x 1.15 m open recovered plank counter; top Y 1.05",
+      "triangles": 2672,
+      "boundsMin": [
+        -1.5,
+        0.0,
+        -0.6781855225563049
+      ],
+      "boundsMax": [
+        1.504348635673523,
+        1.0540000200271606,
+        0.5690000057220459
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 2672,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_StallCounter.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 1600,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_StallCounter_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 798,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_StallCounter_LOD2.fbx"
+        }
+      ]
+    },
+    {
+      "id": "KH_GoodsFood",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_GoodsFood.fbx",
+      "collection": "KH_GoodsFood",
+      "sourceOffset": [
+        0.0,
+        0,
+        50.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_GoodsFood_CanvasRed_NC",
+          "material": "CanvasRed",
+          "collider": false
+        },
+        {
+          "name": "KH_GoodsFood_Copper_NC",
+          "material": "Copper",
+          "collider": false
+        },
+        {
+          "name": "KH_GoodsFood_Enamel_NC",
+          "material": "Enamel",
+          "collider": false
+        },
+        {
+          "name": "KH_GoodsFood_Frame_NC",
+          "material": "Frame",
+          "collider": false
+        },
+        {
+          "name": "KH_GoodsFood_Paper_NC",
+          "material": "Paper",
+          "collider": false
+        },
+        {
+          "name": "KH_GoodsFood_PlasticDark_NC",
+          "material": "PlasticDark",
+          "collider": false
+        },
+        {
+          "name": "KH_GoodsFood_SandCanvas_NC",
+          "material": "SandCanvas",
+          "collider": false
+        },
+        {
+          "name": "KH_GoodsFood_TimberRaw_NC",
+          "material": "TimberRaw",
+          "collider": false
+        },
+        {
+          "name": "KH_GoodsFood_WornWood_NC",
+          "material": "WornWood",
+          "collider": false
+        }
+      ],
+      "origin": "Stock bottom centre; 1.7 x .9 x .76 m bottles, tin cans, jars, vegetable crate and tied grain bags; no collision",
+      "triangles": 5184,
+      "boundsMin": [
+        -0.8299999833106995,
+        -0.003729691496118903,
+        -0.39565595984458923
+      ],
+      "boundsMax": [
+        0.8314999938011169,
+        0.5872829556465149,
+        0.38798099756240845
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 5184,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_GoodsFood.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 3102,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_GoodsFood_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 1746,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_GoodsFood_LOD2.fbx",
+          "roundtripRestoredChunks": [
+            "KH_GoodsFood_Frame_NC"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "KH_GoodsTools",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_GoodsTools.fbx",
+      "collection": "KH_GoodsTools",
+      "sourceOffset": [
+        13.0,
+        0,
+        50.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_GoodsTools_CanvasRed_NC",
+          "material": "CanvasRed",
+          "collider": false
+        },
+        {
+          "name": "KH_GoodsTools_Copper_NC",
+          "material": "Copper",
+          "collider": false
+        },
+        {
+          "name": "KH_GoodsTools_Enamel_NC",
+          "material": "Enamel",
+          "collider": false
+        },
+        {
+          "name": "KH_GoodsTools_Frame_NC",
+          "material": "Frame",
+          "collider": false
+        },
+        {
+          "name": "KH_GoodsTools_Paper_NC",
+          "material": "Paper",
+          "collider": false
+        },
+        {
+          "name": "KH_GoodsTools_PlasticDark_NC",
+          "material": "PlasticDark",
+          "collider": false
+        },
+        {
+          "name": "KH_GoodsTools_SteelOxide_NC",
+          "material": "SteelOxide",
+          "collider": false
+        },
+        {
+          "name": "KH_GoodsTools_TimberRaw_NC",
+          "material": "TimberRaw",
+          "collider": false
+        },
+        {
+          "name": "KH_GoodsTools_WornWood_NC",
+          "material": "WornWood",
+          "collider": false
+        }
+      ],
+      "origin": "Stock bottom centre; 1.75 x .55 x .72 m hammer, saw, pliers, screwdrivers, cable coils and parts trays; no collision",
+      "triangles": 1924,
+      "boundsMin": [
+        -0.8924999833106995,
+        0.0,
+        -0.33000001311302185
+      ],
+      "boundsMax": [
+        0.7533147931098938,
+        0.39249980449676514,
+        0.36780884861946106
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 1924,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_GoodsTools.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 1144,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_GoodsTools_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 588,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_GoodsTools_LOD2.fbx",
+          "roundtripRestoredChunks": [
+            "KH_GoodsTools_CanvasRed_NC"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "KH_GoodsGear",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_GoodsGear.fbx",
+      "collection": "KH_GoodsGear",
+      "sourceOffset": [
+        26.0,
+        0,
+        50.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_GoodsGear_CanvasBlue_NC",
+          "material": "CanvasBlue",
+          "collider": false
+        },
+        {
+          "name": "KH_GoodsGear_Copper_NC",
+          "material": "Copper",
+          "collider": false
+        },
+        {
+          "name": "KH_GoodsGear_Frame_NC",
+          "material": "Frame",
+          "collider": false
+        },
+        {
+          "name": "KH_GoodsGear_PlasticDark_NC",
+          "material": "PlasticDark",
+          "collider": false
+        },
+        {
+          "name": "KH_GoodsGear_SandCanvas_NC",
+          "material": "SandCanvas",
+          "collider": false
+        },
+        {
+          "name": "KH_GoodsGear_TarpGreen_NC",
+          "material": "TarpGreen",
+          "collider": false
+        },
+        {
+          "name": "KH_GoodsGear_WornWood_NC",
+          "material": "WornWood",
+          "collider": false
+        }
+      ],
+      "origin": "Stock bottom centre; 1.8 x .85 x .8 m backpacks, rolled bedmat, paired boots and canteen; no collision",
+      "triangles": 1448,
+      "boundsMin": [
+        -0.7341685891151428,
+        0.009999999776482582,
+        -0.4089966416358948
+      ],
+      "boundsMax": [
+        0.8130776286125183,
+        0.6474423408508301,
+        0.3935805559158325
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 1448,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_GoodsGear.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 978,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_GoodsGear_LOD1.fbx",
+          "roundtripRestoredChunks": [
+            "KH_GoodsGear_SandCanvas_NC"
+          ]
+        },
+        {
+          "level": 2,
+          "triangles": 746,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_GoodsGear_LOD2.fbx",
+          "roundtripRestoredChunks": [
+            "KH_GoodsGear_Copper_NC",
+            "KH_GoodsGear_Frame_NC",
+            "KH_GoodsGear_SandCanvas_NC"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "KH_PalletCrates",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_PalletCrates.fbx",
+      "collection": "KH_PalletCrates",
+      "sourceOffset": [
+        39.0,
+        0,
+        50.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_PalletCrates_Copper_NC",
+          "material": "Copper",
+          "collider": false
+        },
+        {
+          "name": "KH_PalletCrates_Frame_NC",
+          "material": "Frame",
+          "collider": false
+        },
+        {
+          "name": "KH_PalletCrates_Paper_NC",
+          "material": "Paper",
+          "collider": false
+        },
+        {
+          "name": "KH_PalletCrates_Paper_C",
+          "material": "Paper",
+          "collider": true
+        },
+        {
+          "name": "KH_PalletCrates_PlasticDark_NC",
+          "material": "PlasticDark",
+          "collider": false
+        },
+        {
+          "name": "KH_PalletCrates_SandCanvas_NC",
+          "material": "SandCanvas",
+          "collider": false
+        },
+        {
+          "name": "KH_PalletCrates_TimberRaw_C",
+          "material": "TimberRaw",
+          "collider": true
+        },
+        {
+          "name": "KH_PalletCrates_WornWood_C",
+          "material": "WornWood",
+          "collider": true
+        }
+      ],
+      "origin": "Floor centre; 1.5 x 1.45 x 1.25 m open slatted crates on pallet with bottle and tied box; static collision",
+      "triangles": 9300,
+      "boundsMin": [
+        -0.75,
+        0.0,
+        -0.625
+      ],
+      "boundsMax": [
+        0.75,
+        1.4199999570846558,
+        0.6150000095367432
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 9300,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_PalletCrates.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 5574,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_PalletCrates_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 3300,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_PalletCrates_LOD2.fbx",
+          "roundtripRestoredChunks": [
+            "KH_PalletCrates_Frame_NC",
+            "KH_PalletCrates_Paper_C",
+            "KH_PalletCrates_SandCanvas_NC"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "KH_SupplySackStack",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_SupplySackStack.fbx",
+      "collection": "KH_SupplySackStack",
+      "sourceOffset": [
+        0.0,
+        0,
+        60.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_SupplySackStack_CanvasBeige_NC",
+          "material": "CanvasBeige",
+          "collider": false
+        },
+        {
+          "name": "KH_SupplySackStack_CanvasBeige_C",
+          "material": "CanvasBeige",
+          "collider": true
+        },
+        {
+          "name": "KH_SupplySackStack_CanvasBlue_NC",
+          "material": "CanvasBlue",
+          "collider": false
+        },
+        {
+          "name": "KH_SupplySackStack_CanvasRed_NC",
+          "material": "CanvasRed",
+          "collider": false
+        },
+        {
+          "name": "KH_SupplySackStack_SandCanvas_NC",
+          "material": "SandCanvas",
+          "collider": false
+        },
+        {
+          "name": "KH_SupplySackStack_SandCanvas_C",
+          "material": "SandCanvas",
+          "collider": true
+        },
+        {
+          "name": "KH_SupplySackStack_WornWood_NC",
+          "material": "WornWood",
+          "collider": false
+        }
+      ],
+      "origin": "Floor centre; 1.5 x 1.10 x 1.15 m mismatched sewn sacks and patched grain bag with tied necks; static collision",
+      "triangles": 896,
+      "boundsMin": [
+        -0.7396416664123535,
+        0.0,
+        -0.5259999632835388
+      ],
+      "boundsMax": [
+        0.7021546363830566,
+        0.9599999785423279,
+        0.49216076731681824
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 896,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_SupplySackStack.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 530,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_SupplySackStack_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 286,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_SupplySackStack_LOD2.fbx",
+          "roundtripRestoredChunks": [
+            "KH_SupplySackStack_CanvasBlue_NC",
+            "KH_SupplySackStack_CanvasRed_NC"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "KH_LowDisplay",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_LowDisplay.fbx",
+      "collection": "KH_LowDisplay",
+      "sourceOffset": [
+        13.0,
+        0,
+        60.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_LowDisplay_CanvasBeige_NC",
+          "material": "CanvasBeige",
+          "collider": false
+        },
+        {
+          "name": "KH_LowDisplay_CanvasBlue_NC",
+          "material": "CanvasBlue",
+          "collider": false
+        },
+        {
+          "name": "KH_LowDisplay_CanvasRed_NC",
+          "material": "CanvasRed",
+          "collider": false
+        },
+        {
+          "name": "KH_LowDisplay_Copper_NC",
+          "material": "Copper",
+          "collider": false
+        },
+        {
+          "name": "KH_LowDisplay_Enamel_NC",
+          "material": "Enamel",
+          "collider": false
+        },
+        {
+          "name": "KH_LowDisplay_Frame_NC",
+          "material": "Frame",
+          "collider": false
+        },
+        {
+          "name": "KH_LowDisplay_Paper_NC",
+          "material": "Paper",
+          "collider": false
+        },
+        {
+          "name": "KH_LowDisplay_PlasticDark_NC",
+          "material": "PlasticDark",
+          "collider": false
+        },
+        {
+          "name": "KH_LowDisplay_SandCanvas_NC",
+          "material": "SandCanvas",
+          "collider": false
+        },
+        {
+          "name": "KH_LowDisplay_TarpGreen_NC",
+          "material": "TarpGreen",
+          "collider": false
+        },
+        {
+          "name": "KH_LowDisplay_TimberRaw_NC",
+          "material": "TimberRaw",
+          "collider": false
+        },
+        {
+          "name": "KH_LowDisplay_WornWood_NC",
+          "material": "WornWood",
+          "collider": false
+        }
+      ],
+      "origin": "Floor centre; 2.25 x .70 x 1.4 m ground trader display: textile mat, open crate, books, boots, enamel bowls and folded clothing; no collision",
+      "triangles": 4030,
+      "boundsMin": [
+        -1.125,
+        0.0,
+        -0.699999988079071
+      ],
+      "boundsMax": [
+        1.125,
+        0.6600000262260437,
+        0.699999988079071
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 4030,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_LowDisplay.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 2410,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_LowDisplay_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 1322,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_LowDisplay_LOD2.fbx",
+          "roundtripRestoredChunks": [
+            "KH_LowDisplay_Paper_NC",
+            "KH_LowDisplay_SandCanvas_NC"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "KH_WorkbenchStocked",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_WorkbenchStocked.fbx",
+      "collection": "KH_WorkbenchStocked",
+      "sourceOffset": [
+        26.0,
+        0,
+        60.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_WorkbenchStocked_CanvasBeige_NC",
+          "material": "CanvasBeige",
+          "collider": false
+        },
+        {
+          "name": "KH_WorkbenchStocked_CanvasRed_NC",
+          "material": "CanvasRed",
+          "collider": false
+        },
+        {
+          "name": "KH_WorkbenchStocked_Copper_NC",
+          "material": "Copper",
+          "collider": false
+        },
+        {
+          "name": "KH_WorkbenchStocked_Frame_NC",
+          "material": "Frame",
+          "collider": false
+        },
+        {
+          "name": "KH_WorkbenchStocked_Frame_C",
+          "material": "Frame",
+          "collider": true
+        },
+        {
+          "name": "KH_WorkbenchStocked_SteelOxide_NC",
+          "material": "SteelOxide",
+          "collider": false
+        },
+        {
+          "name": "KH_WorkbenchStocked_TimberRaw_NC",
+          "material": "TimberRaw",
+          "collider": false
+        },
+        {
+          "name": "KH_WorkbenchStocked_TimberRaw_C",
+          "material": "TimberRaw",
+          "collider": true
+        },
+        {
+          "name": "KH_WorkbenchStocked_WornWood_NC",
+          "material": "WornWood",
+          "collider": false
+        },
+        {
+          "name": "KH_WorkbenchStocked_WornWood_C",
+          "material": "WornWood",
+          "collider": true
+        }
+      ],
+      "origin": "Floor centre; front -Z; 2.8 x 2.35 x 1.2 m scarred timber repair bench, vise, hanging real tools and stocked slatted shelves; static collision",
+      "triangles": 8026,
+      "boundsMin": [
+        -1.399999976158142,
+        0.0,
+        -0.5830000042915344
+      ],
+      "boundsMax": [
+        1.399999976158142,
+        2.3550000190734863,
+        0.5830000042915344
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 8026,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_WorkbenchStocked.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 4808,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_WorkbenchStocked_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 2404,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_WorkbenchStocked_LOD2.fbx"
+        }
+      ]
+    },
+    {
+      "id": "KH_Stool",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_Stool.fbx",
+      "collection": "KH_Stool",
+      "sourceOffset": [
+        39.0,
+        0,
+        60.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_Stool_Frame_NC",
+          "material": "Frame",
+          "collider": false
+        },
+        {
+          "name": "KH_Stool_TimberRaw_NC",
+          "material": "TimberRaw",
+          "collider": false
+        },
+        {
+          "name": "KH_Stool_TimberRaw_C",
+          "material": "TimberRaw",
+          "collider": true
+        },
+        {
+          "name": "KH_Stool_WornWood_C",
+          "material": "WornWood",
+          "collider": true
+        }
+      ],
+      "origin": "Floor centre; .5 x .52 x .5 m three-legged handmade plank stool; static collision",
+      "triangles": 852,
+      "boundsMin": [
+        -0.23499999940395355,
+        0.010882096365094185,
+        -0.24500000476837158
+      ],
+      "boundsMax": [
+        0.25117284059524536,
+        0.5239999890327454,
+        0.24500000476837158
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 852,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_Stool.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 510,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_Stool_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 254,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_Stool_LOD2.fbx"
+        }
+      ]
+    },
+    {
+      "id": "KH_Bench",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_Bench.fbx",
+      "collection": "KH_Bench",
+      "sourceOffset": [
+        0.0,
+        0,
+        70.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_Bench_Frame_NC",
+          "material": "Frame",
+          "collider": false
+        },
+        {
+          "name": "KH_Bench_Frame_C",
+          "material": "Frame",
+          "collider": true
+        },
+        {
+          "name": "KH_Bench_SteelOxide_C",
+          "material": "SteelOxide",
+          "collider": true
+        },
+        {
+          "name": "KH_Bench_TimberRaw_C",
+          "material": "TimberRaw",
+          "collider": true
+        },
+        {
+          "name": "KH_Bench_WornWood_C",
+          "material": "WornWood",
+          "collider": true
+        }
+      ],
+      "origin": "Floor centre; front -Z; 1.8 x .88 x .65 m recovered plank bench with back; static collision",
+      "triangles": 1496,
+      "boundsMin": [
+        -0.8999999761581421,
+        0.01203124038875103,
+        -0.3199999928474426
+      ],
+      "boundsMax": [
+        0.8999999761581421,
+        0.8825210332870483,
+        0.32704535126686096
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 1496,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_Bench.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 892,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_Bench_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 444,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_Bench_LOD2.fbx"
+        }
+      ]
+    },
+    {
+      "id": "KH_BunkMakeshift",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_BunkMakeshift.fbx",
+      "collection": "KH_BunkMakeshift",
+      "sourceOffset": [
+        13.0,
+        0,
+        70.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_BunkMakeshift_CanvasBeige_C",
+          "material": "CanvasBeige",
+          "collider": true
+        },
+        {
+          "name": "KH_BunkMakeshift_CanvasBlue_NC",
+          "material": "CanvasBlue",
+          "collider": false
+        },
+        {
+          "name": "KH_BunkMakeshift_CanvasRed_NC",
+          "material": "CanvasRed",
+          "collider": false
+        },
+        {
+          "name": "KH_BunkMakeshift_Frame_NC",
+          "material": "Frame",
+          "collider": false
+        },
+        {
+          "name": "KH_BunkMakeshift_Frame_C",
+          "material": "Frame",
+          "collider": true
+        },
+        {
+          "name": "KH_BunkMakeshift_SandCanvas_NC",
+          "material": "SandCanvas",
+          "collider": false
+        },
+        {
+          "name": "KH_BunkMakeshift_SteelOxide_NC",
+          "material": "SteelOxide",
+          "collider": false
+        },
+        {
+          "name": "KH_BunkMakeshift_TimberRaw_NC",
+          "material": "TimberRaw",
+          "collider": false
+        },
+        {
+          "name": "KH_BunkMakeshift_TimberRaw_C",
+          "material": "TimberRaw",
+          "collider": true
+        },
+        {
+          "name": "KH_BunkMakeshift_WornWood_NC",
+          "material": "WornWood",
+          "collider": false
+        },
+        {
+          "name": "KH_BunkMakeshift_WornWood_C",
+          "material": "WornWood",
+          "collider": true
+        }
+      ],
+      "origin": "Floor centre; 2.30 x 1.08 m, 2.12 m high; head at local -X",
+      "triangles": 8240,
+      "boundsMin": [
+        -1.1636489629745483,
+        0.0,
+        -0.717184841632843
+      ],
+      "boundsMax": [
+        1.1703922748565674,
+        2.119999885559082,
+        0.5724999904632568
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 8240,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_BunkMakeshift.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 4934,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_BunkMakeshift_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 2772,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_BunkMakeshift_LOD2.fbx",
+          "roundtripRestoredChunks": [
+            "KH_BunkMakeshift_SandCanvas_NC",
+            "KH_BunkMakeshift_SteelOxide_NC"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "KH_Bedroll",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_Bedroll.fbx",
+      "collection": "KH_Bedroll",
+      "sourceOffset": [
+        26.0,
+        0,
+        70.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_Bedroll_CanvasBeige_C",
+          "material": "CanvasBeige",
+          "collider": true
+        },
+        {
+          "name": "KH_Bedroll_CanvasBlue_NC",
+          "material": "CanvasBlue",
+          "collider": false
+        },
+        {
+          "name": "KH_Bedroll_SandCanvas_NC",
+          "material": "SandCanvas",
+          "collider": false
+        },
+        {
+          "name": "KH_Bedroll_TimberRaw_C",
+          "material": "TimberRaw",
+          "collider": true
+        },
+        {
+          "name": "KH_Bedroll_WornWood_NC",
+          "material": "WornWood",
+          "collider": false
+        }
+      ],
+      "origin": "Floor centre; 2.10 x .94 m; low pallet mattress, head at -X",
+      "triangles": 2888,
+      "boundsMin": [
+        -1.0399999618530273,
+        0.0,
+        -0.46000000834465027
+      ],
+      "boundsMax": [
+        1.0399999618530273,
+        0.4350000023841858,
+        0.5
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 2888,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_Bedroll.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 1730,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_Bedroll_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 1002,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_Bedroll_LOD2.fbx",
+          "roundtripRestoredChunks": [
+            "KH_Bedroll_SandCanvas_NC"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "KH_LivingScreen",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_LivingScreen.fbx",
+      "collection": "KH_LivingScreen",
+      "sourceOffset": [
+        39.0,
+        0,
+        70.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_LivingScreen_CanvasBeige_NC",
+          "material": "CanvasBeige",
+          "collider": false
+        },
+        {
+          "name": "KH_LivingScreen_CanvasBlue_NC",
+          "material": "CanvasBlue",
+          "collider": false
+        },
+        {
+          "name": "KH_LivingScreen_CanvasRed_NC",
+          "material": "CanvasRed",
+          "collider": false
+        },
+        {
+          "name": "KH_LivingScreen_SandCanvas_NC",
+          "material": "SandCanvas",
+          "collider": false
+        },
+        {
+          "name": "KH_LivingScreen_TimberRaw_C",
+          "material": "TimberRaw",
+          "collider": true
+        }
+      ],
+      "origin": "Bottom centre; 2.60 x 2.45 m; privacy cloth, front -Z",
+      "triangles": 2468,
+      "boundsMin": [
+        -1.350000023841858,
+        0.0,
+        -0.19499999284744263
+      ],
+      "boundsMax": [
+        1.350000023841858,
+        2.450000047683716,
+        0.24500000476837158
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 2468,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_LivingScreen.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 1474,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_LivingScreen_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 816,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_LivingScreen_LOD2.fbx",
+          "roundtripRestoredChunks": [
+            "KH_LivingScreen_SandCanvas_NC"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "KH_RugRed",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_RugRed.fbx",
+      "collection": "KH_RugRed",
+      "sourceOffset": [
+        0.0,
+        0,
+        80.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_RugRed_RugRed_NC",
+          "material": "RugRed",
+          "collider": false
+        },
+        {
+          "name": "KH_RugRed_SandCanvas_NC",
+          "material": "SandCanvas",
+          "collider": false
+        }
+      ],
+      "origin": "Floor centre; 2.80 x 1.80 m woven rug, .12 m end fringes",
+      "triangles": 2284,
+      "boundsMin": [
+        -1.509536623954773,
+        0.0007623900310136378,
+        -0.8999999761581421
+      ],
+      "boundsMax": [
+        1.5094273090362549,
+        0.03298250213265419,
+        0.8999999761581421
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 2284,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_RugRed.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 1368,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_RugRed_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 684,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_RugRed_LOD2.fbx"
+        }
+      ]
+    },
+    {
+      "id": "KH_RugBlue",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_RugBlue.fbx",
+      "collection": "KH_RugBlue",
+      "sourceOffset": [
+        13.0,
+        0,
+        80.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_RugBlue_RugBlue_NC",
+          "material": "RugBlue",
+          "collider": false
+        },
+        {
+          "name": "KH_RugBlue_SandCanvas_NC",
+          "material": "SandCanvas",
+          "collider": false
+        }
+      ],
+      "origin": "Floor centre; 2.80 x 1.80 m woven rug, .12 m end fringes",
+      "triangles": 2284,
+      "boundsMin": [
+        -1.5095264911651611,
+        0.0019812914542853832,
+        -0.8999999761581421
+      ],
+      "boundsMax": [
+        1.5094094276428223,
+        0.041804999113082886,
+        0.8999999761581421
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 2284,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_RugBlue.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 1368,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_RugBlue_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 684,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_RugBlue_LOD2.fbx"
+        }
+      ]
+    },
+    {
+      "id": "KH_RugWoven",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_RugWoven.fbx",
+      "collection": "KH_RugWoven",
+      "sourceOffset": [
+        26.0,
+        0,
+        80.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_RugWoven_RugWoven_NC",
+          "material": "RugWoven",
+          "collider": false
+        },
+        {
+          "name": "KH_RugWoven_SandCanvas_NC",
+          "material": "SandCanvas",
+          "collider": false
+        }
+      ],
+      "origin": "Floor centre; 2.80 x 1.80 m woven rug, .12 m end fringes",
+      "triangles": 2284,
+      "boundsMin": [
+        -1.5090280771255493,
+        0.0008883720729500055,
+        -0.8999999761581421
+      ],
+      "boundsMax": [
+        1.5090242624282837,
+        0.04187248647212982,
+        0.8999999761581421
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 2284,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_RugWoven.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 1368,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_RugWoven_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 684,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_RugWoven_LOD2.fbx"
+        }
+      ]
+    },
+    {
+      "id": "KH_RailDrape",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_RailDrape.fbx",
+      "collection": "KH_RailDrape",
+      "sourceOffset": [
+        39.0,
+        0,
+        80.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_RailDrape_CanvasBeige_NC",
+          "material": "CanvasBeige",
+          "collider": false
+        },
+        {
+          "name": "KH_RailDrape_CanvasBlue_NC",
+          "material": "CanvasBlue",
+          "collider": false
+        },
+        {
+          "name": "KH_RailDrape_SandCanvas_NC",
+          "material": "SandCanvas",
+          "collider": false
+        }
+      ],
+      "origin": "Bottom centre; 2.60 m wide x 1.05 m high draped rail cloth; visual only",
+      "triangles": 2272,
+      "boundsMin": [
+        -1.2999999523162842,
+        0.0,
+        -0.12613777816295624
+      ],
+      "boundsMax": [
+        1.2999999523162842,
+        1.1069282293319702,
+        0.14499999582767487
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 2272,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_RailDrape.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 1360,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_RailDrape_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 740,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_RailDrape_LOD2.fbx",
+          "roundtripRestoredChunks": [
+            "KH_RailDrape_SandCanvas_NC"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "KH_RailDrapeBlue",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_RailDrapeBlue.fbx",
+      "collection": "KH_RailDrapeBlue",
+      "sourceOffset": [
+        0.0,
+        0,
+        90.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_RailDrapeBlue_CanvasBeige_NC",
+          "material": "CanvasBeige",
+          "collider": false
+        },
+        {
+          "name": "KH_RailDrapeBlue_CanvasBlue_NC",
+          "material": "CanvasBlue",
+          "collider": false
+        },
+        {
+          "name": "KH_RailDrapeBlue_SandCanvas_NC",
+          "material": "SandCanvas",
+          "collider": false
+        }
+      ],
+      "origin": "Bottom centre; 2.60 m wide x 1.05 m high draped rail cloth; visual only",
+      "triangles": 2272,
+      "boundsMin": [
+        -1.2999999523162842,
+        0.0,
+        -0.12613777816295624
+      ],
+      "boundsMax": [
+        1.2999999523162842,
+        1.1069282293319702,
+        0.14499999582767487
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 2272,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_RailDrapeBlue.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 1360,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_RailDrapeBlue_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 740,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_RailDrapeBlue_LOD2.fbx",
+          "roundtripRestoredChunks": [
+            "KH_RailDrapeBlue_SandCanvas_NC"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "KH_RestTable",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_RestTable.fbx",
+      "collection": "KH_RestTable",
+      "sourceOffset": [
+        13.0,
+        0,
+        90.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_RestTable_CanvasRed_NC",
+          "material": "CanvasRed",
+          "collider": false
+        },
+        {
+          "name": "KH_RestTable_Enamel_NC",
+          "material": "Enamel",
+          "collider": false
+        },
+        {
+          "name": "KH_RestTable_Frame_NC",
+          "material": "Frame",
+          "collider": false
+        },
+        {
+          "name": "KH_RestTable_Paper_NC",
+          "material": "Paper",
+          "collider": false
+        },
+        {
+          "name": "KH_RestTable_PlasticDark_NC",
+          "material": "PlasticDark",
+          "collider": false
+        },
+        {
+          "name": "KH_RestTable_SandCanvas_NC",
+          "material": "SandCanvas",
+          "collider": false
+        },
+        {
+          "name": "KH_RestTable_TimberRaw_NC",
+          "material": "TimberRaw",
+          "collider": false
+        },
+        {
+          "name": "KH_RestTable_TimberRaw_C",
+          "material": "TimberRaw",
+          "collider": true
+        },
+        {
+          "name": "KH_RestTable_WornWood_NC",
+          "material": "WornWood",
+          "collider": false
+        },
+        {
+          "name": "KH_RestTable_WornWood_C",
+          "material": "WornWood",
+          "collider": true
+        }
+      ],
+      "origin": "Floor centre; 2.00 x .92 m communal plank table; top .78 m",
+      "triangles": 2800,
+      "boundsMin": [
+        -1.0,
+        0.0301077738404274,
+        -0.44699999690055847
+      ],
+      "boundsMax": [
+        1.0,
+        1.1621242761611938,
+        0.44699999690055847
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 2800,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_RestTable.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 1672,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_RestTable_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 940,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_RestTable_LOD2.fbx",
+          "roundtripRestoredChunks": [
+            "KH_RestTable_Frame_NC",
+            "KH_RestTable_Paper_NC"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "KH_FireBarrel",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_FireBarrel.fbx",
+      "collection": "KH_FireBarrel",
+      "sourceOffset": [
+        26.0,
+        0,
+        90.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_FireBarrel_Ember_NC",
+          "material": "Ember",
+          "collider": false
+        },
+        {
+          "name": "KH_FireBarrel_Frame_NC",
+          "material": "Frame",
+          "collider": false
+        },
+        {
+          "name": "KH_FireBarrel_PlasticDark_NC",
+          "material": "PlasticDark",
+          "collider": false
+        },
+        {
+          "name": "KH_FireBarrel_SteelOxide_C",
+          "material": "SteelOxide",
+          "collider": true
+        },
+        {
+          "name": "KH_FireBarrel_TimberRaw_NC",
+          "material": "TimberRaw",
+          "collider": false
+        },
+        {
+          "name": "KH_FireBarrel_WornWood_NC",
+          "material": "WornWood",
+          "collider": false
+        }
+      ],
+      "origin": "Floor centre; .66 m diameter x 1.03 m; open fire drum, static glowing coals",
+      "triangles": 2488,
+      "boundsMin": [
+        -0.34299999475479126,
+        0.03999999910593033,
+        -0.34299999475479126
+      ],
+      "boundsMax": [
+        0.34299999475479126,
+        0.9969282150268555,
+        0.34299999475479126
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 2488,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_FireBarrel.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 1488,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_FireBarrel_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 1086,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_FireBarrel_LOD2.fbx",
+          "roundtripRestoredChunks": [
+            "KH_FireBarrel_Frame_NC"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "KH_CampChair",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_CampChair.fbx",
+      "collection": "KH_CampChair",
+      "sourceOffset": [
+        39.0,
+        0,
+        90.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_CampChair_Frame_NC",
+          "material": "Frame",
+          "collider": false
+        },
+        {
+          "name": "KH_CampChair_SandCanvas_NC",
+          "material": "SandCanvas",
+          "collider": false
+        },
+        {
+          "name": "KH_CampChair_SteelOxide_NC",
+          "material": "SteelOxide",
+          "collider": false
+        },
+        {
+          "name": "KH_CampChair_TarpGreen_NC",
+          "material": "TarpGreen",
+          "collider": false
+        },
+        {
+          "name": "KH_CampChair_TimberRaw_C",
+          "material": "TimberRaw",
+          "collider": true
+        }
+      ],
+      "origin": "Floor centre; .65 x .75 m folding chair, .90 m high; faces -Z",
+      "triangles": 1980,
+      "boundsMin": [
+        -0.30250000953674316,
+        0.014637143351137638,
+        -0.3228254020214081
+      ],
+      "boundsMax": [
+        0.32749998569488525,
+        0.9174999594688416,
+        0.36963292956352234
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 1980,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_CampChair.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 1184,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_CampChair_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 590,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_CampChair_LOD2.fbx"
+        }
+      ]
+    },
+    {
+      "id": "KH_ResidentBundle",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_ResidentBundle.fbx",
+      "collection": "KH_ResidentBundle",
+      "sourceOffset": [
+        0.0,
+        0,
+        100.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_ResidentBundle_CanvasBeige_NC",
+          "material": "CanvasBeige",
+          "collider": false
+        },
+        {
+          "name": "KH_ResidentBundle_CanvasRed_NC",
+          "material": "CanvasRed",
+          "collider": false
+        },
+        {
+          "name": "KH_ResidentBundle_Frame_NC",
+          "material": "Frame",
+          "collider": false
+        },
+        {
+          "name": "KH_ResidentBundle_Paper_NC",
+          "material": "Paper",
+          "collider": false
+        },
+        {
+          "name": "KH_ResidentBundle_SandCanvas_NC",
+          "material": "SandCanvas",
+          "collider": false
+        },
+        {
+          "name": "KH_ResidentBundle_SteelOxide_NC",
+          "material": "SteelOxide",
+          "collider": false
+        },
+        {
+          "name": "KH_ResidentBundle_TarpGreen_NC",
+          "material": "TarpGreen",
+          "collider": false
+        },
+        {
+          "name": "KH_ResidentBundle_TarpGreen_C",
+          "material": "TarpGreen",
+          "collider": true
+        },
+        {
+          "name": "KH_ResidentBundle_WornWood_NC",
+          "material": "WornWood",
+          "collider": false
+        }
+      ],
+      "origin": "Floor centre; 1.35 x .95 m resident belongings with bags, shoes and bedding",
+      "triangles": 3408,
+      "boundsMin": [
+        -0.5550000071525574,
+        0.0008756443858146667,
+        -0.5
+      ],
+      "boundsMax": [
+        0.6600000262260437,
+        0.7108443379402161,
+        0.3988913893699646
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 3408,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_ResidentBundle.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 2040,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_ResidentBundle_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 1138,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_ResidentBundle_LOD2.fbx",
+          "roundtripRestoredChunks": [
+            "KH_ResidentBundle_Paper_NC",
+            "KH_ResidentBundle_SandCanvas_NC",
+            "KH_ResidentBundle_SteelOxide_NC"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "KH_PottedPlant",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_PottedPlant.fbx",
+      "collection": "KH_PottedPlant",
+      "sourceOffset": [
+        13.0,
+        0,
+        100.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_PottedPlant_Enamel_C",
+          "material": "Enamel",
+          "collider": true
+        },
+        {
+          "name": "KH_PottedPlant_LeafGreen_NC",
+          "material": "LeafGreen",
+          "collider": false
+        },
+        {
+          "name": "KH_PottedPlant_PlasticDark_NC",
+          "material": "PlasticDark",
+          "collider": false
+        },
+        {
+          "name": "KH_PottedPlant_SteelOxide_NC",
+          "material": "SteelOxide",
+          "collider": false
+        }
+      ],
+      "origin": "Floor centre; roughly .70 x .70 m leafy pot, 1.10 m high",
+      "triangles": 2734,
+      "boundsMin": [
+        -0.2601814866065979,
+        0.014999974519014359,
+        -0.3295232653617859
+      ],
+      "boundsMax": [
+        0.233890101313591,
+        1.0399999618530273,
+        0.3065851032733917
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 2734,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_PottedPlant.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 1506,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_PottedPlant_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 852,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_PottedPlant_LOD2.fbx"
+        }
+      ]
+    },
+    {
+      "id": "KH_FloorDebris",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_FloorDebris.fbx",
+      "collection": "KH_FloorDebris",
+      "sourceOffset": [
+        26.0,
+        0,
+        100.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_FloorDebris_CanvasBeige_NC",
+          "material": "CanvasBeige",
+          "collider": false
+        },
+        {
+          "name": "KH_FloorDebris_Paper_NC",
+          "material": "Paper",
+          "collider": false
+        },
+        {
+          "name": "KH_FloorDebris_TimberRaw_NC",
+          "material": "TimberRaw",
+          "collider": false
+        }
+      ],
+      "origin": "Floor centre; 1.40 x 1.10 m static loose papers, wood and cloth, no collision",
+      "triangles": 852,
+      "boundsMin": [
+        -0.6324999928474426,
+        -5.939881521044299e-05,
+        -0.47999998927116394
+      ],
+      "boundsMax": [
+        0.612500011920929,
+        0.10228319466114044,
+        0.5060243606567383
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 852,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_FloorDebris.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 508,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_FloorDebris_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 264,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_FloorDebris_LOD2.fbx",
+          "roundtripRestoredChunks": [
+            "KH_FloorDebris_TimberRaw_NC"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "KH_KursAtriumBanner",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_KursAtriumBanner.fbx",
+      "collection": "KH_KursAtriumBanner",
+      "sourceOffset": [
+        39.0,
+        0,
+        100.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_KursAtriumBanner_CanvasBlue_NC",
+          "material": "CanvasBlue",
+          "collider": false
+        },
+        {
+          "name": "KH_KursAtriumBanner_Lettering_NC",
+          "material": "ClothInk",
+          "collider": false
+        },
+        {
+          "name": "KH_KursAtriumBanner_SandCanvas_NC",
+          "material": "SandCanvas",
+          "collider": false
+        },
+        {
+          "name": "KH_KursAtriumBanner_SignRed_NC",
+          "material": "SignRed",
+          "collider": false
+        },
+        {
+          "name": "KH_KursAtriumBanner_SteelOxide_NC",
+          "material": "SteelOxide",
+          "collider": false
+        }
+      ],
+      "origin": "Cloth bottom centre; 4.5 x 6 m; folded blue fabric with double-sided white Kurs wordmark; suspension top Y 6.5",
+      "triangles": 28112,
+      "boundsMin": [
+        -2.282947063446045,
+        -0.02499999664723873,
+        -0.10585031658411026
+      ],
+      "boundsMax": [
+        2.282947063446045,
+        6.501380443572998,
+        0.10370443016290665
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 28112,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_KursAtriumBanner.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 16864,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_KursAtriumBanner_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 8428,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_KursAtriumBanner_LOD2.fbx"
+        }
+      ]
+    },
+    {
+      "id": "KH_SignWeapons",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_SignWeapons.fbx",
+      "collection": "KH_SignWeapons",
+      "sourceOffset": [
+        0.0,
+        0,
+        110.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_SignWeapons_CanvasDark_NC",
+          "material": "CanvasDark",
+          "collider": false
+        },
+        {
+          "name": "KH_SignWeapons_Lettering_NC",
+          "material": "ClothInk",
+          "collider": false
+        },
+        {
+          "name": "KH_SignWeapons_SandCanvas_NC",
+          "material": "SandCanvas",
+          "collider": false
+        },
+        {
+          "name": "KH_SignWeapons_SteelOxide_NC",
+          "material": "SteelOxide",
+          "collider": false
+        }
+      ],
+      "origin": "Cloth bottom centre; 4 x .95 m; front -Z; weapons shop banner",
+      "triangles": 4988,
+      "boundsMin": [
+        -2.0267908573150635,
+        -0.02499999664723873,
+        -0.09929785132408142
+      ],
+      "boundsMax": [
+        2.0267908573150635,
+        1.1822307109832764,
+        0.0937524288892746
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 4988,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_SignWeapons.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 2990,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_SignWeapons_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 2854,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_SignWeapons_LOD2.fbx"
+        }
+      ]
+    },
+    {
+      "id": "KH_SignMedicalTrade",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_SignMedicalTrade.fbx",
+      "collection": "KH_SignMedicalTrade",
+      "sourceOffset": [
+        13.0,
+        0,
+        110.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_SignMedicalTrade_CanvasBeige_NC",
+          "material": "CanvasBeige",
+          "collider": false
+        },
+        {
+          "name": "KH_SignMedicalTrade_Frame_NC",
+          "material": "InkDark",
+          "collider": false
+        },
+        {
+          "name": "KH_SignMedicalTrade_SandCanvas_NC",
+          "material": "SandCanvas",
+          "collider": false
+        },
+        {
+          "name": "KH_SignMedicalTrade_SignRed_NC",
+          "material": "SignRed",
+          "collider": false
+        },
+        {
+          "name": "KH_SignMedicalTrade_SteelOxide_NC",
+          "material": "SteelOxide",
+          "collider": false
+        }
+      ],
+      "origin": "Cloth bottom centre; 4 x 1.3 m; front -Z; medicines, provisions and barter banner",
+      "triangles": 6260,
+      "boundsMin": [
+        -2.0267908573150635,
+        -0.02499999664723873,
+        -0.09662459790706635
+      ],
+      "boundsMax": [
+        2.0267908573150635,
+        1.5322307348251343,
+        0.09351107478141785
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 6260,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_SignMedicalTrade.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 3752,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_SignMedicalTrade_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 3616,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_SignMedicalTrade_LOD2.fbx"
+        }
+      ]
+    },
+    {
+      "id": "KH_SignGear",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_SignGear.fbx",
+      "collection": "KH_SignGear",
+      "sourceOffset": [
+        26.0,
+        0,
+        110.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_SignGear_CanvasDark_NC",
+          "material": "CanvasDark",
+          "collider": false
+        },
+        {
+          "name": "KH_SignGear_Lettering_NC",
+          "material": "ClothInk",
+          "collider": false
+        },
+        {
+          "name": "KH_SignGear_PlasticDark_NC",
+          "material": "PlasticDark",
+          "collider": false
+        },
+        {
+          "name": "KH_SignGear_SandCanvas_NC",
+          "material": "SandCanvas",
+          "collider": false
+        },
+        {
+          "name": "KH_SignGear_SteelOxide_NC",
+          "material": "SteelOxide",
+          "collider": false
+        }
+      ],
+      "origin": "Cloth bottom centre; 4 x 1.25 m; front -Z; packs and tools banner",
+      "triangles": 8154,
+      "boundsMin": [
+        -2.0267908573150635,
+        -0.02499999664723873,
+        -0.10708971321582794
+      ],
+      "boundsMax": [
+        2.0267908573150635,
+        1.48223078250885,
+        0.09353815019130707
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 8154,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_SignGear.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 4886,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_SignGear_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 2442,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_SignGear_LOD2.fbx"
+        }
+      ]
+    },
+    {
+      "id": "KH_SignRepair",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_SignRepair.fbx",
+      "collection": "KH_SignRepair",
+      "sourceOffset": [
+        39.0,
+        0,
+        110.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_SignRepair_CanvasDark_NC",
+          "material": "CanvasDark",
+          "collider": false
+        },
+        {
+          "name": "KH_SignRepair_Lettering_NC",
+          "material": "ClothInk",
+          "collider": false
+        },
+        {
+          "name": "KH_SignRepair_SandCanvas_NC",
+          "material": "SandCanvas",
+          "collider": false
+        },
+        {
+          "name": "KH_SignRepair_SteelOxide_NC",
+          "material": "SteelOxide",
+          "collider": false
+        }
+      ],
+      "origin": "Cloth bottom centre; 3 x 1.5 m; front -Z; repair stall banner",
+      "triangles": 9116,
+      "boundsMin": [
+        -1.5267908573150635,
+        -0.02499999664723873,
+        -0.10832282900810242
+      ],
+      "boundsMax": [
+        1.5267908573150635,
+        1.7322306632995605,
+        0.09341930598020554
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 9116,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_SignRepair.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 5466,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_SignRepair_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 2730,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_SignRepair_LOD2.fbx"
+        }
+      ]
+    },
+    {
+      "id": "KH_CheckpointHeader",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_CheckpointHeader.fbx",
+      "collection": "KH_CheckpointHeader",
+      "sourceOffset": [
+        0.0,
+        0,
+        120.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_CheckpointHeader_CanvasDark_NC",
+          "material": "CanvasDark",
+          "collider": false
+        },
+        {
+          "name": "KH_CheckpointHeader_Lettering_NC",
+          "material": "ClothInk",
+          "collider": false
+        },
+        {
+          "name": "KH_CheckpointHeader_SandCanvas_NC",
+          "material": "SandCanvas",
+          "collider": false
+        },
+        {
+          "name": "KH_CheckpointHeader_SignRed_NC",
+          "material": "SignRed",
+          "collider": false
+        },
+        {
+          "name": "KH_CheckpointHeader_SteelOxide_NC",
+          "material": "SteelOxide",
+          "collider": false
+        }
+      ],
+      "origin": "Cloth bottom centre; 6 x 1.4 m; front -Z; checkpoint main entrance banner",
+      "triangles": 8450,
+      "boundsMin": [
+        -3.0267908573150635,
+        -0.02499999664723873,
+        -0.10038622468709946
+      ],
+      "boundsMax": [
+        3.0267908573150635,
+        1.6322307586669922,
+        0.09346219897270203
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 8450,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_CheckpointHeader.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 5066,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_CheckpointHeader_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 4930,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_CheckpointHeader_LOD2.fbx"
+        }
+      ]
+    },
+    {
+      "id": "KH_CheckpointRules",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_CheckpointRules.fbx",
+      "collection": "KH_CheckpointRules",
+      "sourceOffset": [
+        13.0,
+        0,
+        120.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_CheckpointRules_CanvasDark_NC",
+          "material": "CanvasDark",
+          "collider": false
+        },
+        {
+          "name": "KH_CheckpointRules_Lettering_NC",
+          "material": "ClothInk",
+          "collider": false
+        },
+        {
+          "name": "KH_CheckpointRules_SandCanvas_NC",
+          "material": "SandCanvas",
+          "collider": false
+        },
+        {
+          "name": "KH_CheckpointRules_SteelOxide_NC",
+          "material": "SteelOxide",
+          "collider": false
+        }
+      ],
+      "origin": "Cloth bottom centre; 2.6 x 1.6 m; front -Z; inspection and visitor rules",
+      "triangles": 9776,
+      "boundsMin": [
+        -1.3267909288406372,
+        -0.02499999664723873,
+        -0.10387051850557327
+      ],
+      "boundsMax": [
+        1.3267909288406372,
+        1.832230806350708,
+        0.09338134527206421
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 9776,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_CheckpointRules.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 5862,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_CheckpointRules_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 2928,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_CheckpointRules_LOD2.fbx"
+        }
+      ]
+    },
+    {
+      "id": "KH_MetalDetector",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_MetalDetector.fbx",
+      "collection": "KH_MetalDetector",
+      "sourceOffset": [
+        26.0,
+        0,
+        120.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_MetalDetector_Ember_NC",
+          "material": "Ember",
+          "collider": false
+        },
+        {
+          "name": "KH_MetalDetector_Enamel_C",
+          "material": "Enamel",
+          "collider": true
+        },
+        {
+          "name": "KH_MetalDetector_Frame_NC",
+          "material": "Frame",
+          "collider": false
+        },
+        {
+          "name": "KH_MetalDetector_LampGlass_NC",
+          "material": "LampGlass",
+          "collider": false
+        },
+        {
+          "name": "KH_MetalDetector_PlasticDark_NC",
+          "material": "PlasticDark",
+          "collider": false
+        },
+        {
+          "name": "KH_MetalDetector_PlasticDark_C",
+          "material": "PlasticDark",
+          "collider": true
+        },
+        {
+          "name": "KH_MetalDetector_SteelOxide_NC",
+          "material": "SteelOxide",
+          "collider": false
+        }
+      ],
+      "origin": "Floor centre; 1.6 x 2.6 x .50 m; central passage 1.22 m wide, 2.36 m high; static inspection portal",
+      "triangles": 3412,
+      "boundsMin": [
+        -0.875,
+        0.0,
+        -0.33000001311302185
+      ],
+      "boundsMax": [
+        0.875,
+        2.5999999046325684,
+        0.33000001311302185
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 3412,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_MetalDetector.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 2042,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_MetalDetector_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 1072,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_MetalDetector_LOD2.fbx",
+          "roundtripRestoredChunks": [
+            "KH_MetalDetector_Ember_NC",
+            "KH_MetalDetector_LampGlass_NC",
+            "KH_MetalDetector_SteelOxide_NC"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "KH_SecurityFence",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_SecurityFence.fbx",
+      "collection": "KH_SecurityFence",
+      "sourceOffset": [
+        39.0,
+        0,
+        120.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_SecurityFence_Copper_NC",
+          "material": "Copper",
+          "collider": false
+        },
+        {
+          "name": "KH_SecurityFence_Frame_C",
+          "material": "Frame",
+          "collider": true
+        },
+        {
+          "name": "KH_SecurityFence_SteelOxide_C",
+          "material": "SteelOxide",
+          "collider": true
+        }
+      ],
+      "origin": "Floor centre; 2.5 x 2.5 x .16 m checkpoint wire fence; physical posts and welded mesh",
+      "triangles": 2076,
+      "boundsMin": [
+        -1.340000033378601,
+        0.0,
+        -0.20000000298023224
+      ],
+      "boundsMax": [
+        1.340000033378601,
+        2.5,
+        0.20000000298023224
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 2076,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_SecurityFence.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 1244,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_SecurityFence_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 620,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_SecurityFence_LOD2.fbx"
+        }
+      ]
+    },
+    {
+      "id": "KH_StringLights",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_StringLights.fbx",
+      "collection": "KH_StringLights",
+      "sourceOffset": [
+        0.0,
+        0,
+        130.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_StringLights_Copper_NC",
+          "material": "Copper",
+          "collider": false
+        },
+        {
+          "name": "KH_StringLights_LampGlass_NC",
+          "material": "LampGlass",
+          "collider": false
+        },
+        {
+          "name": "KH_StringLights_PlasticDark_NC",
+          "material": "PlasticDark",
+          "collider": false
+        }
+      ],
+      "origin": "Cable endpoint midpoint; 6 m span local X, endpoints Y 0; sag .45 m; eight bulbs to Y -.75; no realtime lights",
+      "triangles": 3312,
+      "boundsMin": [
+        -3.0374999046325684,
+        -0.7926853895187378,
+        -0.05381867289543152
+      ],
+      "boundsMax": [
+        3.0374999046325684,
+        0.02250000089406967,
+        0.07500000298023224
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 3312,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_StringLights.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 1986,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_StringLights_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 992,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_StringLights_LOD2.fbx"
+        }
+      ]
+    },
+    {
+      "id": "KH_WeaponsDisplay",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_WeaponsDisplay.fbx",
+      "collection": "KH_WeaponsDisplay",
+      "sourceOffset": [
+        13.0,
+        0,
+        130.0
+      ],
+      "chunks": [
+        {
+          "name": "KH_WeaponsDisplay_Frame_NC",
+          "material": "Frame",
+          "collider": false
+        },
+        {
+          "name": "KH_WeaponsDisplay_PlasticDark_NC",
+          "material": "PlasticDark",
+          "collider": false
+        },
+        {
+          "name": "KH_WeaponsDisplay_SteelOxide_NC",
+          "material": "SteelOxide",
+          "collider": false
+        },
+        {
+          "name": "KH_WeaponsDisplay_TimberRaw_NC",
+          "material": "TimberRaw",
+          "collider": false
+        },
+        {
+          "name": "KH_WeaponsDisplay_WornWood_NC",
+          "material": "WornWood",
+          "collider": false
+        }
+      ],
+      "origin": "Countertop centre; 1.84 m wide, 1.12 m high, .55 m deep; four static rifles and magazines, front -Z",
+      "triangles": 5772,
+      "boundsMin": [
+        -0.9222630262374878,
+        -0.13410606980323792,
+        -0.3125
+      ],
+      "boundsMax": [
+        0.9099999666213989,
+        1.0199999809265137,
+        0.28999999165534973
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 5772,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_WeaponsDisplay.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 3458,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_WeaponsDisplay_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 1724,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_WeaponsDisplay_LOD2.fbx"
+        }
+      ]
+    },
+    {
+      "id": "KH_AtriumFir",
+      "collection": "KH_AtriumFir",
+      "sourceOffset": [
+        26,
+        0,
+        130
+      ],
+      "origin": "Floor centre; 3.35m evergreen with needle fans, cutout fronds, wrapped light cable and bulbs",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_AtriumFir.fbx",
+      "chunks": [
+        {
+          "name": "KH_AtriumFir_FirNeedles_NC",
+          "material": "FirNeedles",
+          "collider": false
+        },
+        {
+          "name": "KH_AtriumFir_Frame_NC",
+          "material": "Frame",
+          "collider": false
+        },
+        {
+          "name": "KH_AtriumFir_LampGlass_NC",
+          "material": "LampGlass",
+          "collider": false
+        },
+        {
+          "name": "KH_AtriumFir_LeafGreen_NC",
+          "material": "LeafGreen",
+          "collider": false
+        },
+        {
+          "name": "KH_AtriumFir_TimberRaw_NC",
+          "material": "TimberRaw",
+          "collider": false
+        },
+        {
+          "name": "KH_AtriumFir_TimberRaw_C",
+          "material": "TimberRaw",
+          "collider": true
+        }
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 21832,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_AtriumFir.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 16344,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_AtriumFir_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 9064,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_AtriumFir_LOD2.fbx"
+        }
+      ],
+      "triangles": 21832,
+      "boundsMin": [
+        -1.1796098947525024,
+        0.0,
+        -1.168700933456421
+      ],
+      "boundsMax": [
+        1.1716768741607666,
+        3.3499999046325684,
+        1.1737573146820068
       ]
     }
-  ]
+  ],
+  "audit7Geometry": "Edited source solids retain original names; evaluated FBX with editable Bevel/WeightedNormal source modifiers",
+  "audit7LODCorrection": "Defective small decimated solids detected by actual roundtrip are restored from the preceding safe LOD, preserving all chunk identities and descending triangle counts."
 }

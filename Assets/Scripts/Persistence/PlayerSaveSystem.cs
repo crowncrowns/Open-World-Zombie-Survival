@@ -379,6 +379,7 @@ namespace ZombieSurvival.Persistence
         }
         private void OnGUI()
         {
+            if (ZombieSurvival.Presentation.SurvivorHUD.Owns(this)) return;
             if(!showHud || GetComponent<PlayerInventory>()?.IsOpen == true || GetComponent<PlayerProgressionMenu>()?.IsOpen == true || GetComponent<PlayerSaveMenu>()?.IsOpen == true || GetComponent<ZombieSurvival.Services.PlayerServiceSession>()?.IsOpen == true)return;float scale=Mathf.Min(Screen.width/1000f,Screen.height/700f);var matrix=GUI.matrix;GUI.matrix=Matrix4x4.Scale(Vector3.one*scale);
             float width=Screen.width/scale;Color color=GUI.color;GUI.color=new Color(.055f,.075f,.095f,1);GUI.DrawTexture(new Rect(width/2-300,125,600,74),Texture2D.whiteTexture);GUI.color=color;
             GUI.Label(new Rect(width/2-292,128,584,68),Status+"\nF6 — меню · "+(GetComponent<PlayerSaveSlots>()?.AutoStatus??""),new GUIStyle(GUI.skin.label){fontSize=13,wordWrap=true});GUI.matrix=matrix;

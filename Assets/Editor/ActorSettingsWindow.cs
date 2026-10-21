@@ -14,7 +14,7 @@ public sealed class ActorSettingsWindow : EditorWindow
     private ZombieSurvival.Inventory.ItemDefinition itemType;
     private Vector2 scroll;
     private readonly Dictionary<EntityId, Editor> editors = new Dictionary<EntityId, Editor>();
-    private readonly string[] tabs = { "Общие", "Движение", "Паркур", "Скрытность / ИИ", "Внешность", "Инвентарь", "Звук", "Бой / оружие", "Деньги / бюджет", "Потребности / сохранение", "Развитие / хотбар" };
+    private readonly string[] tabs = { "Общие", "Движение", "Паркур", "Скрытность / ИИ", "Внешность", "Инвентарь", "Звук", "Бой / оружие", "Деньги / бюджет", "Потребности / сохранение", "Развитие / хотбар", "Интерфейс" };
     [MenuItem("Tools/Zombie Survival/Настройки персонажа и зомби")]
     public static void Open() { var window = GetWindow<ActorSettingsWindow>("Настройки актёра"); window.minSize = new Vector2(650,450); window.ReadSelection(); }
     private void OnEnable() { Selection.selectionChanged += ReadSelection; ReadSelection(); }
@@ -87,6 +87,7 @@ public sealed class ActorSettingsWindow : EditorWindow
     {
         switch (type)
         {
+            case "SurvivorHUD": return 11;
             case "ActorIdentity": case "Health": case "CombatTarget": case "PlayerStamina": case "PlayerLifeCycle": case "PlayerFallDamage": return 0;
             case "FirstPersonController": return 1;
             case "PlayerParkour": return 2;

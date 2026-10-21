@@ -265,6 +265,13 @@ def _extra(collection, template, name, material):
 def _retarget(collections, originals, level, log):
     changes=[]
     for identifier, collection in collections.items():
+        # Construct each LOD's extra stitches/pull tabs afresh. Retaining LOD0
+        # extras here would silently defeat reduction at the next two levels.
+        for obj in list(collection.all_objects):
+            if obj.get("Hub8SoftGoodsOwned"):
+                data=obj.data
+                bpy.data.objects.remove(obj,do_unlink=True)
+                if data.users==0:bpy.data.meshes.remove(data)
         specs=originals[identifier]
         objects={name:bpy.data.objects[name] for name in specs}
         if identifier=="KH_Sandbag":
@@ -381,7 +388,7 @@ def _retarget(collections, originals, level, log):
     return changes
 
 
-def _roundtrip(path, prop, expected_triangles):
+def _roundtrip(path, prop, expected_triangles, expected_bounds):
     # This intentionally destroys the working scene only after native LOD0 has
     # been saved to the work file, then reads the real FBX with Blender's importer.
     bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -403,21 +410,90 @@ def _roundtrip(path, prop, expected_triangles):
         records.append(dict(chunk=obj.name,**metrics))
     triangles=sum(r["triangles"] for r in records)
     assert triangles==expected_triangles,(path,triangles,expected_triangles)
+    points=[o.matrix_world@v.co for o in objects for v in o.data.vertices]
+    lo=[min(p[i] for p in points) for i in (0,2,1)]
+    hi=[max(p[i] for p in points) for i in (0,2,1)]
+    assert max(abs(a-b) for a,b in zip(lo,expected_bounds["boundsMin"]))<.00015,(path,"min bounds",lo,expected_bounds)
+    assert max(abs(a-b) for a,b in zip(hi,expected_bounds["boundsMax"]))<.00015,(path,"max bounds",hi,expected_bounds)
     return dict(path=str(path),sha256=hashlib.sha256(path.read_bytes()).hexdigest(),
-                triangles=triangles,chunks=records)
+                triangles=triangles,boundsMin=lo,boundsMax=hi,chunks=records)
+
+
+def _preserve_fbx_nodes(path, original):
+    """Transplant new mesh payloads into the original FBX object/connection tree.
+
+    An exporter may assign different numeric IDs despite stable object names.
+    Preserve the actual old Model, Geometry and material IDs, parent links and
+    transforms; the edited geometry is the sole payload allowed to change.
+    """
+    from audit7_soft_shading import (child, clone, encoded_clone, tree_hash,
+                                    parse_fbx, encode_bin)
+    original_tree, version = parse_fbx.parse(str(original))
+    fresh, fresh_version = parse_fbx.parse(str(path))
+    assert version == fresh_version, (path, "FBX version changed")
+    tree = clone(original_tree)
+
+    def geometries_by_model(value):
+        objects = child(value, b"Objects").elems
+        models = {o.props[0]: o for o in objects if o.id == b"Model"}
+        connections = child(value, b"Connections").elems
+        result = {}
+        for geometry in (o for o in objects if o.id == b"Geometry"):
+            linked = [models[c.props[2]] for c in connections
+                      if c.props[0] == b"OO" and c.props[1] == geometry.props[0]
+                      and c.props[2] in models]
+            assert len(linked) == 1, (path, "Ambiguous mesh/model owner")
+            name = linked[0].props[1].split(b"\x00\x01")[0]
+            assert name not in result, (path, "Duplicate FBX Model name")
+            result[name] = geometry
+        return result
+
+    old_geometry, new_geometry = geometries_by_model(tree), geometries_by_model(fresh)
+    assert old_geometry.keys() == new_geometry.keys(), (path, "FBX mesh identities changed")
+    contracts = {identifier: tree_hash(child(tree, identifier))
+                 for identifier in (b"Connections", b"GlobalSettings")}
+    model_contracts = {o.props[0]: tree_hash(o) for o in child(tree, b"Objects").elems
+                       if o.id == b"Model"}
+    for name, geometry in old_geometry.items():
+        geometry.elems = [clone(e) for e in new_geometry[name].elems]
+    assert all(tree_hash(child(tree, identifier)) == digest
+               for identifier, digest in contracts.items())
+    assert model_contracts == {o.props[0]: tree_hash(o)
+                              for o in child(tree, b"Objects").elems if o.id == b"Model"}
+    temporary = path.with_suffix(".nodes8.fbx")
+    encode_bin.write(str(temporary), encoded_clone(tree), version)
+    temporary.replace(path)
+    parsed, _ = parse_fbx.parse(str(path))
+    assert model_contracts == {o.props[0]: tree_hash(o)
+                              for o in child(parsed, b"Objects").elems if o.id == b"Model"}
+    assert all(tree_hash(child(parsed, identifier)) == digest
+               for identifier, digest in contracts.items())
+    return dict(retainedAllModelUIDsNamesTransforms=True,
+                retainedGeometryUIDs=True, retainedConnections=True,
+                source=str(original), models=len(model_contracts))
 
 
 def apply(root, work):
     """Save targeted native LOD0 and nine proved FBX exports; return manifest updates."""
     root,work=Path(root).resolve(),Path(work).resolve()
+    assert root != Path(__file__).resolve().parents[2], "A separate staging project is required"
     directory=work/"soft_goods";directory.mkdir(parents=True,exist_ok=True)
     source=root/"Sources/KursHub/KursHubProps.blend"
+    source_before_sha=hashlib.sha256(source.read_bytes()).hexdigest()
     manifest_path=root/"Assets/Environment/KursHub/Props/KursHubPropsManifest.json"
     manifest=json.loads(manifest_path.read_text(encoding="utf8"))
     props={p["id"]:p for p in manifest["props"] if p["id"] in TARGETS}
     assert set(props)==set(TARGETS),"The three known authored prop records are required"
     backup=directory/"before";backup.mkdir(exist_ok=True)
     if not (backup/source.name).exists():shutil.copy2(source,backup/source.name)
+    original_fbx={}
+    for prop in props.values():
+        for lod in prop["lods"]:
+            model=root/lod["model"]
+            saved=backup/lod["model"]
+            saved.parent.mkdir(parents=True,exist_ok=True)
+            if not saved.exists():shutil.copy2(model,saved)
+            original_fbx[lod["model"]]=saved
     bpy.ops.wm.open_mainfile(filepath=str(source))
     collections={identifier:bpy.data.collections[identifier] for identifier in TARGETS}
     originals={};original_matrices={};modifier_states={}
@@ -454,14 +530,16 @@ def apply(root, work):
                         if level==2:m.show_viewport=False;m.show_render=False
             prop_record=dict(id=identifier,objects=objects,offset=collection.instance_offset.copy())
             record,extra=export_prop(prop_record,root,level)
+            native_contract=_preserve_fbx_nodes(root/record["model"],original_fbx[record["model"]])
             assert sorted(c["name"] for c in extra["chunks"])==sorted(c["name"] for c in props[identifier]["chunks"])
-            exports.append(dict(id=identifier,level=level,record=record,extra=extra))
+            exports.append(dict(id=identifier,level=level,record=record,extra=extra,nativeContract=native_contract))
             if level==0:
                 updates[identifier].update(triangles=record["triangles"],boundsMin=extra["boundsMin"],boundsMax=extra["boundsMax"])
             updates[identifier].setdefault("hub8SoftGoods",dict(revision=8,approach="Procedural closed profiles and sewn cloth, original objects and chunks retained"))
         if level==0:
             # Preserve existing relative image paths for the canonical source
             # location. The final copy is written only after all FBX proofs pass.
+            bpy.context.preferences.filepaths.save_version=0
             bpy.ops.wm.save_as_mainfile(filepath=str(temporary_native),relative_remap=False)
     roundtrips=[]
     for identifier in TARGETS:
@@ -470,15 +548,18 @@ def apply(root, work):
         assert counts[0]>counts[1]>counts[2],(identifier,"unsafe/nondecreasing LOD",counts)
         updates[identifier]["lods"]=[e["record"] for e in levels]
         for exported in levels:
-            roundtrips.append(_roundtrip(root/exported["record"]["model"],props[identifier],exported["record"]["triangles"]))
+            roundtrips.append(_roundtrip(root/exported["record"]["model"],props[identifier],exported["record"]["triangles"],exported["extra"]))
     incoming=source.with_name(source.name+".hub8-incoming")
+    assert hashlib.sha256(source.read_bytes()).hexdigest()==source_before_sha,"Concurrent native source edit; staged source left unchanged"
     shutil.copy2(temporary_native,incoming)
     incoming.replace(source)
     bpy.ops.wm.open_mainfile(filepath=str(source))
     result=dict(status="HUB8_SOFT_GOODS_ROUNDTRIP_OK",source=str(source),
+                sourceBeforeSHA256=source_before_sha,
                 sourceSHA256=hashlib.sha256(source.read_bytes()).hexdigest(),
                 targets=list(TARGETS),corrections=log,propUpdates=list(updates.values()),
                 roundtrips=roundtrips,
+                nativeContracts=[dict(id=e["id"],level=e["level"],**e["nativeContract"]) for e in exports],
                 retained="All original object names, transforms, source offsets, material/collision groups and chunk node names. Existing crate/vegetable/packet geometry retained.",
                 limitation="No kettle object exists in these three collections. No unknown mesh was reinterpreted as a kettle. Actual scene visual review remains required.")
     (directory/"soft_goods_validation.json").write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding="utf8")

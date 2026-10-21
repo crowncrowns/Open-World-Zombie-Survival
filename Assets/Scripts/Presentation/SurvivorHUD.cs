@@ -30,6 +30,8 @@ namespace ZombieSurvival.Presentation
         private float criticalHealth = .25f;
         [SerializeField, InspectorName("Порог заметного шума"), Min(.1f), Tooltip("Минимальная громкость реального события GameplayNoise для индикатора. Это не вероятность обнаружения и не информация о скрытом враге.")]
         private float noiseThreshold = 1.5f;
+        [SerializeField, InspectorName("Опорный уровень шума"), Range(0, 100), Tooltip("Игровой уровень в дБ при громкости GameplayNoise 1. Формула: опорный уровень + 20 log10(громкость). Это условная шкала, не измерение физического dB SPL; слух NPC остаётся прежним.")]
+        private float referenceNoiseDb = 50f;
         [SerializeField, InspectorName("Размер интерфейса"), Range(.75f, 1.4f), Tooltip("Множитель масштаба относительно макета 1920×1080. Все блоки учитывают безопасную область экрана.")]
         private float interfaceScale = 1f;
 
@@ -56,7 +58,8 @@ namespace ZombieSurvival.Presentation
         private Font font;
         private ContextualHudGroup hpGroup, staminaGroup, foodGroup, waterGroup, hotbarGroup, weaponGroup, noiseGroup, promptGroup, toastGroup;
         private Meter hpMeter, staminaMeter, foodMeter, waterMeter;
-        private Image flash, reticle, criticalMark;
+        private Image flash, criticalMark;
+        private Graphic reticle;
         private Text weaponName, ammo, weaponState, noiseText, targetName, targetAction, feedback, toast, deathText;
         private RectTransform death;
         private Rect lastSafe;
@@ -75,7 +78,7 @@ namespace ZombieSurvival.Presentation
         }
 
         private sealed class Meter { internal RectTransform Fill; internal Image Ink; internal Text Value, Label; internal float Displayed = 1; }
-        private sealed class Cell { internal Image Back, Accent; internal Text Number, Name, Detail; }
+        private sealed class Cell { internal Image Back, Accent; internal RawImage Model; internal Text Number, Detail; }
         private void OnEnable()
         {
             Resolve();
@@ -196,7 +199,7 @@ namespace ZombieSurvival.Presentation
             UpdateWeapon(visible);
             UpdateInteraction(visible);
             bool loud = noise != null && noise.isActiveAndEnabled && noise.CurrentLoudness >= noiseThreshold;
-            if (loud) noiseText.text = "///  " + noise.CurrentNoiseLabel.ToUpperInvariant() + "  ·  ШУМ";
+            if (loud) noiseText.text = "///  " + Mathf.RoundToInt(referenceNoiseDb + 20f * Mathf.Log10(Mathf.Max(.0001f, noise.CurrentLoudness))) + " дБ  ·  " + noise.CurrentNoiseLabel.ToUpperInvariant();
             noiseGroup.Tick(loud, visible, fadeSeconds);
             UpdateNotifications();
             toastGroup.Tick(false, visible, fadeSeconds);
@@ -215,10 +218,9 @@ namespace ZombieSurvival.Presentation
                 cell.Back.color = selected ? new Color(.14f, .16f, .13f, .96f) : Back;
                 cell.Accent.color = selected ? Amber : new Color(.38f, .41f, .36f, .35f);
                 cell.Number.color = selected ? Amber : Muted;
-                cell.Name.color = item == null ? Muted : Paper;
-                cell.Name.text = item != null ? item.Definition.DisplayName : "—";
-                cell.Detail.text = item == null ? "" : item.Definition.Weapon != null && item.Definition.Weapon.kind == WeaponKind.Firearm ? item.LoadedRounds + " / " + hotbar.Storage.Count(item.Definition.Weapon.Ammo)
-                    : item.Definition.HasDurability ? Mathf.CeilToInt(item.Durability) + " / " + Mathf.CeilToInt(item.Definition.MaximumDurability) : "× " + item.Quantity;
+                cell.Model.texture = item != null ? ItemModelIcons.Get(item.Definition) : null;
+                cell.Model.enabled = cell.Model.texture != null;
+                cell.Detail.text = item != null ? "×" + item.Quantity : "";
             }
             hotbarGroup.Tick(false, visible && hotbar.isActiveAndEnabled, fadeSeconds);
         }
@@ -252,8 +254,7 @@ namespace ZombieSurvival.Presentation
             feedback.text = active ? interactor.Feedback : "";
             if (hotbar != null && !string.IsNullOrEmpty(hotbar.PresentationFeedback)) feedback.text = hotbar.PresentationFeedback;
             if (!visible) feedback.text = "";
-            bool weaponAim = weapons != null && weapons.Equipped != null && weapons.IsAiming;
-            reticle.enabled = active && (target != null || weaponAim || weapons != null && weapons.HitMarkerVisible);
+            reticle.enabled = visible;
             reticle.color = weapons != null && weapons.HitMarkerVisible ? Red : usable ? Amber : Paper;
         }
         private void UpdateNotifications()
@@ -310,8 +311,9 @@ namespace ZombieSurvival.Presentation
             feedback = Label(fb, "Feedback text", Vector2.zero, new Vector2(760, 46), 16, Paper, TextAnchor.MiddleCenter);
             var note = Panel("Notification", new Vector2(.5f, 1), new Vector2(0, -78), new Vector2(700, 70), out toastGroup);
             toast = Label(note, "Notification text", Vector2.zero, new Vector2(700, 70), 17, Paper, TextAnchor.MiddleCenter);
-            var aim = Rect(safe, "Reticle", new Vector2(.5f, .5f), new Vector2(.5f, .5f), Vector2.zero, new Vector2(3, 3));
-            reticle = aim.gameObject.AddComponent<Image>(); reticle.raycastTarget = false;
+            var aim = Rect(safe, "Reticle", new Vector2(.5f, .5f), new Vector2(.5f, .5f), Vector2.zero, new Vector2(4, 4));
+            reticle = aim.gameObject.AddComponent<HudDot>(); reticle.raycastTarget = false;
+            var outline = aim.gameObject.AddComponent<Outline>(); outline.effectColor = new Color(0, 0, 0, .75f); outline.effectDistance = new Vector2(.7f, .7f);
             flash = Rect(go.transform, "Damage flash", Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero).gameObject.AddComponent<Image>();
             flash.raycastTarget = false; flash.color = Color.clear;
             death = Rect(safe, "Death", Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
@@ -332,13 +334,16 @@ namespace ZombieSurvival.Presentation
                 var rect = Rect(root, "Slot " + (i + 1), Vector2.zero, Vector2.zero, new Vector2(i * width + 2, 0), new Vector2(width - 5, 82));
                 rect.pivot = Vector2.zero;
                 var background = rect.gameObject.AddComponent<Image>(); background.raycastTarget = false; background.color = Back;
+                var iconRect = Rect(rect, "Item model", Vector2.zero, Vector2.zero, new Vector2(18, 13), new Vector2(width - 39, 61));
+                iconRect.pivot = Vector2.zero;
+                var icon = iconRect.gameObject.AddComponent<RawImage>(); icon.raycastTarget = false; icon.enabled = false;
                 cells[i] = new Cell
                 {
                     Back = background,
+                    Model = icon,
                     Accent = Box(rect, "Selection", Vector2.zero, new Vector2(width - 5, 2), Amber),
                     Number = Label(rect, "Key", new Vector2(10, 56), new Vector2(22, 19), 12, Muted),
-                    Name = Label(rect, "Item", new Vector2(10, 25), new Vector2(width - 25, 33), 14, Paper),
-                    Detail = Label(rect, "Count", new Vector2(10, 5), new Vector2(width - 25, 21), 12, Muted)
+                    Detail = Label(rect, "Count", new Vector2(9, 4), new Vector2(width - 23, 24), 17, Paper, TextAnchor.MiddleRight)
                 };
                 cells[i].Number.text = i < 5 ? (i + 1).ToString("00") : "·";
             }

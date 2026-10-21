@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "stage": 7,
+  "stage": 8,
   "coordinates": "Unity metres; X right, Y up, front -Z",
   "palette": [
     {
@@ -272,6 +272,105 @@
         0.02,
         1
       ]
+    },
+    {
+      "name": "Hub8LabelsA",
+      "rgba": [
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "name": "Hub8LabelsB",
+      "rgba": [
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "name": "Hub8SkylightGlass",
+      "rgba": [
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "name": "Hub8SkylightFrame",
+      "rgba": [
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "name": "Hub8SignCheckpoint",
+      "rgba": [
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "name": "Hub8SignGear",
+      "rgba": [
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "name": "Hub8SignKurs",
+      "rgba": [
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "name": "Hub8SignMedical",
+      "rgba": [
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "name": "Hub8SignRepair",
+      "rgba": [
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "name": "Hub8SignRules",
+      "rgba": [
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "name": "Hub8SignWeapons",
+      "rgba": [
+        1,
+        1,
+        1,
+        1
+      ]
     }
   ],
   "props": [
@@ -297,7 +396,7 @@
         }
       ],
       "origin": "Ground centre; .85 m wide, .35 m high, .50 m deep",
-      "triangles": 640,
+      "triangles": 3932,
       "boundsMin": [
         -0.42500001192092896,
         0.0,
@@ -311,20 +410,24 @@
       "lods": [
         {
           "level": 0,
-          "triangles": 640,
+          "triangles": 3932,
           "model": "Assets/Environment/KursHub/Props/Models/KH_Sandbag.fbx"
         },
         {
           "level": 1,
-          "triangles": 466,
+          "triangles": 1852,
           "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_Sandbag_LOD1.fbx"
         },
         {
           "level": 2,
-          "triangles": 336,
+          "triangles": 836,
           "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_Sandbag_LOD2.fbx"
         }
-      ]
+      ],
+      "hub8SoftGoods": {
+        "revision": 8,
+        "approach": "Procedural closed profiles and sewn cloth, original objects and chunks retained"
+      }
     },
     {
       "id": "KH_Barricade",
@@ -1565,37 +1668,38 @@
         }
       ],
       "origin": "Stock bottom centre; 1.7 x .9 x .76 m bottles, tin cans, jars, vegetable crate and tied grain bags; no collision",
-      "triangles": 5184,
+      "triangles": 33860,
       "boundsMin": [
         -0.8299999833106995,
         -0.003729691496118903,
-        -0.39565595984458923
+        -0.3956565856933594
       ],
       "boundsMax": [
-        0.8314999938011169,
-        0.5872829556465149,
-        0.38798099756240845
+        0.8325150012969971,
+        0.5799999833106995,
+        0.3879814147949219
       ],
       "lods": [
         {
           "level": 0,
-          "triangles": 5184,
+          "triangles": 33860,
           "model": "Assets/Environment/KursHub/Props/Models/KH_GoodsFood.fbx"
         },
         {
           "level": 1,
-          "triangles": 3102,
+          "triangles": 19428,
           "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_GoodsFood_LOD1.fbx"
         },
         {
           "level": 2,
-          "triangles": 1746,
-          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_GoodsFood_LOD2.fbx",
-          "roundtripRestoredChunks": [
-            "KH_GoodsFood_Frame_NC"
-          ]
+          "triangles": 11108,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_GoodsFood_LOD2.fbx"
         }
-      ]
+      ],
+      "hub8SoftGoods": {
+        "revision": 8,
+        "approach": "Procedural closed profiles and sewn cloth, original objects and chunks retained"
+      }
     },
     {
       "id": "KH_GoodsTools",
@@ -1903,38 +2007,38 @@
         }
       ],
       "origin": "Floor centre; 1.5 x 1.10 x 1.15 m mismatched sewn sacks and patched grain bag with tied necks; static collision",
-      "triangles": 896,
+      "triangles": 23856,
       "boundsMin": [
         -0.7396416664123535,
         0.0,
-        -0.5259999632835388
+        -0.5163993835449219
       ],
       "boundsMax": [
         0.7021546363830566,
         0.9599999785423279,
-        0.49216076731681824
+        0.4921607971191406
       ],
       "lods": [
         {
           "level": 0,
-          "triangles": 896,
+          "triangles": 23856,
           "model": "Assets/Environment/KursHub/Props/Models/KH_SupplySackStack.fbx"
         },
         {
           "level": 1,
-          "triangles": 530,
+          "triangles": 11004,
           "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_SupplySackStack_LOD1.fbx"
         },
         {
           "level": 2,
-          "triangles": 286,
-          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_SupplySackStack_LOD2.fbx",
-          "roundtripRestoredChunks": [
-            "KH_SupplySackStack_CanvasBlue_NC",
-            "KH_SupplySackStack_CanvasRed_NC"
-          ]
+          "triangles": 4676,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_SupplySackStack_LOD2.fbx"
         }
-      ]
+      ],
+      "hub8SoftGoods": {
+        "revision": 8,
+        "approach": "Procedural closed profiles and sewn cloth, original objects and chunks retained"
+      }
     },
     {
       "id": "KH_LowDisplay",
@@ -3231,7 +3335,7 @@
         },
         {
           "name": "KH_KursAtriumBanner_Lettering_NC",
-          "material": "ClothInk",
+          "material": "Hub8SignKurs",
           "collider": false
         },
         {
@@ -3251,34 +3355,41 @@
         }
       ],
       "origin": "Cloth bottom centre; 4.5 x 6 m; folded blue fabric with double-sided white Kurs wordmark; suspension top Y 6.5",
-      "triangles": 28112,
+      "triangles": 13920,
       "boundsMin": [
         -2.282947063446045,
         -0.02499999664723873,
-        -0.10585031658411026
+        -0.10143280774354935
       ],
       "boundsMax": [
         2.282947063446045,
         6.501380443572998,
-        0.10370443016290665
+        0.10023324191570282
       ],
       "lods": [
         {
           "level": 0,
-          "triangles": 28112,
+          "triangles": 13920,
           "model": "Assets/Environment/KursHub/Props/Models/KH_KursAtriumBanner.fbx"
         },
         {
           "level": 1,
-          "triangles": 16864,
+          "triangles": 8352,
           "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_KursAtriumBanner_LOD1.fbx"
         },
         {
           "level": 2,
-          "triangles": 8428,
+          "triangles": 4176,
           "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_KursAtriumBanner_LOD2.fbx"
         }
-      ]
+      ],
+      "signQualityRevision": 8,
+      "signPrint": {
+        "material": "Hub8SignKurs",
+        "uniqueUV": true,
+        "depthExpansionMetres": 0.0007,
+        "originalGlyphSourceArchive": "Revision7 lettering archive"
+      }
     },
     {
       "id": "KH_SignWeapons",
@@ -3297,7 +3408,7 @@
         },
         {
           "name": "KH_SignWeapons_Lettering_NC",
-          "material": "ClothInk",
+          "material": "Hub8SignWeapons",
           "collider": false
         },
         {
@@ -3312,34 +3423,41 @@
         }
       ],
       "origin": "Cloth bottom centre; 4 x .95 m; front -Z; weapons shop banner",
-      "triangles": 4988,
+      "triangles": 5200,
       "boundsMin": [
         -2.0267908573150635,
         -0.02499999664723873,
-        -0.09929785132408142
+        -0.09659595787525177
       ],
       "boundsMax": [
         2.0267908573150635,
         1.1822307109832764,
-        0.0937524288892746
+        0.09445242583751678
       ],
       "lods": [
         {
           "level": 0,
-          "triangles": 4988,
+          "triangles": 5200,
           "model": "Assets/Environment/KursHub/Props/Models/KH_SignWeapons.fbx"
         },
         {
           "level": 1,
-          "triangles": 2990,
+          "triangles": 3116,
           "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_SignWeapons_LOD1.fbx"
         },
         {
           "level": 2,
-          "triangles": 2854,
+          "triangles": 2980,
           "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_SignWeapons_LOD2.fbx"
         }
-      ]
+      ],
+      "signQualityRevision": 8,
+      "signPrint": {
+        "material": "Hub8SignWeapons",
+        "uniqueUV": true,
+        "depthExpansionMetres": 0.0007,
+        "originalGlyphSourceArchive": "Revision7 lettering archive"
+      }
     },
     {
       "id": "KH_SignMedicalTrade",
@@ -3358,7 +3476,7 @@
         },
         {
           "name": "KH_SignMedicalTrade_Frame_NC",
-          "material": "InkDark",
+          "material": "Hub8SignMedical",
           "collider": false
         },
         {
@@ -3378,34 +3496,41 @@
         }
       ],
       "origin": "Cloth bottom centre; 4 x 1.3 m; front -Z; medicines, provisions and barter banner",
-      "triangles": 6260,
+      "triangles": 5296,
       "boundsMin": [
         -2.0267908573150635,
         -0.02499999664723873,
-        -0.09662459790706635
+        -0.09678830951452255
       ],
       "boundsMax": [
         2.0267908573150635,
         1.5322307348251343,
-        0.09351107478141785
+        0.09421107172966003
       ],
       "lods": [
         {
           "level": 0,
-          "triangles": 6260,
+          "triangles": 5296,
           "model": "Assets/Environment/KursHub/Props/Models/KH_SignMedicalTrade.fbx"
         },
         {
           "level": 1,
-          "triangles": 3752,
+          "triangles": 3176,
           "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_SignMedicalTrade_LOD1.fbx"
         },
         {
           "level": 2,
-          "triangles": 3616,
+          "triangles": 3012,
           "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_SignMedicalTrade_LOD2.fbx"
         }
-      ]
+      ],
+      "signQualityRevision": 8,
+      "signPrint": {
+        "material": "Hub8SignMedical",
+        "uniqueUV": true,
+        "depthExpansionMetres": 0.0007,
+        "originalGlyphSourceArchive": "Revision7 lettering archive"
+      }
     },
     {
       "id": "KH_SignGear",
@@ -3424,7 +3549,7 @@
         },
         {
           "name": "KH_SignGear_Lettering_NC",
-          "material": "ClothInk",
+          "material": "Hub8SignGear",
           "collider": false
         },
         {
@@ -3444,34 +3569,41 @@
         }
       ],
       "origin": "Cloth bottom centre; 4 x 1.25 m; front -Z; packs and tools banner",
-      "triangles": 8154,
+      "triangles": 5448,
       "boundsMin": [
         -2.0267908573150635,
         -0.02499999664723873,
-        -0.10708971321582794
+        -0.09677597880363464
       ],
       "boundsMax": [
         2.0267908573150635,
         1.48223078250885,
-        0.09353815019130707
+        0.09423814713954926
       ],
       "lods": [
         {
           "level": 0,
-          "triangles": 8154,
+          "triangles": 5448,
           "model": "Assets/Environment/KursHub/Props/Models/KH_SignGear.fbx"
         },
         {
           "level": 1,
-          "triangles": 4886,
+          "triangles": 3266,
           "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_SignGear_LOD1.fbx"
         },
         {
           "level": 2,
-          "triangles": 2442,
+          "triangles": 1634,
           "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_SignGear_LOD2.fbx"
         }
-      ]
+      ],
+      "signQualityRevision": 8,
+      "signPrint": {
+        "material": "Hub8SignGear",
+        "uniqueUV": true,
+        "depthExpansionMetres": 0.0007,
+        "originalGlyphSourceArchive": "Revision7 lettering archive"
+      }
     },
     {
       "id": "KH_SignRepair",
@@ -3490,7 +3622,7 @@
         },
         {
           "name": "KH_SignRepair_Lettering_NC",
-          "material": "ClothInk",
+          "material": "Hub8SignRepair",
           "collider": false
         },
         {
@@ -3505,34 +3637,41 @@
         }
       ],
       "origin": "Cloth bottom centre; 3 x 1.5 m; front -Z; repair stall banner",
-      "triangles": 9116,
+      "triangles": 5200,
       "boundsMin": [
         -1.5267908573150635,
         -0.02499999664723873,
-        -0.10832282900810242
+        -0.09681443870067596
       ],
       "boundsMax": [
         1.5267908573150635,
         1.7322306632995605,
-        0.09341930598020554
+        0.09411930292844772
       ],
       "lods": [
         {
           "level": 0,
-          "triangles": 9116,
+          "triangles": 5200,
           "model": "Assets/Environment/KursHub/Props/Models/KH_SignRepair.fbx"
         },
         {
           "level": 1,
-          "triangles": 5466,
+          "triangles": 3116,
           "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_SignRepair_LOD1.fbx"
         },
         {
           "level": 2,
-          "triangles": 2730,
+          "triangles": 1556,
           "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_SignRepair_LOD2.fbx"
         }
-      ]
+      ],
+      "signQualityRevision": 8,
+      "signPrint": {
+        "material": "Hub8SignRepair",
+        "uniqueUV": true,
+        "depthExpansionMetres": 0.0007,
+        "originalGlyphSourceArchive": "Revision7 lettering archive"
+      }
     },
     {
       "id": "KH_CheckpointHeader",
@@ -3551,7 +3690,7 @@
         },
         {
           "name": "KH_CheckpointHeader_Lettering_NC",
-          "material": "ClothInk",
+          "material": "Hub8SignCheckpoint",
           "collider": false
         },
         {
@@ -3571,34 +3710,41 @@
         }
       ],
       "origin": "Cloth bottom centre; 6 x 1.4 m; front -Z; checkpoint main entrance banner",
-      "triangles": 8450,
+      "triangles": 5296,
       "boundsMin": [
         -3.0267908573150635,
         -0.02499999664723873,
-        -0.10038622468709946
+        -0.09680517017841339
       ],
       "boundsMax": [
         3.0267908573150635,
         1.6322307586669922,
-        0.09346219897270203
+        0.09416219592094421
       ],
       "lods": [
         {
           "level": 0,
-          "triangles": 8450,
+          "triangles": 5296,
           "model": "Assets/Environment/KursHub/Props/Models/KH_CheckpointHeader.fbx"
         },
         {
           "level": 1,
-          "triangles": 5066,
+          "triangles": 3176,
           "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_CheckpointHeader_LOD1.fbx"
         },
         {
           "level": 2,
-          "triangles": 4930,
+          "triangles": 3012,
           "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_CheckpointHeader_LOD2.fbx"
         }
-      ]
+      ],
+      "signQualityRevision": 8,
+      "signPrint": {
+        "material": "Hub8SignCheckpoint",
+        "uniqueUV": true,
+        "depthExpansionMetres": 0.0007,
+        "originalGlyphSourceArchive": "Revision7 lettering archive"
+      }
     },
     {
       "id": "KH_CheckpointRules",
@@ -3617,7 +3763,7 @@
         },
         {
           "name": "KH_CheckpointRules_Lettering_NC",
-          "material": "ClothInk",
+          "material": "Hub8SignRules",
           "collider": false
         },
         {
@@ -3632,34 +3778,41 @@
         }
       ],
       "origin": "Cloth bottom centre; 2.6 x 1.6 m; front -Z; inspection and visitor rules",
-      "triangles": 9776,
+      "triangles": 5200,
       "boundsMin": [
         -1.3267909288406372,
         -0.02499999664723873,
-        -0.10387051850557327
+        -0.0968184694647789
       ],
       "boundsMax": [
         1.3267909288406372,
         1.832230806350708,
-        0.09338134527206421
+        0.0940813422203064
       ],
       "lods": [
         {
           "level": 0,
-          "triangles": 9776,
+          "triangles": 5200,
           "model": "Assets/Environment/KursHub/Props/Models/KH_CheckpointRules.fbx"
         },
         {
           "level": 1,
-          "triangles": 5862,
+          "triangles": 3116,
           "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_CheckpointRules_LOD1.fbx"
         },
         {
           "level": 2,
-          "triangles": 2928,
+          "triangles": 1556,
           "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_CheckpointRules_LOD2.fbx"
         }
-      ]
+      ],
+      "signQualityRevision": 8,
+      "signPrint": {
+        "material": "Hub8SignRules",
+        "uniqueUV": true,
+        "depthExpansionMetres": 0.0007,
+        "originalGlyphSourceArchive": "Revision7 lettering archive"
+      }
     },
     {
       "id": "KH_MetalDetector",
@@ -3990,8 +4143,1248 @@
         3.3499999046325684,
         1.1737573146820068
       ]
+    },
+    {
+      "id": "KH_DieselGenerator",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_DieselGenerator.fbx",
+      "collection": "KH_DieselGenerator",
+      "sourceOffset": [
+        80.0,
+        0.0,
+        200.0
+      ],
+      "origin": "Дизельная электростанция: сварная рама, двигатель, альтернатор, радиатор и топливная система",
+      "triangles": 16348,
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 16348,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_DieselGenerator.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 5500,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_DieselGenerator_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 2668,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_DieselGenerator_LOD2.fbx"
+        }
+      ],
+      "chunks": [
+        {
+          "name": "KH_DieselGenerator_Copper_NC",
+          "material": "Copper",
+          "collider": false
+        },
+        {
+          "name": "KH_DieselGenerator_Enamel_C",
+          "material": "Enamel",
+          "collider": true
+        },
+        {
+          "name": "KH_DieselGenerator_Enamel_NC",
+          "material": "Enamel",
+          "collider": false
+        },
+        {
+          "name": "KH_DieselGenerator_Frame_C",
+          "material": "Frame",
+          "collider": true
+        },
+        {
+          "name": "KH_DieselGenerator_Frame_NC",
+          "material": "Frame",
+          "collider": false
+        },
+        {
+          "name": "KH_DieselGenerator_Glass_NC",
+          "material": "Glass",
+          "collider": false
+        },
+        {
+          "name": "KH_DieselGenerator_Hub8LabelsA_NC",
+          "material": "Hub8LabelsA",
+          "collider": false
+        },
+        {
+          "name": "KH_DieselGenerator_Paper_NC",
+          "material": "Paper",
+          "collider": false
+        },
+        {
+          "name": "KH_DieselGenerator_PlasticDark_C",
+          "material": "PlasticDark",
+          "collider": true
+        },
+        {
+          "name": "KH_DieselGenerator_PlasticDark_NC",
+          "material": "PlasticDark",
+          "collider": false
+        },
+        {
+          "name": "KH_DieselGenerator_SignRed_NC",
+          "material": "SignRed",
+          "collider": false
+        },
+        {
+          "name": "KH_DieselGenerator_SteelOxide_C",
+          "material": "SteelOxide",
+          "collider": true
+        },
+        {
+          "name": "KH_DieselGenerator_SteelOxide_NC",
+          "material": "SteelOxide",
+          "collider": false
+        }
+      ],
+      "boundsMin": [
+        -1.4000015258789062,
+        0.0,
+        -0.6399993896484375
+      ],
+      "boundsMax": [
+        1.4000015258789062,
+        1.5832067728042603,
+        0.595001220703125
+      ]
+    },
+    {
+      "id": "KH_PowerSwitchboard",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_PowerSwitchboard.fbx",
+      "collection": "KH_PowerSwitchboard",
+      "sourceOffset": [
+        89.0,
+        0.0,
+        200.0
+      ],
+      "origin": "Распределительный щит 380/220 В с дверями, приборами, автоматами, замками и кабельными вводами",
+      "triangles": 14616,
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 14616,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_PowerSwitchboard.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 4328,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_PowerSwitchboard_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 1896,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_PowerSwitchboard_LOD2.fbx"
+        }
+      ],
+      "chunks": [
+        {
+          "name": "KH_PowerSwitchboard_Enamel_C",
+          "material": "Enamel",
+          "collider": true
+        },
+        {
+          "name": "KH_PowerSwitchboard_Enamel_NC",
+          "material": "Enamel",
+          "collider": false
+        },
+        {
+          "name": "KH_PowerSwitchboard_Frame_C",
+          "material": "Frame",
+          "collider": true
+        },
+        {
+          "name": "KH_PowerSwitchboard_Frame_NC",
+          "material": "Frame",
+          "collider": false
+        },
+        {
+          "name": "KH_PowerSwitchboard_Glass_NC",
+          "material": "Glass",
+          "collider": false
+        },
+        {
+          "name": "KH_PowerSwitchboard_Hub8LabelsA_NC",
+          "material": "Hub8LabelsA",
+          "collider": false
+        },
+        {
+          "name": "KH_PowerSwitchboard_Paper_NC",
+          "material": "Paper",
+          "collider": false
+        },
+        {
+          "name": "KH_PowerSwitchboard_PlasticDark_C",
+          "material": "PlasticDark",
+          "collider": true
+        },
+        {
+          "name": "KH_PowerSwitchboard_PlasticDark_NC",
+          "material": "PlasticDark",
+          "collider": false
+        },
+        {
+          "name": "KH_PowerSwitchboard_SignRed_NC",
+          "material": "SignRed",
+          "collider": false
+        }
+      ],
+      "boundsMin": [
+        -0.8000030517578125,
+        0.0,
+        -0.30999755859375
+      ],
+      "boundsMax": [
+        0.8000030517578125,
+        2.108996868133545,
+        0.225006103515625
+      ]
+    },
+    {
+      "id": "KH_WaterTreatment",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_WaterTreatment.fbx",
+      "collection": "KH_WaterTreatment",
+      "sourceOffset": [
+        98.0,
+        0.0,
+        200.0
+      ],
+      "origin": "Установка водоподготовки: накопитель, последовательные фильтры, насос, краны, манометр и отводы",
+      "triangles": 11372,
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 11372,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_WaterTreatment.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 5052,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_WaterTreatment_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 2776,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_WaterTreatment_LOD2.fbx"
+        }
+      ],
+      "chunks": [
+        {
+          "name": "KH_WaterTreatment_Copper_C",
+          "material": "Copper",
+          "collider": true
+        },
+        {
+          "name": "KH_WaterTreatment_Copper_NC",
+          "material": "Copper",
+          "collider": false
+        },
+        {
+          "name": "KH_WaterTreatment_Enamel_C",
+          "material": "Enamel",
+          "collider": true
+        },
+        {
+          "name": "KH_WaterTreatment_Enamel_NC",
+          "material": "Enamel",
+          "collider": false
+        },
+        {
+          "name": "KH_WaterTreatment_Frame_C",
+          "material": "Frame",
+          "collider": true
+        },
+        {
+          "name": "KH_WaterTreatment_Frame_NC",
+          "material": "Frame",
+          "collider": false
+        },
+        {
+          "name": "KH_WaterTreatment_Glass_NC",
+          "material": "Glass",
+          "collider": false
+        },
+        {
+          "name": "KH_WaterTreatment_Hub8LabelsA_NC",
+          "material": "Hub8LabelsA",
+          "collider": false
+        },
+        {
+          "name": "KH_WaterTreatment_Paper_C",
+          "material": "Paper",
+          "collider": true
+        },
+        {
+          "name": "KH_WaterTreatment_Paper_NC",
+          "material": "Paper",
+          "collider": false
+        },
+        {
+          "name": "KH_WaterTreatment_PlasticDark_NC",
+          "material": "PlasticDark",
+          "collider": false
+        },
+        {
+          "name": "KH_WaterTreatment_SignRed_NC",
+          "material": "SignRed",
+          "collider": false
+        }
+      ],
+      "boundsMin": [
+        -1.5800018310546875,
+        0.0,
+        -0.57000732421875
+      ],
+      "boundsMax": [
+        1.5800018310546875,
+        2.013200044631958,
+        0.57000732421875
+      ]
+    },
+    {
+      "id": "KH_UtilityRack",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_UtilityRack.fbx",
+      "collection": "KH_UtilityRack",
+      "sourceOffset": [
+        107.0,
+        0.0,
+        200.0
+      ],
+      "origin": "Сборный складской стеллаж с перфорированными стойками, четырьмя полками, тарой и запасными шлангами",
+      "triangles": 39128,
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 39128,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_UtilityRack.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 9200,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_UtilityRack_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 3172,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_UtilityRack_LOD2.fbx"
+        }
+      ],
+      "chunks": [
+        {
+          "name": "KH_UtilityRack_CanvasDark_C",
+          "material": "CanvasDark",
+          "collider": true
+        },
+        {
+          "name": "KH_UtilityRack_Enamel_C",
+          "material": "Enamel",
+          "collider": true
+        },
+        {
+          "name": "KH_UtilityRack_Enamel_NC",
+          "material": "Enamel",
+          "collider": false
+        },
+        {
+          "name": "KH_UtilityRack_Frame_C",
+          "material": "Frame",
+          "collider": true
+        },
+        {
+          "name": "KH_UtilityRack_Frame_NC",
+          "material": "Frame",
+          "collider": false
+        },
+        {
+          "name": "KH_UtilityRack_Hub8LabelsA_NC",
+          "material": "Hub8LabelsA",
+          "collider": false
+        },
+        {
+          "name": "KH_UtilityRack_PlasticDark_C",
+          "material": "PlasticDark",
+          "collider": true
+        },
+        {
+          "name": "KH_UtilityRack_PlasticDark_NC",
+          "material": "PlasticDark",
+          "collider": false
+        },
+        {
+          "name": "KH_UtilityRack_SignRed_NC",
+          "material": "SignRed",
+          "collider": false
+        },
+        {
+          "name": "KH_UtilityRack_SteelOxide_C",
+          "material": "SteelOxide",
+          "collider": true
+        },
+        {
+          "name": "KH_UtilityRack_SteelOxide_NC",
+          "material": "SteelOxide",
+          "collider": false
+        },
+        {
+          "name": "KH_UtilityRack_TimberRaw_C",
+          "material": "TimberRaw",
+          "collider": true
+        }
+      ],
+      "boundsMin": [
+        -1.25,
+        0.0,
+        -0.404998779296875
+      ],
+      "boundsMax": [
+        1.25,
+        2.200000047683716,
+        0.404998779296875
+      ]
+    },
+    {
+      "id": "KH_RepairBench",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_RepairBench.fbx",
+      "collection": "KH_RepairBench",
+      "sourceOffset": [
+        116.0,
+        0.0,
+        200.0
+      ],
+      "origin": "Слесарный верстак: досчатая столешница, шкаф, ящики, тиски, точило, инструмент и рабочий свет",
+      "triangles": 15596,
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 15596,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_RepairBench.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 5124,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_RepairBench_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 2256,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_RepairBench_LOD2.fbx"
+        }
+      ],
+      "chunks": [
+        {
+          "name": "KH_RepairBench_Enamel_C",
+          "material": "Enamel",
+          "collider": true
+        },
+        {
+          "name": "KH_RepairBench_Enamel_NC",
+          "material": "Enamel",
+          "collider": false
+        },
+        {
+          "name": "KH_RepairBench_Frame_C",
+          "material": "Frame",
+          "collider": true
+        },
+        {
+          "name": "KH_RepairBench_Frame_NC",
+          "material": "Frame",
+          "collider": false
+        },
+        {
+          "name": "KH_RepairBench_Glass_NC",
+          "material": "Glass",
+          "collider": false
+        },
+        {
+          "name": "KH_RepairBench_Hub8LabelsA_NC",
+          "material": "Hub8LabelsA",
+          "collider": false
+        },
+        {
+          "name": "KH_RepairBench_LampGlass_NC",
+          "material": "LampGlass",
+          "collider": false
+        },
+        {
+          "name": "KH_RepairBench_PlasticDark_NC",
+          "material": "PlasticDark",
+          "collider": false
+        },
+        {
+          "name": "KH_RepairBench_SignRed_NC",
+          "material": "SignRed",
+          "collider": false
+        },
+        {
+          "name": "KH_RepairBench_SteelOxide_C",
+          "material": "SteelOxide",
+          "collider": true
+        },
+        {
+          "name": "KH_RepairBench_TimberRaw_C",
+          "material": "TimberRaw",
+          "collider": true
+        },
+        {
+          "name": "KH_RepairBench_TimberRaw_NC",
+          "material": "TimberRaw",
+          "collider": false
+        },
+        {
+          "name": "KH_RepairBench_WornWood_C",
+          "material": "WornWood",
+          "collider": true
+        }
+      ],
+      "boundsMin": [
+        -1.25,
+        0.0,
+        -0.4799957275390625
+      ],
+      "boundsMax": [
+        1.25,
+        1.7825000286102295,
+        0.4459991455078125
+      ]
+    },
+    {
+      "id": "KH_RadioDesk",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_RadioDesk.fbx",
+      "collection": "KH_RadioDesk",
+      "sourceOffset": [
+        125.0,
+        0.0,
+        200.0
+      ],
+      "origin": "Дежурное место радиста: стол, приёмопередатчик, блок питания, микрофон, гарнитура, журнал и кабели",
+      "triangles": 18656,
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 18656,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_RadioDesk.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 4972,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_RadioDesk_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 1956,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_RadioDesk_LOD2.fbx"
+        }
+      ],
+      "chunks": [
+        {
+          "name": "KH_RadioDesk_CanvasDark_NC",
+          "material": "CanvasDark",
+          "collider": false
+        },
+        {
+          "name": "KH_RadioDesk_Enamel_C",
+          "material": "Enamel",
+          "collider": true
+        },
+        {
+          "name": "KH_RadioDesk_Enamel_NC",
+          "material": "Enamel",
+          "collider": false
+        },
+        {
+          "name": "KH_RadioDesk_Frame_C",
+          "material": "Frame",
+          "collider": true
+        },
+        {
+          "name": "KH_RadioDesk_Frame_NC",
+          "material": "Frame",
+          "collider": false
+        },
+        {
+          "name": "KH_RadioDesk_Glass_NC",
+          "material": "Glass",
+          "collider": false
+        },
+        {
+          "name": "KH_RadioDesk_Hub8LabelsA_NC",
+          "material": "Hub8LabelsA",
+          "collider": false
+        },
+        {
+          "name": "KH_RadioDesk_Lettering_NC",
+          "material": "Lettering",
+          "collider": false
+        },
+        {
+          "name": "KH_RadioDesk_Paper_NC",
+          "material": "Paper",
+          "collider": false
+        },
+        {
+          "name": "KH_RadioDesk_PlasticDark_C",
+          "material": "PlasticDark",
+          "collider": true
+        },
+        {
+          "name": "KH_RadioDesk_PlasticDark_NC",
+          "material": "PlasticDark",
+          "collider": false
+        },
+        {
+          "name": "KH_RadioDesk_SignRed_NC",
+          "material": "SignRed",
+          "collider": false
+        },
+        {
+          "name": "KH_RadioDesk_TimberRaw_C",
+          "material": "TimberRaw",
+          "collider": true
+        },
+        {
+          "name": "KH_RadioDesk_TimberRaw_NC",
+          "material": "TimberRaw",
+          "collider": false
+        },
+        {
+          "name": "KH_RadioDesk_WornWood_C",
+          "material": "WornWood",
+          "collider": true
+        }
+      ],
+      "boundsMin": [
+        -0.75,
+        0.0,
+        -0.375
+      ],
+      "boundsMax": [
+        0.75,
+        1.2423768043518066,
+        0.375
+      ]
+    },
+    {
+      "id": "KH_MedicalCot",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_MedicalCot.fbx",
+      "collection": "KH_MedicalCot",
+      "sourceOffset": [
+        80.0,
+        0.0,
+        209.0
+      ],
+      "origin": "Tubular medical cot with articulated back, layered upholstery, tied blanket, four swivel casters and side adjustment knobs",
+      "triangles": 12644,
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 12644,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_MedicalCot.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 4560,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_MedicalCot_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 1952,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_MedicalCot_LOD2.fbx"
+        }
+      ],
+      "chunks": [
+        {
+          "name": "KH_MedicalCot_CanvasBeige_C",
+          "material": "CanvasBeige",
+          "collider": true
+        },
+        {
+          "name": "KH_MedicalCot_CanvasBeige_NC",
+          "material": "CanvasBeige",
+          "collider": false
+        },
+        {
+          "name": "KH_MedicalCot_CanvasBlue_C",
+          "material": "CanvasBlue",
+          "collider": true
+        },
+        {
+          "name": "KH_MedicalCot_CanvasBlue_NC",
+          "material": "CanvasBlue",
+          "collider": false
+        },
+        {
+          "name": "KH_MedicalCot_Copper_NC",
+          "material": "Copper",
+          "collider": false
+        },
+        {
+          "name": "KH_MedicalCot_Frame_C",
+          "material": "Frame",
+          "collider": true
+        },
+        {
+          "name": "KH_MedicalCot_Frame_NC",
+          "material": "Frame",
+          "collider": false
+        },
+        {
+          "name": "KH_MedicalCot_Hub8LabelsA_NC",
+          "material": "Hub8LabelsA",
+          "collider": false
+        },
+        {
+          "name": "KH_MedicalCot_PlasticDark_NC",
+          "material": "PlasticDark",
+          "collider": false
+        },
+        {
+          "name": "KH_MedicalCot_SandCanvas_NC",
+          "material": "SandCanvas",
+          "collider": false
+        },
+        {
+          "name": "KH_MedicalCot_WornWood_C",
+          "material": "WornWood",
+          "collider": true
+        }
+      ],
+      "boundsMin": [
+        -0.5049972534179688,
+        0.00299999862909317,
+        -1.05279541015625
+      ],
+      "boundsMax": [
+        0.5049972534179688,
+        1.0139211416244507,
+        1.0489959716796875
+      ]
+    },
+    {
+      "id": "KH_MedicalCabinet",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_MedicalCabinet.fbx",
+      "collection": "KH_MedicalCabinet",
+      "sourceOffset": [
+        89.0,
+        0.0,
+        209.0
+      ],
+      "origin": "Enamel medical cupboard, glazed doors, formed shelves, drawer, hinges, bottles and marked first-aid case",
+      "triangles": 19352,
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 19352,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_MedicalCabinet.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 6704,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_MedicalCabinet_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 3136,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_MedicalCabinet_LOD2.fbx"
+        }
+      ],
+      "chunks": [
+        {
+          "name": "KH_MedicalCabinet_CanvasBeige_C",
+          "material": "CanvasBeige",
+          "collider": true
+        },
+        {
+          "name": "KH_MedicalCabinet_Enamel_C",
+          "material": "Enamel",
+          "collider": true
+        },
+        {
+          "name": "KH_MedicalCabinet_Frame_C",
+          "material": "Frame",
+          "collider": true
+        },
+        {
+          "name": "KH_MedicalCabinet_Frame_NC",
+          "material": "Frame",
+          "collider": false
+        },
+        {
+          "name": "KH_MedicalCabinet_Glass_NC",
+          "material": "Glass",
+          "collider": false
+        },
+        {
+          "name": "KH_MedicalCabinet_Hub8LabelsA_NC",
+          "material": "Hub8LabelsA",
+          "collider": false
+        },
+        {
+          "name": "KH_MedicalCabinet_Paper_NC",
+          "material": "Paper",
+          "collider": false
+        },
+        {
+          "name": "KH_MedicalCabinet_PlasticDark_NC",
+          "material": "PlasticDark",
+          "collider": false
+        },
+        {
+          "name": "KH_MedicalCabinet_SignRed_NC",
+          "material": "SignRed",
+          "collider": false
+        }
+      ],
+      "boundsMin": [
+        -0.625,
+        0.0,
+        -0.4929351806640625
+      ],
+      "boundsMax": [
+        0.625,
+        1.7999999523162842,
+        0.2259979248046875
+      ]
+    },
+    {
+      "id": "KH_KitchenRange",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_KitchenRange.fbx",
+      "collection": "KH_KitchenRange",
+      "sourceOffset": [
+        98.0,
+        0.0,
+        209.0
+      ],
+      "origin": "Repaired community range with four ring burners, oven, stockpots, open fuel-cylinder bay and connected manifold",
+      "triangles": 18828,
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 18828,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_KitchenRange.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 8004,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_KitchenRange_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 3852,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_KitchenRange_LOD2.fbx"
+        }
+      ],
+      "chunks": [
+        {
+          "name": "KH_KitchenRange_Copper_C",
+          "material": "Copper",
+          "collider": true
+        },
+        {
+          "name": "KH_KitchenRange_Copper_NC",
+          "material": "Copper",
+          "collider": false
+        },
+        {
+          "name": "KH_KitchenRange_Enamel_C",
+          "material": "Enamel",
+          "collider": true
+        },
+        {
+          "name": "KH_KitchenRange_Frame_C",
+          "material": "Frame",
+          "collider": true
+        },
+        {
+          "name": "KH_KitchenRange_Frame_NC",
+          "material": "Frame",
+          "collider": false
+        },
+        {
+          "name": "KH_KitchenRange_Glass_NC",
+          "material": "Glass",
+          "collider": false
+        },
+        {
+          "name": "KH_KitchenRange_Hub8LabelsA_NC",
+          "material": "Hub8LabelsA",
+          "collider": false
+        },
+        {
+          "name": "KH_KitchenRange_Paper_NC",
+          "material": "Paper",
+          "collider": false
+        },
+        {
+          "name": "KH_KitchenRange_PlasticDark_C",
+          "material": "PlasticDark",
+          "collider": true
+        },
+        {
+          "name": "KH_KitchenRange_PlasticDark_NC",
+          "material": "PlasticDark",
+          "collider": false
+        },
+        {
+          "name": "KH_KitchenRange_SignRed_NC",
+          "material": "SignRed",
+          "collider": false
+        },
+        {
+          "name": "KH_KitchenRange_SteelOxide_C",
+          "material": "SteelOxide",
+          "collider": true
+        },
+        {
+          "name": "KH_KitchenRange_SteelOxide_NC",
+          "material": "SteelOxide",
+          "collider": false
+        }
+      ],
+      "boundsMin": [
+        -1.0999984741210938,
+        0.0,
+        -0.5079498291015625
+      ],
+      "boundsMax": [
+        1.0999984741210938,
+        1.3675180673599243,
+        0.4250030517578125
+      ]
+    },
+    {
+      "id": "KH_WashStation",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_WashStation.fbx",
+      "collection": "KH_WashStation",
+      "sourceOffset": [
+        107.0,
+        0.0,
+        209.0
+      ],
+      "origin": "Community wash stand with pressed basin, hand pump, gravity reservoir, connected waste trap, soap and draped hand towel",
+      "triangles": 10584,
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 10584,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_WashStation.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 3968,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_WashStation_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 1908,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_WashStation_LOD2.fbx"
+        }
+      ],
+      "chunks": [
+        {
+          "name": "KH_WashStation_CanvasBeige_NC",
+          "material": "CanvasBeige",
+          "collider": false
+        },
+        {
+          "name": "KH_WashStation_CanvasBlue_NC",
+          "material": "CanvasBlue",
+          "collider": false
+        },
+        {
+          "name": "KH_WashStation_Copper_NC",
+          "material": "Copper",
+          "collider": false
+        },
+        {
+          "name": "KH_WashStation_Enamel_C",
+          "material": "Enamel",
+          "collider": true
+        },
+        {
+          "name": "KH_WashStation_Frame_C",
+          "material": "Frame",
+          "collider": true
+        },
+        {
+          "name": "KH_WashStation_Frame_NC",
+          "material": "Frame",
+          "collider": false
+        },
+        {
+          "name": "KH_WashStation_Hub8LabelsA_NC",
+          "material": "Hub8LabelsA",
+          "collider": false
+        },
+        {
+          "name": "KH_WashStation_PlasticDark_C",
+          "material": "PlasticDark",
+          "collider": true
+        },
+        {
+          "name": "KH_WashStation_PlasticDark_NC",
+          "material": "PlasticDark",
+          "collider": false
+        },
+        {
+          "name": "KH_WashStation_TimberRaw_NC",
+          "material": "TimberRaw",
+          "collider": false
+        }
+      ],
+      "boundsMin": [
+        -0.9000015258789062,
+        0.0,
+        -0.41876220703125
+      ],
+      "boundsMax": [
+        0.8799972534179688,
+        1.4952846765518188,
+        0.3459930419921875
+      ]
+    },
+    {
+      "id": "KH_PersonalLocker",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_PersonalLocker.fbx",
+      "collection": "KH_PersonalLocker",
+      "sourceOffset": [
+        116.0,
+        0.0,
+        209.0
+      ],
+      "origin": "Three reused sheet-metal lockers with distinct doors, vent hoods, hinges, padlock, name cards and a personal picture",
+      "triangles": 13840,
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 13840,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_PersonalLocker.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 3180,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_PersonalLocker_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 968,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_PersonalLocker_LOD2.fbx"
+        }
+      ],
+      "chunks": [
+        {
+          "name": "KH_PersonalLocker_CanvasBeige_NC",
+          "material": "CanvasBeige",
+          "collider": false
+        },
+        {
+          "name": "KH_PersonalLocker_CanvasBlue_NC",
+          "material": "CanvasBlue",
+          "collider": false
+        },
+        {
+          "name": "KH_PersonalLocker_Copper_C",
+          "material": "Copper",
+          "collider": true
+        },
+        {
+          "name": "KH_PersonalLocker_Enamel_C",
+          "material": "Enamel",
+          "collider": true
+        },
+        {
+          "name": "KH_PersonalLocker_Enamel_NC",
+          "material": "Enamel",
+          "collider": false
+        },
+        {
+          "name": "KH_PersonalLocker_Frame_C",
+          "material": "Frame",
+          "collider": true
+        },
+        {
+          "name": "KH_PersonalLocker_Frame_NC",
+          "material": "Frame",
+          "collider": false
+        },
+        {
+          "name": "KH_PersonalLocker_Hub8LabelsA_NC",
+          "material": "Hub8LabelsA",
+          "collider": false
+        },
+        {
+          "name": "KH_PersonalLocker_Hub8LabelsB_NC",
+          "material": "Hub8LabelsB",
+          "collider": false
+        },
+        {
+          "name": "KH_PersonalLocker_InkDark_NC",
+          "material": "InkDark",
+          "collider": false
+        },
+        {
+          "name": "KH_PersonalLocker_Paper_NC",
+          "material": "Paper",
+          "collider": false
+        },
+        {
+          "name": "KH_PersonalLocker_PlasticDark_C",
+          "material": "PlasticDark",
+          "collider": true
+        },
+        {
+          "name": "KH_PersonalLocker_PlasticDark_NC",
+          "material": "PlasticDark",
+          "collider": false
+        },
+        {
+          "name": "KH_PersonalLocker_SignRed_NC",
+          "material": "SignRed",
+          "collider": false
+        },
+        {
+          "name": "KH_PersonalLocker_SteelOxide_C",
+          "material": "SteelOxide",
+          "collider": true
+        },
+        {
+          "name": "KH_PersonalLocker_SteelOxide_NC",
+          "material": "SteelOxide",
+          "collider": false
+        }
+      ],
+      "boundsMin": [
+        -0.75,
+        0.0,
+        -0.3537750244140625
+      ],
+      "boundsMax": [
+        0.75,
+        1.899999976158142,
+        0.25
+      ]
+    },
+    {
+      "id": "KH_CommunityBoard",
+      "model": "Assets/Environment/KursHub/Props/Models/KH_CommunityBoard.fbx",
+      "collection": "KH_CommunityBoard",
+      "sourceOffset": [
+        125.0,
+        0.0,
+        209.0
+      ],
+      "origin": "Reclaimed community notice board with timber frame, pinned neighbourhood map, job notices and a hand-ruled duty ledger",
+      "triangles": 8848,
+      "lods": [
+        {
+          "level": 0,
+          "triangles": 8848,
+          "model": "Assets/Environment/KursHub/Props/Models/KH_CommunityBoard.fbx"
+        },
+        {
+          "level": 1,
+          "triangles": 2436,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_CommunityBoard_LOD1.fbx"
+        },
+        {
+          "level": 2,
+          "triangles": 928,
+          "model": "Assets/Environment/KursHub/Props/Models/LOD/KH_CommunityBoard_LOD2.fbx"
+        }
+      ],
+      "chunks": [
+        {
+          "name": "KH_CommunityBoard_CanvasBeige_NC",
+          "material": "CanvasBeige",
+          "collider": false
+        },
+        {
+          "name": "KH_CommunityBoard_CanvasBlue_NC",
+          "material": "CanvasBlue",
+          "collider": false
+        },
+        {
+          "name": "KH_CommunityBoard_CanvasDark_NC",
+          "material": "CanvasDark",
+          "collider": false
+        },
+        {
+          "name": "KH_CommunityBoard_Copper_NC",
+          "material": "Copper",
+          "collider": false
+        },
+        {
+          "name": "KH_CommunityBoard_Frame_C",
+          "material": "Frame",
+          "collider": true
+        },
+        {
+          "name": "KH_CommunityBoard_Frame_NC",
+          "material": "Frame",
+          "collider": false
+        },
+        {
+          "name": "KH_CommunityBoard_Hub8LabelsB_NC",
+          "material": "Hub8LabelsB",
+          "collider": false
+        },
+        {
+          "name": "KH_CommunityBoard_InkDark_NC",
+          "material": "InkDark",
+          "collider": false
+        },
+        {
+          "name": "KH_CommunityBoard_Paper_NC",
+          "material": "Paper",
+          "collider": false
+        },
+        {
+          "name": "KH_CommunityBoard_SignRed_NC",
+          "material": "SignRed",
+          "collider": false
+        },
+        {
+          "name": "KH_CommunityBoard_TimberRaw_C",
+          "material": "TimberRaw",
+          "collider": true
+        },
+        {
+          "name": "KH_CommunityBoard_WornWood_C",
+          "material": "WornWood",
+          "collider": true
+        }
+      ],
+      "boundsMin": [
+        -1.11199951171875,
+        0.0,
+        -0.089996337890625
+      ],
+      "boundsMax": [
+        1.11199951171875,
+        1.8029999732971191,
+        0.089996337890625
+      ]
     }
   ],
   "audit7Geometry": "Edited source solids retain original names; evaluated FBX with editable Bevel/WeightedNormal source modifiers",
-  "audit7LODCorrection": "Defective small decimated solids detected by actual roundtrip are restored from the preceding safe LOD, preserving all chunk identities and descending triangle counts."
+  "audit7LODCorrection": "Defective small decimated solids detected by actual roundtrip are restored from the preceding safe LOD, preserving all chunk identities and descending triangle counts.",
+  "audit8Geometry": {
+    "retainedProps": 55,
+    "newProps": [
+      "KH_DieselGenerator",
+      "KH_PowerSwitchboard",
+      "KH_WaterTreatment",
+      "KH_UtilityRack",
+      "KH_RepairBench",
+      "KH_RadioDesk",
+      "KH_MedicalCot",
+      "KH_MedicalCabinet",
+      "KH_KitchenRange",
+      "KH_WashStation",
+      "KH_PersonalLocker",
+      "KH_CommunityBoard"
+    ],
+    "lodMethod": "Constructed ring density and bevel segments; no collapse decimation"
+  }
 }

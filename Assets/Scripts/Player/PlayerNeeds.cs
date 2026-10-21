@@ -86,6 +86,7 @@ namespace ZombieSurvival.Player
         }
         private void OnGUI()
         {
+            if (ZombieSurvival.Presentation.SurvivorHUD.Owns(this)) return;
             if(!showHud || motor==null || !motor.IsAlive || !motor.GameplayInputEnabled)return;
             float scale=Mathf.Min(Screen.width/1000f,Screen.height/700f);var matrix=GUI.matrix;GUI.matrix=Matrix4x4.Scale(Vector3.one*scale);
             float h=Screen.height/scale; Color old=GUI.color;GUI.color=new Color(.055f,.075f,.095f,1);GUI.DrawTexture(new Rect(18,h-245,250,64),Texture2D.whiteTexture);GUI.color=old;

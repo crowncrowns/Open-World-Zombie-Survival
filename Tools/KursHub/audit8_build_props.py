@@ -19,6 +19,8 @@ def retain_missing_chunks(prop,previous):
   if obj.type!='MESH' or obj.name not in missing:continue
   chunk=expected[obj.name];matrix=obj.matrix_world.copy();obj.parent=None;obj.matrix_world=matrix;obj.location+=prop['offset']
   obj.data.materials.clear();obj.data.materials.append(bpy.data.materials[chunk['material']]);obj['unity_collision']=chunk['collider'];obj['Hub8ExportChunk']=chunk['name'];obj['Audit8RetainedSafeLODChunk']=True
+  # Keep the export node name free; Blender otherwise appends .001 to the merged chunk.
+  obj.name='Audit8RetainedSource_'+chunk['name']
   for col in list(obj.users_collection):col.objects.unlink(obj)
   prop['col'].objects.link(obj);prop['objects'].append(obj);kept.append(obj)
  assert {o['Hub8ExportChunk'] for o in kept}==missing,('Missing real previous LOD chunk',missing)
@@ -60,7 +62,10 @@ for level in range(3):
   bpy.data.collections.remove(prop['col'])
 manifest['props'].extend(new.values());manifest['stage']=8
 manifest['audit8Geometry']=dict(retainedProps=len(old_ids),newProps=list(new),lodMethod='Constructed ring density and bevel segments; no collapse decimation')
-for slot in labels.values():manifest['palette']['Hub8Labels'+chr(65+slot//32)]=[1,1,1,1]
+palette_names={entry['name'] for entry in manifest['palette']}
+for name in sorted({'Hub8Labels'+chr(65+slot//32) for slot in labels.values()}):
+ if name not in palette_names:
+  manifest['palette'].append(dict(name=name,rgba=[1,1,1,1]));palette_names.add(name)
 path.write_text(json.dumps(manifest,ensure_ascii=False,indent=2),encoding='utf8')
 (W/'label_atlas_entries.json').write_text(json.dumps([dict(prop=key[0],name=key[1],text=key[2],ink=key[3],index=index) for key,index in labels.items()],ensure_ascii=False,indent=2),encoding='utf8')
 (W/'new_prop_geometry.json').write_text(json.dumps(dict(status='AUDIT8_NEW_PROP_SOURCE_OK',sourceRecords=source_records,props=list(new.values())),ensure_ascii=False,indent=2),encoding='utf8')

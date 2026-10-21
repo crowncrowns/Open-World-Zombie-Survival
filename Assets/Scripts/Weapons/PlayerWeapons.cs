@@ -66,6 +66,7 @@ namespace ZombieSurvival.Weapons
                 try { listener(data); } catch(System.Exception error) { Debug.LogException(error,this); }
         }
         public bool IsReloading => reloadAt > 0;
+        public bool HitMarkerVisible => Time.time < hitUntil;
         public bool IsAttacking => pending != null || committingAttack;
         public bool IsRecovering => equipped != null && Time.time < readyAt;
         private void BeginCommit() { committingAttack=true; attacksInProgress++; }
@@ -290,6 +291,7 @@ namespace ZombieSurvival.Weapons
         }
         private void OnGUI()
         {
+            if (ZombieSurvival.Presentation.SurvivorHUD.Owns(this)) return;
             if(!showHud || motor==null || !motor.IsAlive || !motor.GameplayInputEnabled) return;
             bool hasHotbar=hotbar!=null && hotbar.isActiveAndEnabled;
             float scale=Mathf.Min(Screen.width/1000f,Screen.height/700f); var old=GUI.matrix;

@@ -91,6 +91,7 @@ namespace ZombieSurvival.Player
         {
             if (!IsOpen)
             {
+                if (ZombieSurvival.Presentation.SurvivorHUD.Owns(this)) return;
                 if (motor == null || !motor.AcceptingGameplayInput || progression == null) return;
                 var old = GUI.matrix; float hudScale = Mathf.Min(Screen.width / 1000f, Screen.height / 700f);
                 GUI.matrix = Matrix4x4.Scale(Vector3.one * hudScale);

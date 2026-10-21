@@ -57,6 +57,22 @@ public static class KursHubInteriorFinishSetup
                 light.intensity = item.intensity;
                 light.range = item.range;
             }
+            else
+            {
+                var light = child.GetComponent<Light>();
+                var oldColor = new Color(1, .56f, .25f);
+                var targetColor = new Color(item.color[0], item.color[1], item.color[2]);
+                var oldIntensity = item.intensity / (item.id.EndsWith("Sign light", StringComparison.Ordinal) ? .35f : .5f);
+                // Migrate only the exact generated orange Stage 6 default.
+                // Scene overrides and independently authored light settings win.
+                if (Vector4.Distance(light.color, oldColor) < .0001f
+                    && Mathf.Abs(light.intensity - oldIntensity) < .0001f
+                    && Mathf.Abs(light.range - item.range) < .0001f)
+                {
+                    light.color = targetColor;
+                    light.intensity = item.intensity;
+                }
+            }
             child.localPosition = V(item.position);
             child.gameObject.isStatic = true;
         }
