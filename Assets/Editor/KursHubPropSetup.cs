@@ -38,6 +38,10 @@ public static class KursHubPropSetup
         public float[] position;
         public float[] rotation;
         public float[] scale;
+        [Tooltip("Сила света конкретного прожектора в единицах Unity Light.intensity. 0 — сохранить настройку общего префаба.")]
+        public float lightIntensity;
+        [Tooltip("Дальность света конкретного прожектора в метрах. 0 — сохранить настройку общего префаба.")]
+        public float lightRange;
     }
 
     private static Prop[] Read()
@@ -272,6 +276,16 @@ public static class KursHubPropSetup
             }
             child.SetLocalPositionAndRotation(V(placement.position), Quaternion.Euler(V(placement.rotation)));
             child.localScale = V(placement.scale);
+            if (placement.lightIntensity > 0 || placement.lightRange > 0)
+            {
+                var light = DirectChild(child, "Work light")?.GetComponent<Light>();
+                if (light == null) throw new InvalidOperationException("Нет источника Work light: " + placement.id);
+                if (placement.lightIntensity > 0) light.intensity = placement.lightIntensity;
+                if (placement.lightRange > 0) light.range = placement.lightRange;
+                // The shared reusable prefab keeps its defaults. Only this
+                // authored fixture records the explicitly requested setting.
+                PrefabUtility.RecordPrefabInstancePropertyModifications(light);
+            }
             PrefabUtility.RecordPrefabInstancePropertyModifications(child);
             PrefabUtility.RecordPrefabInstancePropertyModifications(child.gameObject);
         }
@@ -361,6 +375,13 @@ public static class KursHubPropSetup
                 || Vector3.Distance(child.localScale, V(placement.scale)) > .001f
                 || Quaternion.Angle(child.localRotation, Quaternion.Euler(V(placement.rotation))) > .001f)
                 throw new InvalidOperationException("Поза prop не соответствует manifest: " + placement.id);
+            if (placement.lightIntensity > 0 || placement.lightRange > 0)
+            {
+                var light = DirectChild(child, "Work light")?.GetComponent<Light>();
+                if (light == null || (placement.lightIntensity > 0 && !Mathf.Approximately(light.intensity, placement.lightIntensity))
+                    || (placement.lightRange > 0 && !Mathf.Approximately(light.range, placement.lightRange)))
+                    throw new InvalidOperationException("Свет prop не соответствует manifest: " + placement.id);
+            }
         }
     }
 
@@ -377,6 +398,10 @@ public static class KursHubPropSetup
             CheckVector(placement.scale, placement.id);
             if (!FinitePositive(V(placement.scale)))
                 throw new InvalidOperationException("Scale prop должен быть положительным: " + placement.id);
+            if (float.IsNaN(placement.lightIntensity) || float.IsInfinity(placement.lightIntensity) || placement.lightIntensity < 0
+                || float.IsNaN(placement.lightRange) || float.IsInfinity(placement.lightRange) || placement.lightRange < 0
+                || ((placement.lightIntensity > 0 || placement.lightRange > 0) && placement.prop != "KH_Floodlight"))
+                throw new InvalidOperationException("Некорректная настройка конкретного прожектора: " + placement.id);
         }
     }
 

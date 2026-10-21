@@ -17,6 +17,7 @@ public static class KursHubSurfaceSetup
         public int resolution;
         public float tiling;
         public float normalStrength;
+        public bool alpha;
     }
 
     private static AuditSurface AuditSurfaceFor(string family)
@@ -55,7 +56,7 @@ public static class KursHubSurfaceSetup
             {
                 // Only registered, newly authored families get an initial map.
                 // Existing artist textures, tint and UV transforms keep priority.
-                material.SetTexture("_BaseMap", Texture(pair.Key + "_BaseColor.png", false, true, pair.Key == "Hub8SkylightGlass"));
+                material.SetTexture("_BaseMap", Texture(pair.Key + "_BaseColor.png", false, true, hub8.alpha));
                 material.SetTextureScale("_BaseMap", Vector2.one * hub8.tiling);
                 material.SetTextureOffset("_BaseMap", Vector2.zero);
                 material.SetColor("_BaseColor", Color.white);
@@ -63,7 +64,7 @@ public static class KursHubSurfaceSetup
                 material.SetFloat("_Metallic", 1);
                 material.SetFloat("_Smoothness", 1);
                 material.enableInstancing = true;
-                if (pair.Key == "Hub8SkylightGlass") Transparent(material);
+                if (hub8.alpha) Transparent(material);
                 material.SetOverrideTag(AppliedTag, "1");
             }
             if ((pair.Key == "LeafGreen" || pair.Key == "FirNeedles") && material.GetTexture("_BaseMap") == null
@@ -144,7 +145,7 @@ public static class KursHubSurfaceSetup
         if (current == null || AssetDatabase.GetAssetPath(current) != basePath) return false;
         var version = material.GetTag(AppliedTag, false, "");
         if (version != "1" && version != "7") return false;
-        var transparent = family == "GlassGrime" || family == "Hub8SkylightGlass";
+        var transparent = family == "GlassGrime" || (family.StartsWith("Hub8", StringComparison.Ordinal) && spec.alpha);
         var hasAlpha = transparent || family == "FirNeedles";
         material.SetTexture("_BaseMap", Texture(family + "_BaseColor.png", false, true, hasAlpha));
         var normalPath = TextureFolder + "/" + family + "_Normal.png";

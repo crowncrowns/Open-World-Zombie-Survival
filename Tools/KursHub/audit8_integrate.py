@@ -31,6 +31,17 @@ def _sha(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
+def _native_name(identifier):
+    # Blender names are limited to 63 bytes. The full stable Unity ID lives in
+    # a custom property; a deterministic suffix prevents silent truncation.
+    if len(identifier.encode('utf8')) <= 63:
+        return identifier
+    prefix = identifier[:48]
+    while len(prefix.encode('utf8')) > 48:
+        prefix = prefix[:-1]
+    return prefix + '_' + hashlib.sha256(identifier.encode('utf8')).hexdigest()[:10]
+
+
 def _write(path, data):
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -62,11 +73,16 @@ def _verify_native_poses(manifest, props):
     count, maximum_error = 0, 0.
     for key in ("propInstances", "interiorInstances", "settlementInstances"):
         for placement in manifest[key]:
-            obj = bpy.data.objects.get(placement["id"])
+            obj = bpy.data.objects.get(_native_name(placement["id"]))
             if obj is None or obj.instance_type != 'COLLECTION' or obj.instance_collection.name != placement["prop"]:
                 raise AssertionError("Native instance/collection mismatch: "+placement["id"])
+            if obj.parent is not None:
+                raise AssertionError("Unexpected object parent on source placement: "+placement["id"])
             for point in ((0, 0, 0), (1, 0, 0), (0, 1, 0), (0, 0, 1)):
-                actual = obj.matrix_world @ Vector((point[0], point[2], point[1]))
+                # Hidden collections do not enter Blender's dependency graph;
+                # their cached matrix_world can stay stale after a file load.
+                # Unparented placements are authored by their serialized basis.
+                actual = obj.matrix_basis @ Vector((point[0], point[2], point[1]))
                 expected = transform(point, placement)
                 error = max(abs(actual[i]-expected[j]) for i, j in ((0, 0), (1, 2), (2, 1)))
                 maximum_error = max(maximum_error, error)
@@ -79,7 +95,8 @@ def _verify_native_poses(manifest, props):
         if collection is None or max(abs(collection.instance_offset[i]-expected[j]) for i, j in ((0,0),(1,2),(2,1))) > .000025:
             raise AssertionError("Native library instance offset mismatch: "+prop["id"])
     return dict(instances=count, propCollections=len(props["props"]),
-                maximumTransformErrorMetres=maximum_error, basisSamplesPerInstance=4)
+                maximumTransformErrorMetres=maximum_error, basisSamplesPerInstance=4,
+                verification="Serialized unparented matrix_basis, including hidden source collections")
 
 
 def _guard(root, work):
@@ -126,19 +143,20 @@ def _pack_materials(root, output):
     report["revision8Integration"] = True
     report["clearGlassAlpha"] = []
     for material in bpy.data.materials:
-        if _base(material.name) != "Hub8SkylightGlass":
+        if _base(material.name) not in ("Hub8SkylightGlass", "Hub8FloorWear"):
             continue
         if not material.use_nodes:
             raise AssertionError("Hub8 clear glass lost its material nodes")
         nodes, links = material.node_tree.nodes, material.node_tree.links
         bsdf = next((node for node in nodes if node.type == 'BSDF_PRINCIPLED'), None)
-        albedo = next((node for node in nodes if node.type == 'TEX_IMAGE' and node.image
-                       and Path(bpy.path.abspath(node.image.filepath)).name == "Hub8SkylightGlass_BaseColor.png"), None)
+        family = _base(material.name)
+        albedo = next((link.from_node for link in bsdf.inputs['Base Color'].links
+                       if link.from_node.type == 'TEX_IMAGE'), None) if bsdf else None
         if bsdf is None or albedo is None:
             raise AssertionError("Hub8 clear glass needs its registered BaseColor RGBA map")
         links.new(albedo.outputs['Alpha'], bsdf.inputs['Alpha'])
         material.surface_render_method = 'DITHERED'
-        material["KursHub8AlphaSource"] = "Hub8SkylightGlass_BaseColor.png Alpha; no extra opacity multiplier"
+        material["KursHub8AlphaSource"] = family+"_BaseColor.png Alpha; no extra opacity multiplier"
         report["clearGlassAlpha"].append(material.name)
     for skipped in report["skipped"]:
         if _base(skipped["name"]).startswith("Hub8"):
@@ -243,6 +261,9 @@ def integrate(root=AUTHORING, work=WORK, building_only=False):
     known_materials.update(MATERIALS)
     unified = []
     for collection in library.values():
+        # Keep reusable types even when no instance currently uses that type.
+        # Appended unlinked collections otherwise disappear on save/reopen.
+        collection.use_fake_user = True
         for obj in collection.all_objects:
             for slot in obj.material_slots:
                 if not slot.material:
@@ -269,7 +290,7 @@ def integrate(root=AUTHORING, work=WORK, building_only=False):
         expected = {placement["id"] for placement in placements}
         if len(expected) != len(placements):
             raise AssertionError("Duplicate manifest instance IDs in "+key)
-        previous = {obj.name for obj in group.objects}
+        previous = {obj.get("KursUnityInstanceId", obj.name) for obj in group.objects}
         if not previous <= expected:
             raise AssertionError("Author instance outside manifest preserved without overwriting: "+str(previous-expected))
         for placement in placements:
@@ -277,9 +298,9 @@ def integrate(root=AUTHORING, work=WORK, building_only=False):
                 raise AssertionError("Instance ID reused across groups: "+placement["id"])
             if placement["prop"] not in library:
                 raise AssertionError("Unknown placement prop: "+placement["prop"])
-            obj = bpy.data.objects.get(placement["id"])
+            obj = bpy.data.objects.get(_native_name(placement["id"]))
             if obj is None:
-                obj = bpy.data.objects.new(placement["id"], None)
+                obj = bpy.data.objects.new(_native_name(placement["id"]), None)
                 group.objects.link(obj)
             elif obj not in group.objects.values():
                 raise AssertionError("Instance name collides with an unrelated authored object: "+placement["id"])
@@ -287,6 +308,7 @@ def integrate(root=AUTHORING, work=WORK, building_only=False):
             obj.instance_collection = library[placement["prop"]]
             _pose(obj, placement)
             obj["UnityPrefab"] = "Assets/Environment/KursHub/Props/Prefabs/"+placement["prop"]+".prefab"
+            obj["KursUnityInstanceId"] = placement["id"]
             placement_by_id[placement["id"]] = (obj, placement)
         counts[key] = len(placements)
 
@@ -299,10 +321,10 @@ def integrate(root=AUTHORING, work=WORK, building_only=False):
         if identifier in light_ids:
             raise AssertionError("Duplicate practical-light identifier: "+identifier)
         light_ids.add(identifier)
-        obj = bpy.data.objects.get(identifier)
+        obj = bpy.data.objects.get(_native_name(identifier))
         if obj is None:
             light = bpy.data.lights.new(identifier, 'POINT')
-            obj = bpy.data.objects.new(identifier, light)
+            obj = bpy.data.objects.new(_native_name(identifier), light)
             lights_group.objects.link(obj)
         elif obj.type != 'LIGHT' or obj.data.type != 'POINT' or obj not in lights_group.objects.values():
             raise AssertionError("Authored object collides with manifest Point light: "+identifier)
@@ -340,10 +362,10 @@ def integrate(root=AUTHORING, work=WORK, building_only=False):
         # Blender lights look along local -Z; Unity Spot lights look along +Z.
         obj.rotation_quaternion @= Quaternion((1, 0, 0), math.pi/2)
         obj.data.color = (1, .73, .43)
-        obj.data.energy = 12
+        obj.data.energy = float(placement.get("lightIntensity", 0) or 3) * 4
         obj.data.spot_size = math.radians(100)
         obj.data.spot_blend = .35
-        obj.data.cutoff_distance = 14
+        obj.data.cutoff_distance = float(placement.get("lightRange", 0) or 14)
         obj.data.use_custom_distance = True
         obj["KursHub8PreviewOnly"] = "Mirror of native KH_Floodlight Work light; not an additional Unity light"
         spot_count += 1

@@ -1,0 +1,325 @@
+// Temporary runtime probe compiled only in the isolated Editor project.
+// Copy as Assets/KursHubPlayerProbe8.cs, never into the live checkout's Assets.
+#if UNITY_EDITOR
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
+using Newtonsoft.Json;
+using UnityEditor;
+using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.LowLevel;
+using ZombieSurvival.Player;
+using Debug = UnityEngine.Debug;
+
+[Serializable] public sealed class KursHubPlayerPlan8
+{
+    public string runToken,reportPath,progressPath,prefabSHA256,prefabDependencyHash128,layoutSHA256,
+        navmeshReportSHA256,librarySHA256,playerPrefabSHA256,motorImplementationSHA256,unityVersion,
+        sourcePlayerPrefab,ownedScene,scope;
+    public int expectedRouteCount,expectedZoneCount;
+    public string[] zoneIds;
+    public float characterHeight,characterRadius,characterSkinWidth,characterStepOffset,characterSlopeLimit,walkSpeed;
+    public float[] characterCenter;
+    public bool domainReloadDisabled,sceneReloadDisabled;
+    public KursHubWalkCase8[] cases;
+}
+[Serializable] public sealed class KursHubWalkCase8
+{
+    public string id,kind,zoneId,routeId;
+    public float[][] points;
+    public float heightTolerance;
+    public float[] pushDirection;
+    public int pushAxis;
+    public float stopMinimum,stopMaximum;
+}
+
+public sealed class KursHubPlayerProbe8 : MonoBehaviour
+{
+    public string PlanJson;
+    const string Session = "KursHubPlayerCheck8.";
+    const string HubPath = "Assets/Environment/KursHub";
+    const float PointTolerance = .14f;
+    Keyboard keyboard;
+    CharacterController capsule;
+    FirstPersonController motor;
+    KursHubPlayerPlan8 plan;
+    bool started,completed,insideSegment;
+    string caseFailure;
+    string fatal;
+    string activeCase;
+    int warps,warpsInsideSegments,queuedWFrames,inputAcceptedSamples,totalFrames;
+    float totalMetres;
+    int savedCaptureFramerate,savedVsync;
+    float savedTimeScale;
+    bool savedBackground;
+    InputSettings.BackgroundBehavior savedInputBackground;
+    InputSettings.EditorInputBehaviorInPlayMode savedEditorInput;
+    readonly List<string> engineErrors = new List<string>();
+    readonly List<string> engineWarnings = new List<string>();
+    readonly List<string> collisionPaths = new List<string>();
+    readonly List<CaseResult> results = new List<CaseResult>();
+    Stopwatch wall;
+
+    [Serializable] sealed class PointResult
+    {
+        public int index,frames;
+        public float[] target,actualFeet;
+        public float horizontalError,heightError,metres,groundGap;
+        public bool pass,grounded;
+        public string floorCollider;
+        public string[] wallContacts;
+    }
+    [Serializable] sealed class CaseResult
+    {
+        public string id,kind,routeId,zoneId,status,error;
+        public int initialWarp,queuedWFrames;
+        public float[] initialFeet,finalFeet;
+        public List<PointResult> points = new List<PointResult>();
+    }
+
+    void OnEnable()
+    {
+        Application.logMessageReceived -= OnLog; Application.logMessageReceived += OnLog;
+        if (Application.isPlaying) Begin();
+    }
+    void Start() { Begin(); }
+    void OnDisable()
+    {
+        Application.logMessageReceived -= OnLog;
+        ReleaseInput();
+    }
+    void Begin()
+    {
+        if (started || !Application.isPlaying) return;
+        started=true;
+        try
+        {
+            var project=Directory.GetParent(Application.dataPath).FullName.Replace('\\','/');
+            if(!project.EndsWith("/work/KursHub/UnityProject",StringComparison.OrdinalIgnoreCase))throw new InvalidOperationException("Isolated test project only");
+            plan=JsonConvert.DeserializeObject<KursHubPlayerPlan8>(PlanJson);
+            if(plan==null || plan.runToken!=SessionState.GetString(Session+"Token","") || plan.cases==null || plan.cases.Length==0)
+                throw new InvalidDataException("Missing or mismatched serialized physical-test plan after Play reload");
+            capsule=GetComponent<CharacterController>();motor=GetComponent<FirstPersonController>();
+            if(capsule==null || motor==null)throw new InvalidDataException("Actual shipped capsule/motor missing");
+            wall=Stopwatch.StartNew();
+            savedCaptureFramerate=Time.captureFramerate;savedVsync=QualitySettings.vSyncCount;savedTimeScale=Time.timeScale;
+            savedBackground=Application.runInBackground;savedInputBackground=InputSystem.settings.backgroundBehavior;
+            savedEditorInput=InputSystem.settings.editorInputBehaviorInPlayMode;
+            Time.captureFramerate=60;Time.timeScale=1;QualitySettings.vSyncCount=0;Application.runInBackground=true;
+            InputSystem.settings.backgroundBehavior=InputSettings.BackgroundBehavior.IgnoreFocus;
+            InputSystem.settings.editorInputBehaviorInPlayMode=InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
+            keyboard=InputSystem.AddDevice<Keyboard>("KursHub8ProbeKeyboard_"+plan.runToken);
+            StartCoroutine(Guarded(Scenario()));
+        }
+        catch(Exception ex){fatal=ex.ToString();Finish();}
+    }
+    IEnumerator Guarded(IEnumerator root)
+    {
+        var stack=new Stack<IEnumerator>();stack.Push(root);
+        while(stack.Count>0 && !completed)
+        {
+            Exception problem=null;bool next=false;object value=null;
+            try{next=stack.Peek().MoveNext();if(next)value=stack.Peek().Current;}
+            catch(Exception ex){problem=ex;}
+            if(problem!=null){fatal=problem.ToString();break;}
+            if(!string.IsNullOrEmpty(fatal))break;
+            if(!next){stack.Pop();continue;}
+            if(value is IEnumerator nested){stack.Push(nested);continue;}
+            yield return value;
+        }
+        Finish();
+    }
+    IEnumerator Scenario()
+    {
+        yield return null;yield return null;yield return null;
+        if(!motor.enabled || !capsule.enabled || !motor.AcceptingGameplayInput)
+            throw new InvalidOperationException("The real motor is not accepting gameplay input");
+        if(HashFile(HubPath+"/KursHub.prefab")!=plan.prefabSHA256 || AssetDatabase.GetAssetDependencyHash(HubPath+"/KursHub.prefab").ToString()!=plan.prefabDependencyHash128)
+            throw new InvalidOperationException("Hub assets changed between plan and Play");
+        foreach(var item in plan.cases)
+        {
+            activeCase=item.id;caseFailure=null;collisionPaths.Clear();int startInput=queuedWFrames;
+            var record=new CaseResult{id=item.id,kind=item.kind,zoneId=item.zoneId,routeId=item.routeId,status="FAIL"};
+            results.Add(record);
+            Warp(V(item.points[0]));record.initialWarp=warps;
+            for(int i=0;i<12;i++){ReleaseKeys();yield return null;}
+            record.initialFeet=A(Feet());
+            var start=CheckPoint(0,V(item.points[0]),item.heightTolerance,0,0);
+            record.points.Add(start);
+            if(!start.pass)caseFailure="Independent route start is not grounded at the expected floor";
+            if(string.IsNullOrEmpty(caseFailure))
+            {
+                if(item.pushDirection!=null)yield return Push(item,record);
+                else for(int i=1;i<item.points.Length && string.IsNullOrEmpty(caseFailure);i++)
+                    yield return Walk(V(item.points[i]),item.heightTolerance,i,record);
+            }
+            record.finalFeet=A(Feet());record.queuedWFrames=queuedWFrames-startInput;
+            record.status=string.IsNullOrEmpty(caseFailure)?"PASS":"FAIL";record.error=caseFailure;
+            File.AppendAllText(plan.progressPath,record.status+" "+record.id+" feet="+Feet().ToString("F3")+" Wframes="+record.queuedWFrames+" "+record.error+"\n");
+            Debug.Log("KURS8_PLAYER_CASE "+record.status+" "+record.id);
+            ReleaseKeys();yield return null;
+        }
+    }
+    void Warp(Vector3 feet)
+    {
+        if(insideSegment){warpsInsideSegments++;throw new InvalidOperationException("Teleport inside an active motor segment is forbidden");}
+        ReleaseKeys();
+        var offset=capsule.center.y-capsule.height*.5f;
+        // This public motor reset also clears its transient vertical/planar
+        // velocity. It is called once per independent case, never in a segment.
+        motor.ResetForRespawn(feet-Vector3.up*offset+Vector3.up*.045f,Quaternion.identity);
+        Physics.SyncTransforms();warps++;
+    }
+    IEnumerator Walk(Vector3 target,float heightTolerance,int index,CaseResult record)
+    {
+        insideSegment=true;
+        int frames=0,still=0;float metres=0;var previous=Feet();float best=Horizontal(previous,target);
+        int limit=Mathf.Clamp(Mathf.CeilToInt(best/Mathf.Max(.1f,plan.walkSpeed)*60*4)+180,240,7200);
+        while(Horizontal(Feet(),target)>PointTolerance || Mathf.Abs(Feet().y-target.y)>heightTolerance)
+        {
+            var direction=target-Feet();direction.y=0;
+            if(direction.sqrMagnitude>.00001f)transform.rotation=Quaternion.LookRotation(direction);
+            SendW();yield return null;frames++;totalFrames++;
+            var feet=Feet();var moved=Vector3.Distance(feet,previous);previous=feet;metres+=moved;totalMetres+=moved;
+            if(!Finite(feet) || feet.y<Mathf.Min(target.y,record.initialFeet[1])-.65f)
+            {caseFailure="Fell below the route floor: "+feet;break;}
+            if(!string.IsNullOrEmpty(fatal)){caseFailure=fatal;break;}
+            float distance=Horizontal(feet,target);
+            if(distance<best-.025f){best=distance;still=0;}else still++;
+            if(still>150){caseFailure="Real motor made no waypoint progress for 150 frames; target="+target+" feet="+feet;break;}
+            if(frames>=limit){caseFailure="Real motor waypoint timeout; target="+target+" feet="+feet;break;}
+            if(frames==12 && motor.FindGameplayAction("Move").ReadValue<Vector2>().y<.5f)
+            {caseFailure="Queued W did not reach the real Move action";break;}
+        }
+        ReleaseKeys();for(int i=0;i<16;i++)yield return null;
+        var result=CheckPoint(index,target,heightTolerance,frames,metres);record.points.Add(result);
+        if(!result.pass && string.IsNullOrEmpty(caseFailure))caseFailure="Waypoint did not settle on its expected floor: "+target+" feet="+Feet();
+        insideSegment=false;
+    }
+    IEnumerator Push(KursHubWalkCase8 item,CaseResult record)
+    {
+        insideSegment=true;
+        transform.rotation=Quaternion.LookRotation(V(item.pushDirection));
+        for(int i=0;i<110;i++){SendW();yield return null;totalFrames++;}
+        ReleaseKeys();for(int i=0;i<16;i++)yield return null;
+        var feet=Feet();float coordinate=feet[item.pushAxis];
+        var result=CheckPoint(1,new Vector3(feet.x,item.points[0][1],feet.z),item.heightTolerance,110,0);
+        result.pass=result.pass && coordinate>item.stopMinimum && coordinate<item.stopMaximum && collisionPaths.Count>0;
+        record.points.Add(result);
+        if(!result.pass)caseFailure="Expected physical wall/guard stop not demonstrated: feet="+feet+" contacts="+string.Join(";",collisionPaths);
+        insideSegment=false;
+    }
+    PointResult CheckPoint(int index,Vector3 target,float tolerance,int frames,float metres)
+    {
+        var feet=Feet();RaycastHit ground;bool support=Ground(feet,out ground);
+        float gap=support?Mathf.Abs(feet.y-ground.point.y):float.PositiveInfinity;
+        bool grounded=capsule.isGrounded || motor.IsGrounded || (support && gap<.14f);
+        return new PointResult{index=index,frames=frames,target=A(target),actualFeet=A(feet),horizontalError=Horizontal(feet,target),
+            heightError=Mathf.Abs(feet.y-target.y),metres=metres,grounded=grounded,groundGap=gap,
+            floorCollider=support?PathOf(ground.collider.transform):"none",wallContacts=collisionPaths.Distinct().Take(16).ToArray(),
+            pass=Finite(feet) && Horizontal(feet,target)<.22f && Mathf.Abs(feet.y-target.y)<=tolerance && grounded && support && gap<.16f &&
+                Mathf.Abs(capsule.height-plan.characterHeight)<.001f};
+    }
+    bool Ground(Vector3 feet,out RaycastHit ground)
+    {
+        var hits=Physics.RaycastAll(feet+Vector3.up*.24f,Vector3.down,.55f,~0,QueryTriggerInteraction.Ignore)
+            .Where(h=>h.collider!=null && !h.collider.transform.IsChildOf(transform) && h.collider.transform!=transform && h.normal.y>.45f)
+            .OrderBy(h=>h.distance).ToArray();
+        ground=hits.Length>0?hits[0]:default(RaycastHit);return hits.Length>0;
+    }
+    void SendW()
+    {
+        InputSystem.QueueStateEvent(keyboard,new KeyboardState(Key.W));InputSystem.Update();queuedWFrames++;
+        var move=motor.FindGameplayAction("Move");if(move!=null && move.ReadValue<Vector2>().y>.5f)inputAcceptedSamples++;
+    }
+    void ReleaseKeys()
+    {
+        if(keyboard!=null && keyboard.added){InputSystem.QueueStateEvent(keyboard,new KeyboardState());InputSystem.Update();}
+    }
+    void ReleaseInput()
+    {
+        if(keyboard!=null && keyboard.added){ReleaseKeys();InputSystem.RemoveDevice(keyboard);}keyboard=null;
+    }
+    void OnControllerColliderHit(ControllerColliderHit hit)
+    {
+        if(hit.collider==null || hit.normal.y>.55f)return;
+        string path=PathOf(hit.collider.transform);
+        if(!collisionPaths.Contains(path)){collisionPaths.Add(path);if(collisionPaths.Count>24)collisionPaths.RemoveAt(0);}
+    }
+    void OnLog(string message,string trace,LogType kind)
+    {
+        if(completed)return;
+        if(kind==LogType.Warning)engineWarnings.Add(message);
+        if(kind!=LogType.Error && kind!=LogType.Exception && kind!=LogType.Assert)return;
+        if(trace.Contains("UnityEditor.Search.")){engineWarnings.Add("EDITOR_SEARCH "+message);return;}
+        engineErrors.Add(message+"\n"+trace);fatal=message+"\n"+trace;
+    }
+    void Finish()
+    {
+        if(completed)return;completed=true;
+        bool pass=false;
+        try
+        {
+            ReleaseInput();
+            Time.captureFramerate=savedCaptureFramerate;Time.timeScale=savedTimeScale;QualitySettings.vSyncCount=savedVsync;
+            Application.runInBackground=savedBackground;InputSystem.settings.backgroundBehavior=savedInputBackground;
+            InputSystem.settings.editorInputBehaviorInPlayMode=savedEditorInput;
+            if(plan==null)throw new InvalidDataException("No player plan: "+fatal);
+            string finalLibrary=LibraryHash();
+            bool hashesMatch=finalLibrary==plan.librarySHA256 && HashFile(HubPath+"/KursHub.prefab")==plan.prefabSHA256 &&
+                AssetDatabase.GetAssetDependencyHash(HubPath+"/KursHub.prefab").ToString()==plan.prefabDependencyHash128;
+            var routes=results.Where(r=>!string.IsNullOrEmpty(r.routeId)).ToArray();
+            var zones=plan.zoneIds.Select(id=>new{id,status=results.Any(r=>r.zoneId==id) && results.Where(r=>r.zoneId==id).All(r=>r.status=="PASS")?"PASS":"FAIL",
+                inspectionCases=results.Count(r=>r.zoneId==id),passed=results.Count(r=>r.zoneId==id && r.status=="PASS")}).ToArray();
+            pass=string.IsNullOrEmpty(fatal) && engineErrors.Count==0 && hashesMatch && results.Count==plan.cases.Length &&
+                results.All(r=>r.status=="PASS") && routes.Length==plan.expectedRouteCount && zones.Length==plan.expectedZoneCount &&
+                zones.All(z=>z.status=="PASS") && queuedWFrames>0 && inputAcceptedSamples>0 && warpsInsideSegments==0;
+            File.WriteAllText(plan.reportPath,JsonConvert.SerializeObject(new {
+                status=pass?"PASS":"FAIL",utc=DateTime.UtcNow.ToString("o"),plan,scope=plan.scope,
+                queuedInputSystemWFrames=queuedWFrames,actualMoveActionSamples=inputAcceptedSamples,
+                independentCaseWarps=warps,warpsInsideWalkSegments=warpsInsideSegments,simulatedStepSeconds=1f/60f,
+                movementFrames=totalFrames,physicalMetres=totalMetres,wallSeconds=wall!=null?wall.Elapsed.TotalSeconds:0,
+                performanceScope="CaptureFramerate controls simulation step; wall time is diagnostic, not an FPS measurement.",
+                hashGatePassed=hashesMatch,finalLibrarySHA256=finalLibrary,routes=routes.Select(r=>new{r.routeId,r.status}),zones,
+                cases=results,engineErrors,engineWarnings=engineWarnings.Distinct().ToArray(),fatal,
+                modelScope="Motor/capsule copied from the isolated source prefab only; no avatar, UAL animation, pistol presentation or current live-scene player claim.",
+                sceneSaved=false,gameplayServicesInstantiated=false,actorRegistryTested=false,worldSaveTested=false
+            },Formatting.Indented));
+            File.AppendAllText(plan.progressPath,(pass?"KURS8_PLAYER_PASS":"KURS8_PLAYER_FAIL")+" cases="+results.Count+" W="+queuedWFrames+"\n");
+        }
+        catch(Exception ex)
+        {
+            pass=false;
+            var report=plan!=null?plan.reportPath:SessionState.GetString(Session+"Report","");
+            if(!string.IsNullOrEmpty(report))File.WriteAllText(report,JsonConvert.SerializeObject(new{status="FAIL",fatal=ex.ToString(),cases=results},Formatting.Indented));
+        }
+        SessionState.SetInt(Session+"ExitCode",pass?0:1);SessionState.SetString(Session+"Phase","Finished");
+        Debug.Log(pass?"KURS8_PLAYER_PASS":"KURS8_PLAYER_FAIL");
+        EditorApplication.delayCall+=()=>{EditorApplication.isPlaying=false;};
+    }
+    Vector3 Feet() { return transform.TransformPoint(capsule.center)-transform.up*(capsule.height*.5f); }
+    static float Horizontal(Vector3 a,Vector3 b){a.y=0;b.y=0;return Vector3.Distance(a,b);}
+    static bool Finite(Vector3 p){return !float.IsNaN(p.x) && !float.IsNaN(p.y) && !float.IsNaN(p.z) && !float.IsInfinity(p.x) && !float.IsInfinity(p.y) && !float.IsInfinity(p.z);}
+    static float[] A(Vector3 p){return new[]{p.x,p.y,p.z};}
+    static Vector3 V(float[] p){return new Vector3(p[0],p[1],p[2]);}
+    static string PathOf(Transform item){var names=new List<string>();for(var t=item;t!=null;t=t.parent)names.Add(t.name);names.Reverse();return string.Join("/",names);}
+    public static string HashFile(string path)
+    {
+        using(var hash=SHA256.Create())using(var stream=File.OpenRead(path))return BitConverter.ToString(hash.ComputeHash(stream)).Replace("-","").ToLowerInvariant();
+    }
+    public static string LibraryHash()
+    {
+        var paths=Directory.GetFiles(HubPath,"*",SearchOption.AllDirectories).Where(p=>!p.EndsWith(".meta") &&
+            p.Replace('\\','/')!=HubPath+"/Models/KursHubShell.fbx" && !p.EndsWith("KursHub.prefab") && !p.EndsWith("KursHubManifest.json"))
+            .Select(p=>p.Replace('\\','/')).OrderBy(p=>p,StringComparer.Ordinal);
+        var text=string.Join("\n",paths.Select(p=>p+":"+HashFile(p)));
+        using(var hash=SHA256.Create())return BitConverter.ToString(hash.ComputeHash(Encoding.UTF8.GetBytes(text))).Replace("-","").ToLowerInvariant();
+    }
+}
+#endif

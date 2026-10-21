@@ -1,0 +1,275 @@
+// Temporary Editor harness. Copy ONLY into the isolated validation project's
+// Assets/Editor/KursHubPlayerCheck8.cs; the companion probe goes in its Assets.
+// Run without -quit: KursHubPlayerCheck8.Run. Never copy into product Assets.
+#if UNITY_EDITOR
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using Newtonsoft.Json;
+using UnityEditor;
+using UnityEditor.SceneManagement;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using ZombieSurvival.Player;
+
+[InitializeOnLoad]
+public static class KursHubPlayerCheck8
+{
+    const string PrefabPath = "Assets/Environment/KursHub/KursHub.prefab";
+    const string PlayerPrefabPath = "Assets/CharacterTesting/Prefabs/CharacterTestPlayer.prefab";
+    const string Session = "KursHubPlayerCheck8.";
+    const string OwnedSceneName = "KursHub8 TEMP Physical Traversal";
+
+    [Serializable] sealed class NavReport
+    {
+        public string status, inputSHA256, prefabSHA256, prefabDependencyHash128;
+        public NavRoute[] routes;
+        public NavZone[] zones;
+    }
+    [Serializable] sealed class NavPoint
+    {
+        public string id;
+        public float[] requested, navPosition;
+        public bool sampled, capsuleClear;
+    }
+    [Serializable] sealed class NavSegment
+    {
+        public string id, status;
+        public bool complete;
+        public float[][] corners;
+    }
+    [Serializable] sealed class NavRoute
+    {
+        public string id, status;
+        public NavPoint[] points;
+        public NavSegment[] segments;
+    }
+    [Serializable] sealed class NavZone
+    {
+        public string id, status;
+        public float floorY;
+        public NavPoint[] inspectionPoints;
+        public NavSegment[] connectionsToRoutes;
+    }
+
+    static KursHubPlayerCheck8()
+    {
+        EditorApplication.playModeStateChanged -= OnPlayState;
+        EditorApplication.playModeStateChanged += OnPlayState;
+        EditorApplication.update -= Watchdog;
+        EditorApplication.update += Watchdog;
+    }
+
+    static string AuditRoot()
+    {
+        var project = Directory.GetParent(Application.dataPath).FullName;
+        if (!project.Replace('\\', '/').EndsWith("/work/KursHub/UnityProject", StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("KursHubPlayerCheck8 runs only in work/KursHub/UnityProject.");
+        return Path.GetFullPath(Path.Combine(project, "../audit8"));
+    }
+    static void Require(bool condition, string message)
+    {
+        if (!condition) throw new InvalidDataException(message);
+    }
+    static void AddPoint(List<float[]> points, float[] point)
+    {
+        Require(point != null && point.Length == 3 && point.All(x => !float.IsNaN(x) && !float.IsInfinity(x)), "Invalid metre waypoint");
+        if (points.Count == 0 || Vector3.Distance(V(points[points.Count - 1]), V(point)) > .025f)
+            points.Add((float[])point.Clone());
+    }
+    static Vector3 V(float[] p) { return new Vector3(p[0], p[1], p[2]); }
+    static float[] P(float x, float y, float z) { return new[] { x, y, z }; }
+    static KursHubWalkCase8 Case(string id, params float[][] points)
+    {
+        return new KursHubWalkCase8 { id = id, kind = "Legacy critical continuous walk", points = points, heightTolerance = .15f };
+    }
+
+    static KursHubPlayerPlan8 Prepare(string audit)
+    {
+        string navPath = Path.Combine(audit, "navmesh_validation.json");
+        string layoutPath = Path.Combine(audit, "functional_layout.json");
+        Require(File.Exists(navPath), "Run the final revision-8 NavMesh audit first");
+        var nav = JsonConvert.DeserializeObject<NavReport>(File.ReadAllText(navPath));
+        Require(nav != null && nav.status == "PASS", "The final NavMesh report must be PASS");
+        Require(nav.routes != null && nav.routes.Length == 51 && nav.zones != null && nav.zones.Length == 32,
+            "Expected all 51 authored routes and 32 functional zones");
+        Require(nav.inputSHA256 == KursHubPlayerProbe8.HashFile(layoutPath), "NavMesh/layout SHA mismatch");
+        Require(nav.prefabSHA256 == KursHubPlayerProbe8.HashFile(PrefabPath), "NavMesh/prefab SHA mismatch");
+        Require(nav.prefabDependencyHash128 == AssetDatabase.GetAssetDependencyHash(PrefabPath).ToString(), "NavMesh dependency hash mismatch");
+        var plan = new KursHubPlayerPlan8
+        {
+            runToken = Guid.NewGuid().ToString("N"), reportPath = Path.Combine(audit, "player_validation.json"),
+            progressPath = Path.Combine(audit, "player_progress.txt"),
+            prefabSHA256 = nav.prefabSHA256, prefabDependencyHash128 = nav.prefabDependencyHash128,
+            layoutSHA256 = nav.inputSHA256, navmeshReportSHA256 = KursHubPlayerProbe8.HashFile(navPath),
+            librarySHA256 = KursHubPlayerProbe8.LibraryHash(), playerPrefabSHA256 = KursHubPlayerProbe8.HashFile(PlayerPrefabPath),
+            motorImplementationSHA256 = KursHubPlayerProbe8.HashFile("Assets/Scripts/Player/FirstPersonController.cs"),
+            unityVersion = Application.unityVersion, expectedRouteCount = nav.routes.Length,
+            expectedZoneCount = nav.zones.Length, zoneIds = nav.zones.Select(z => z.id).ToArray(),
+            sourcePlayerPrefab = PlayerPrefabPath, ownedScene = OwnedSceneName,
+            scope = "The isolated copy's shipped FirstPersonController, Input Actions and exact CharacterController settings. " +
+                "Queued Input System W drives every segment; teleport only between independent cases. " +
+                "All 51 final NavMesh corner chains, requested route points, all zone inspection connections, and legacy entrance/checkpoints/stairs/roof. " +
+                "No avatar/UAL/pistol, services, saves, actor registry, NPC AI or FPS claim."
+        };
+        var cases = new List<KursHubWalkCase8>
+        {
+            Case("Core entrance and left checkpoint forward", P(0,0,-90), P(0,0,-80.2f), P(0,0,-74), P(0,0,-61),
+                P(-1.4f,0,-40.5f), P(-1.4f,0,-30.5f), P(0,0,-29)),
+            Case("Core right checkpoint and entrance reverse", P(0,0,-29), P(1.4f,0,-30.5f), P(1.4f,0,-40.5f),
+                P(0,0,-61), P(0,0,-74), P(0,0,-80.2f), P(0,0,-90)),
+            Case("Core left checkpoint reverse", P(-1.4f,0,-30.5f), P(-1.4f,0,-40.5f)),
+            Case("Core right checkpoint forward", P(1.4f,0,-40.5f), P(1.4f,0,-30.5f)),
+            Case("Core market hearth through lane", P(3.4f,0,-28), P(3.4f,0,-12), P(3.4f,0,3), P(3.4f,0,7)),
+            Case("Core east main stair round trip", P(10,0,7), P(10,5.5f,20), P(10,5.5f,22), P(10,5.5f,20), P(10,0,7)),
+            Case("Core west main stair round trip", P(-10,0,7), P(-10,5.5f,20), P(-10,5.5f,22), P(-10,5.5f,20), P(-10,0,7)),
+            Case("Core roof stair dome route and descent", P(-39.5f,5.5f,35.8f), P(-39.5f,8.25f,44),
+                P(-36.5f,8.25f,44), P(-36.5f,11,35), P(-30,11,33), P(-23,11,29), P(-23,11,-50),
+                P(-14,11,-50), P(-23,11,-50), P(-23,11,29), P(-30,11,33), P(-36.5f,11,35),
+                P(-36.5f,11,37.4f), P(-36.5f,8.25f,44), P(-39.5f,8.25f,44), P(-39.5f,5.5f,35.8f))
+        };
+        foreach (var route in nav.routes)
+        {
+            Require(route.status == "PASS" && route.points != null && route.points.Length >= 2 &&
+                route.segments != null && route.segments.Length == route.points.Length - 1, "Invalid Nav route " + route.id);
+            Require(route.points.All(p => p.sampled && p.capsuleClear), "Blocked Nav route endpoint " + route.id);
+            var points = new List<float[]>();
+            AddPoint(points, route.points[0].requested);
+            foreach (var pair in route.segments.Select((s, i) => new { segment = s, i }))
+            {
+                Require(pair.segment.complete && pair.segment.status == "PathComplete" &&
+                    pair.segment.corners != null && pair.segment.corners.Length > 0, "Incomplete segment " + pair.segment.id);
+                foreach (var point in pair.segment.corners) AddPoint(points, point);
+                // A successful sample may be up to .45 m away. The real motor
+                // also reaches the requested physical waypoint before continuing.
+                AddPoint(points, route.points[pair.i + 1].requested);
+            }
+            cases.Add(new KursHubWalkCase8 { id = route.id, kind = "Final NavMesh route", routeId = route.id,
+                points = points.ToArray(), heightTolerance = .28f });
+        }
+        foreach (var zone in nav.zones)
+        {
+            Require(zone.status == "PASS" && zone.inspectionPoints != null && zone.inspectionPoints.Length > 0 &&
+                zone.connectionsToRoutes != null && zone.connectionsToRoutes.Length == zone.inspectionPoints.Length, "Invalid zone " + zone.id);
+            for (int i = 0; i < zone.inspectionPoints.Length; ++i)
+            {
+                var target = zone.inspectionPoints[i]; var connection = zone.connectionsToRoutes[i];
+                Require(target.sampled && target.capsuleClear && connection.complete && connection.status == "PathComplete", "Invalid zone connection " + target.id);
+                var points = new List<float[]>();
+                foreach (var point in connection.corners ?? new float[0][]) AddPoint(points, point);
+                AddPoint(points, target.requested);
+                cases.Add(new KursHubWalkCase8 { id = target.id,
+                    kind = points.Count < 2 ? "Zone inspection on route; standing support" : "Zone inspection connection", zoneId = zone.id,
+                    points = points.ToArray(), heightTolerance = .28f });
+            }
+        }
+        cases.Add(new KursHubWalkCase8 { id = "Core outer wall collision", kind = "Guard push", points = new[] { P(44,0,0) },
+            pushDirection = P(1,0,0), pushAxis = 0, stopMinimum = 45.4f, stopMaximum = 46.3f, heightTolerance = .15f });
+        cases.Add(new KursHubWalkCase8 { id = "Core atrium edge guard collision", kind = "Guard push", points = new[] { P(17,5.5f,-10) },
+            pushDirection = P(-1,0,0), pushAxis = 0, stopMinimum = 15.2f, stopMaximum = 17.2f, heightTolerance = .15f });
+        cases.Add(new KursHubWalkCase8 { id = "Core skylight roof guard collision", kind = "Guard push", points = new[] { P(-17,11,0) },
+            pushDirection = P(1,0,0), pushAxis = 0, stopMinimum = -17.2f, stopMaximum = -15.2f, heightTolerance = .15f });
+        cases.Add(new KursHubWalkCase8 { id = "Core front dome guard collision", kind = "Guard push", points = new[] { P(-14,11,-50) },
+            pushDirection = P(1,0,0), pushAxis = 0, stopMinimum = -14.2f, stopMaximum = -11.6f, heightTolerance = .15f });
+        plan.cases = cases.ToArray();
+        return plan;
+    }
+
+    public static void Run()
+    {
+        string audit = null;
+        try
+        {
+            audit = AuditRoot();
+            Require(!EditorApplication.isPlayingOrWillChangePlaymode, "Start outside Play");
+            Require(string.IsNullOrEmpty(SessionState.GetString(Session + "Token", "")), "Another owned player run is active");
+            var plan = Prepare(audit);
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath);
+            var source = AssetDatabase.LoadAssetAtPath<GameObject>(PlayerPrefabPath);
+            Require(prefab != null && source != null && source.GetComponent<CharacterController>() != null && source.GetComponent<FirstPersonController>() != null,
+                "Hub/player capsule/motor source missing");
+            var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            scene.name = OwnedSceneName;
+            var hub = (GameObject)PrefabUtility.InstantiatePrefab(prefab, scene);
+            hub.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity); hub.transform.localScale = Vector3.one;
+            var outside = GameObject.CreatePrimitive(PrimitiveType.Cube); outside.name = "TEMP ground outside entrance only";
+            outside.transform.position = new Vector3(0,-.21f,-100); outside.transform.localScale = new Vector3(120,.4f,40);
+            // This slab ends at local Z=-80; it never masks missing internal
+            // floors or the building/apron's own colliders during traversal.
+            var player = new GameObject("TEMP exact shipped motor and capsule"); player.SetActive(false);
+            var cc = player.AddComponent<CharacterController>(); EditorUtility.CopySerialized(source.GetComponent<CharacterController>(), cc);
+            var cameraObject = new GameObject("TEMP motor camera"); cameraObject.transform.SetParent(player.transform, false);
+            cameraObject.transform.localPosition = new Vector3(0,1.65f,0);
+            cameraObject.AddComponent<Camera>().enabled = false;
+            var motor = player.AddComponent<FirstPersonController>(); EditorUtility.CopySerialized(source.GetComponent<FirstPersonController>(), motor);
+            var serialized = new SerializedObject(motor);
+            serialized.FindProperty("playerCamera").objectReferenceValue = cameraObject.transform;
+            foreach (var field in new[] { "requireCursorCapture", "captureCursorOnEnable", "requireApplicationFocus", "lookEnabled" })
+                serialized.FindProperty(field).boolValue = false;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            plan.characterHeight = cc.height; plan.characterRadius = cc.radius; plan.characterCenter = new[] { cc.center.x,cc.center.y,cc.center.z };
+            plan.characterSkinWidth = cc.skinWidth; plan.characterStepOffset = cc.stepOffset; plan.characterSlopeLimit = cc.slopeLimit;
+            plan.walkSpeed = serialized.FindProperty("walkSpeed").floatValue;
+            plan.domainReloadDisabled = EditorSettings.enterPlayModeOptionsEnabled && (EditorSettings.enterPlayModeOptions & EnterPlayModeOptions.DisableDomainReload) != 0;
+            plan.sceneReloadDisabled = EditorSettings.enterPlayModeOptionsEnabled && (EditorSettings.enterPlayModeOptions & EnterPlayModeOptions.DisableSceneReload) != 0;
+            var probe = player.AddComponent<KursHubPlayerProbe8>(); probe.PlanJson = JsonConvert.SerializeObject(plan);
+            player.transform.position = V(plan.cases[0].points[0]) + Vector3.up * .04f;
+            player.SetActive(true); Physics.SyncTransforms();
+            Directory.CreateDirectory(audit);
+            File.WriteAllText(Path.Combine(audit, "player_plan.json"), JsonConvert.SerializeObject(plan, Formatting.Indented));
+            File.WriteAllText(plan.progressPath, "PREPARED " + plan.runToken + " cases=" + plan.cases.Length + "\n");
+            SessionState.SetString(Session + "Token", plan.runToken); SessionState.SetString(Session + "Phase", "Prepared");
+            SessionState.SetString(Session + "Report", plan.reportPath); SessionState.SetString(Session + "Scene", OwnedSceneName);
+            SessionState.SetString(Session + "StartedUTC", DateTime.UtcNow.ToString("o")); SessionState.SetInt(Session + "ExitCode", 1);
+            Debug.Log("KURS8_PLAYER_PREPARED " + plan.cases.Length + " cases; unsaved isolated scene; no gameplay services");
+            EditorApplication.EnterPlaymode();
+        }
+        catch (Exception ex)
+        {
+            if (audit != null) File.WriteAllText(Path.Combine(audit,"player_validation.json"), JsonConvert.SerializeObject(new { status="FAIL", phase="Prepare", error=ex.ToString() },Formatting.Indented));
+            Debug.LogException(ex); EditorApplication.Exit(1);
+        }
+    }
+    static void Watchdog()
+    {
+        if (string.IsNullOrEmpty(SessionState.GetString(Session + "Token", ""))) return;
+        DateTime started;
+        if (DateTime.TryParse(SessionState.GetString(Session + "StartedUTC", ""), null, System.Globalization.DateTimeStyles.RoundtripKind, out started)
+            && (DateTime.UtcNow - started.ToUniversalTime()).TotalMinutes > 35)
+        {
+            Abort("Owned player traversal exceeded the 35 minute wall-clock watchdog");
+            if (EditorApplication.isPlaying) EditorApplication.isPlaying = false;
+            else FinishEditor();
+        }
+    }
+    static void Abort(string message)
+    {
+        var report = SessionState.GetString(Session + "Report", "");
+        if (!string.IsNullOrEmpty(report)) File.WriteAllText(report, JsonConvert.SerializeObject(new { status="FAIL", phase="Editor lifecycle", error=message },Formatting.Indented));
+        SessionState.SetInt(Session + "ExitCode", 1); SessionState.SetString(Session + "Phase", "Finished");
+    }
+    static void OnPlayState(PlayModeStateChange state)
+    {
+        if (string.IsNullOrEmpty(SessionState.GetString(Session + "Token", ""))) return;
+        if (state == PlayModeStateChange.EnteredPlayMode) SessionState.SetString(Session + "Phase", "Playing");
+        if (state == PlayModeStateChange.ExitingPlayMode && SessionState.GetString(Session + "Phase", "") != "Finished")
+            Abort("Play stopped before the physical traversal probe finished");
+        if (state == PlayModeStateChange.EnteredEditMode) EditorApplication.delayCall += FinishEditor;
+    }
+    static void FinishEditor()
+    {
+        if (string.IsNullOrEmpty(SessionState.GetString(Session + "Token", ""))) return;
+        int code = SessionState.GetInt(Session + "ExitCode", 1);
+        try
+        {
+            if (SceneManager.GetActiveScene().name != SessionState.GetString(Session + "Scene", ""))
+                throw new InvalidOperationException("Owned traversal scene changed; refusing to close another scene");
+            EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+        }
+        catch (Exception ex) { Debug.LogException(ex); code = 1; }
+        SessionState.EraseString(Session + "Token"); SessionState.EraseString(Session + "Phase");
+        EditorApplication.Exit(code);
+    }
+}
+#endif

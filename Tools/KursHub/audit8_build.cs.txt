@@ -1,0 +1,62 @@
+// Isolated authoring/verification only. Never put this in the live project.
+using System;
+using System.IO;
+using System.Linq;
+using System.Collections.Generic;
+using System.Security.Cryptography;
+using System.Text.RegularExpressions;
+using UnityEditor;
+using UnityEditor.SceneManagement;
+using UnityEngine;
+public static class KursHubBuild8
+{
+    const string Folder="Assets/Environment/KursHub";
+    static string Hash(string path) { using(var h=SHA256.Create()) return BitConverter.ToString(h.ComputeHash(File.ReadAllBytes(path))).Replace("-","").ToLowerInvariant(); }
+    static string Identities() => string.Join("\n",Directory.GetFiles(Folder,"*.prefab",SearchOption.AllDirectories).OrderBy(p=>p,StringComparer.Ordinal).SelectMany(p=>
+        new[]{p+"|"+AssetDatabase.AssetPathToGUID(p)}.Concat(Regex.Matches(File.ReadAllText(p),@"^--- !u!\d+ &(-?\d+)",RegexOptions.Multiline).Cast<Match>().Select(m=>p+"|"+m.Groups[1].Value))));
+    public static void Run()
+    {
+        try
+        {
+            var project=Directory.GetParent(Application.dataPath).FullName;
+            if(!project.Replace('\\','/').EndsWith("/work/KursHub/UnityProject",StringComparison.OrdinalIgnoreCase)) throw new Exception("Isolated validation project only");
+            var audit=Path.GetFullPath(Path.Combine(project,"../audit8"));
+            Environment.SetEnvironmentVariable("KURS_FINAL_OUTPUT",Path.Combine(audit,"delivery"));
+            // Use a separately saved owned scene. Unity cannot save a new demo
+            // over a demo file already open in another loaded scene.
+            EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Single);
+            PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(Folder+"/KursHub.prefab"));
+            if(!EditorSceneManager.SaveScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene(),"Assets/Kurs8Authoring.unity"))throw new Exception("Cannot save owned verification scene");
+            KursHubSetup.BuildPrefab();AssetDatabase.SaveAssets();
+            var first=Identities();
+            KursHubSetup.BuildPrefab();AssetDatabase.SaveAssets();
+            if(first!=Identities())throw new Exception("Second build changed native prefab GUID/local IDs");
+            var old=Regex.Matches(File.ReadAllText(Path.Combine(audit,"baseline",Folder,"KursHub.prefab")),@"^--- !u!\d+ &(-?\d+)",RegexOptions.Multiline).Cast<Match>().Select(m=>m.Groups[1].Value).ToHashSet();
+            var current=Regex.Matches(File.ReadAllText(Folder+"/KursHub.prefab"),@"^--- !u!\d+ &(-?\d+)",RegexOptions.Multiline).Cast<Match>().Select(m=>m.Groups[1].Value).ToHashSet();
+            if(!old.IsSubsetOf(current))throw new Exception("Previous root IDs were lost");
+            KursHubSetup.Check();KursHubQualitySetup.Audit();
+            const string rootGuid="ff5cdff5a433ef342ad7bf24aeafd8b8";
+            const string rootPath=Folder+"/KursHub.prefab";
+            if(AssetDatabase.AssetPathToGUID(rootPath)!=rootGuid)throw new Exception("Root prefab GUID changed");
+            var effective=new HashSet<long>();
+            var native=AssetDatabase.LoadAssetAtPath<GameObject>(rootPath);
+            foreach(var t in native.GetComponentsInChildren<Transform>(true))
+                foreach(var obj in new UnityEngine.Object[]{t.gameObject}.Concat(t.GetComponents<Component>().Cast<UnityEngine.Object>()))
+                    if(obj!=null && AssetDatabase.TryGetGUIDAndLocalFileIdentifier(obj,out string g,out long id) && g==rootGuid)effective.Add(id);
+            var main=Path.GetFullPath(Path.Combine(project,"../../.."));
+            var scenePath=Path.Combine(main,"Assets/CharacterTesting/CharacterTest.unity");
+            var sceneSha=Hash(scenePath);
+            var refs=Regex.Matches(File.ReadAllText(scenePath),@"\{fileID: (-?\d+), guid: ff5cdff5a433ef342ad7bf24aeafd8b8, type: 3\}")
+                .Cast<Match>().Select(m=>long.Parse(m.Groups[1].Value)).Where(id=>id!=100100000).Distinct().ToArray();
+            if(refs.Length==0 || refs.Any(id=>!effective.Contains(id)))throw new Exception("Current main scene prefab target is unresolved");
+            File.WriteAllLines(Path.Combine(audit,"effective_prefab_ids8.txt"),effective.Select(id=>id.ToString()));
+            KursHubQualitySetup.CreateDemo();
+            Directory.CreateDirectory(Path.Combine(audit,"delivery/REPORTS"));
+            KursHubQualitySetup.AuditAndExport();
+            if(Hash(scenePath)!=sceneSha)throw new Exception("Main scene changed during verification; inspect before publication");
+            var proof="KURS8_NATIVE_BUILD_PASS\nUnity="+Application.unityVersion+"\nTwoBuildIdentitiesStable=True\nOldRootIdsPreserved="+old.Count+"\nMainSceneSaved=False\nOwnedAuthoringAndDemoScenesSaved=True\nMainSceneNativeTargets="+refs.Length+"\nMainSceneSHA256="+sceneSha+"\nPACKAGE_SHA256="+Hash(Path.Combine(audit,"delivery/KursHub_Final.unitypackage"))+"\nFBXSHA256="+Hash(Folder+"/Models/KursHubShell.fbx")+"\nPREFABSHA256="+Hash(Folder+"/KursHub.prefab")+"\nMANIFESTSHA256="+Hash(Folder+"/KursHubManifest.json")+"\n";
+            File.WriteAllText(Path.Combine(audit,"native_build8.txt"),proof);Debug.Log(proof);EditorApplication.Exit(0);
+        }
+        catch(Exception e){Debug.LogException(e);EditorApplication.Exit(1);}
+    }
+}
