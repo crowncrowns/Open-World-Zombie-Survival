@@ -2,6 +2,7 @@ using UnityEngine;
 
 namespace ZombieSurvival.Inventory
 {
+    public enum WearSlot { [InspectorName("Не надевается")] None=0, [InspectorName("Туловище")] Body=1, [InspectorName("Голова")] Head=2, [InspectorName("Ноги")] Legs=3, [InspectorName("Плечи")] Shoulders=4, [InspectorName("Рюкзак")] Backpack=5 }
     public enum ItemCategory { [InspectorName("Не назначено")] Uncategorized = 0, [InspectorName("Оружие")] Weapon = 10, [InspectorName("Патроны")] Ammunition = 20, [InspectorName("Снаряжение")] Equipment = 30, [InspectorName("Еда")] Food = 40, [InspectorName("Медицина")] Medicine = 50, [InspectorName("Материалы")] Material = 60 }
     public enum ItemSubcategory { [InspectorName("Не назначено")] Unspecified = 0, [InspectorName("Огнестрельное")] Firearm = 10, [InspectorName("Ближний бой")] Melee = 11, [InspectorName("Боеприпасы")] Ammunition = 20, [InspectorName("Рюкзак")] Backpack = 30, [InspectorName("Броня")] BodyArmor = 31, [InspectorName("Тактический жилет")] TacticalVest = 32, [InspectorName("Одежда")] Clothing = 33, [InspectorName("Фонарик")] Flashlight = 34, [InspectorName("Продукты")] Food = 40, [InspectorName("Медицинские средства")] MedicalSupplies = 50, [InspectorName("Текстиль")] Textile = 60, [InspectorName("Оружейные детали")] WeaponParts = 61, [InspectorName("Бронематериалы")] ArmorMaterial = 62 }
 
@@ -35,6 +36,12 @@ namespace ZombieSurvival.Inventory
         private float maximumDurability = 100f;
         [SerializeField, InspectorName("Можно в хотбар"), Tooltip("Разрешает ручное и автоматическое назначение этого типа в быстрые слоты. Обычно включено у оружия, еды, воды и аптечек; выключено у патронов и материалов. Не создаёт действие использования само по себе.")]
         private bool allowInHotbar;
+        [SerializeField, InspectorName("Слот экипировки"), Tooltip("Куда можно надеть оригинал этого типа. Для брони/рюкзака выберите категорию Снаряжение; оружие остаётся в хотбаре.")]
+        private WearSlot wearSlot;
+        [SerializeField, Range(0,64), InspectorName("Дополнительные слоты рюкзака"), Tooltip("Сколько слотов добавляет НАДЕТЫЙ рюкзак, шт. Рюкзак в кармане/мире вместимость не увеличивает. Базовые 5 слотов задаются у PlayerEquipment.")]
+        private int backpackSlots=12;
+        public WearSlot WearSlot => Category==ItemCategory.Equipment && System.Enum.IsDefined(typeof(WearSlot),wearSlot) ? wearSlot : WearSlot.None;
+        public int BackpackSlots => WearSlot==WearSlot.Backpack ? Mathf.Clamp(backpackSlots,0,64) : 0;
         public bool AllowInHotbar => allowInHotbar;
         public ZombieSurvival.Weapons.WeaponDefinition Weapon => weapon;
         public ZombieSurvival.Equipment.FlashlightDefinition Flashlight => flashlight;

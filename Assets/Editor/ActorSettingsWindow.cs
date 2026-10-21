@@ -93,7 +93,7 @@ public sealed class ActorSettingsWindow : EditorWindow
             case "PlayerParkour": return 2;
             case "PlayerNoiseEmitter": case "PlayerInteractor": case "EnemyBrain": case "EnemyCrawlPursuit": case "MeleeAttack": case "NoiseEmitter": return 3;
             case "PlayerCameraMotion": case "PlayerVisual": case "PlayerModelDefinition": case "PlayerCrawlAnimation": case "HumanoidCrawlPose": case "HumanoidGrounding": case "EnemyAnimationBridge": return 4;
-            case "ItemStorage": case "PlayerInventory": case "PlayerServiceSession": case "TraderServicePoint": case "WorkbenchServicePoint": case "RepairWorkbench": case "ServiceVisual": case "Trader": return 5;
+            case "PlayerEquipment": case "ItemStorage": case "PlayerInventory": case "PlayerServiceSession": case "TraderServicePoint": case "WorkbenchServicePoint": case "RepairWorkbench": case "ServiceVisual": case "Trader": return 5;
             case "PlayerProgression": case "PlayerStatModifiers": case "PlayerProgressionMenu": case "PlayerHotbar": return 10;
             case "Wallet": case "TraderBudget": return 8;
             case "PlayerSaveSlots": case "PlayerSaveMenu": case "PlayerNeeds": case "PlayerSaveSystem": case "SaveIdentity": case "WorldSaveObject": case "WorldActorSaveAdapter": case "WorldIdentitySaveAdapter": case "WorldWalletSaveAdapter": case "WorldDoorSaveAdapter": case "WorldToggleSaveAdapter": case "WorldRigidbodySaveAdapter": return 9;
@@ -116,6 +116,7 @@ public sealed class ActorSettingsWindow : EditorWindow
             case "PlayerNoiseEmitter": return "Шум игрока";
             case "ItemStorage": return "Слоты предметов";
             case "PlayerInventory": return "Окно рюкзака и выбрасывание";
+            case "PlayerEquipment": return "Экипировка и вместимость карманов";
             case "PlayerServiceSession": return "Общая сессия сервиса";
             case "TraderServicePoint": return "Доступ к торговой сессии";
             case "Trader": return "Профили и личные остатки торговца (Т5)";

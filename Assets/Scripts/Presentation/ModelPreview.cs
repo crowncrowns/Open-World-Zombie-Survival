@@ -125,18 +125,37 @@ namespace ZombieSurvival.Presentation
     internal static class ItemModelIcons
     {
         private static readonly Dictionary<ItemDefinition, RenderTexture> Cache = new Dictionary<ItemDefinition, RenderTexture>();
+        private static readonly HashSet<ItemDefinition> Pending = new HashSet<ItemDefinition>();
+        private static ModelPreviewPump pump;
         internal static Texture Get(ItemDefinition type)
         {
             if (type == null || type.WorldPrefab == null) return null;
             if (Cache.TryGetValue(type, out var cached) && cached != null && cached.IsCreated()) return cached;
-            using (var preview = new ModelPreview(type.WorldPrefab, 256, 256))
-            { var result = preview.DetachTexture(); Cache[type] = result; return result; }
+            // Get вызывают OnGUI рюкзака/хотбара/торговли. Camera.Render внутри URP RenderLoop приводит к повторному UniversalCameraData.
+            // На miss только заявка; выключенная preview-камера рендерится из LateUpdate отдельного presentation pump.
+            Pending.Add(type);
+            if(pump==null){var go=new GameObject("UI preview queue"){hideFlags=HideFlags.HideAndDontSave};pump=go.AddComponent<ModelPreviewPump>();}
+            return null;
+        }
+        internal static void RenderPending()
+        {
+            int remaining=2;
+            while(Pending.Count>0 && remaining-->0)
+            {
+                ItemDefinition type=null;foreach(var next in Pending){type=next;break;}Pending.Remove(type);
+                if(type==null || type.WorldPrefab==null)continue;
+                if(Cache.TryGetValue(type,out var old)&&old!=null)
+                {if(old.IsCreated())continue;old.Release();UnityEngine.Object.Destroy(old);}
+                using(var preview=new ModelPreview(type.WorldPrefab,256,256))Cache[type]=preview.DetachTexture();
+                Pending.Remove(type); // Вложенный GUI вызов во время Camera.Render мог снова запросить ещё не опубликованную иконку.
+            }
         }
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void Reset()
         {
             foreach (var texture in Cache.Values) if (texture != null) { texture.Release(); UnityEngine.Object.Destroy(texture); }
             Cache.Clear();
+            Pending.Clear();if(pump!=null)UnityEngine.Object.Destroy(pump.gameObject);pump=null;
         }
     }
 }

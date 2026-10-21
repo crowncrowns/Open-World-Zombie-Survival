@@ -82,6 +82,8 @@ public static class KursHubCapture8
         public int systemMemoryMB;
         public string prefabGuid;
         public string prefabSha256;
+        public string prefabDependencyHash128;
+        public string librarySha256;
         public string layoutSha256;
         public int width;
         public int height;
@@ -143,6 +145,8 @@ public static class KursHubCapture8
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath);
             if (prefab == null) throw new InvalidOperationException("Missing current KursHub prefab");
+            report.prefabDependencyHash128 = AssetDatabase.GetAssetDependencyHash(PrefabPath).ToString();
+            report.librarySha256 = LibraryHash();
             var hub = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
             owned.Add(hub);
             hub.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
@@ -257,6 +261,8 @@ public static class KursHubCapture8
                 "No population, NavMesh, gameplay or player-controller traversal is tested by rendering. Images require visual inspection; no AAA score or acceptance claim is inferred."
             };
             if (errors.Count != 0) throw new InvalidOperationException("Native errors occurred during capture: " + errors.Count);
+            if(report.librarySha256!=LibraryHash() || report.prefabDependencyHash128!=AssetDatabase.GetAssetDependencyHash(PrefabPath).ToString())
+                throw new InvalidOperationException("Hub dependencies changed during image capture");
             report.status = "PASS_NATIVE_CAPTURE";
             exitCode = 0;
         }
@@ -426,5 +432,15 @@ public static class KursHubCapture8
         using (var algorithm = SHA256.Create())
         using (var stream = File.OpenRead(file))
             return string.Concat(algorithm.ComputeHash(stream).Select(b => b.ToString("x2", Invariant)));
+    }
+    private static string LibraryHash()
+    {
+        const string folder="Assets/Environment/KursHub";
+        var paths=Directory.GetFiles(folder,"*",SearchOption.AllDirectories).Where(p=>!p.EndsWith(".meta") &&
+            p.Replace('\\','/')!=folder+"/Models/KursHubShell.fbx" && !p.EndsWith("KursHub.prefab") && !p.EndsWith("KursHubManifest.json"))
+            .Select(p=>p.Replace('\\','/')).OrderBy(p=>p,StringComparer.Ordinal);
+        var content=string.Join("\n",paths.Select(p=>p+":"+Hash(p)));
+        using(var algorithm=SHA256.Create())
+            return string.Concat(algorithm.ComputeHash(Encoding.UTF8.GetBytes(content)).Select(b=>b.ToString("x2",Invariant)));
     }
 }

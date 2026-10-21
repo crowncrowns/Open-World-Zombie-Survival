@@ -64,6 +64,7 @@ namespace ZombieSurvival.Persistence
         { using(var sha=SHA256.Create())return BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(s))).Replace("-",""); }
         private void CheckContext()
         {
+            if(PlayerEquipment.IsBusy || ItemStorage.IsLayoutBusy)throw new InvalidOperationException("Инвентарь завершает перемещение/экипировку.");
             if (ZombieSurvival.Services.Trader.RestockIsBusy) throw new InvalidOperationException("Дождитесь завершения пополнения товаров.");
             if (ZombieSurvival.Services.RepairService.IsBusy) throw new InvalidOperationException("Дождитесь завершения ремонта.");
             if (PlayerWeapons.IsBusy || ItemStorage.IsWeaponUseBusy) throw new InvalidOperationException("Дождитесь завершения применения оружия.");
@@ -88,6 +89,7 @@ namespace ZombieSurvival.Persistence
                 if(item==null || string.IsNullOrWhiteSpace(item.Id) || !result.TryAdd(item.Id,item))throw new InvalidOperationException("Пустой или повторяющийся ID в каталоге предметов.");
             return result;
         }
+        internal ItemDefinition FindItemType(string id)=>Catalog().TryGetValue(id??"",out var type)?type:null;
         private Dictionary<string,ItemStorage> Storages()
         {
             var result=new Dictionary<string,ItemStorage>(StringComparer.Ordinal);
@@ -120,6 +122,7 @@ namespace ZombieSurvival.Persistence
         /// <summary>Дешёвая проверка для планировщика. Полная проверка мира остаётся внутри TrySaveSlot.</summary>
         public bool CanSaveNow(out string reason)
         {
+            if(PlayerEquipment.IsBusy || ItemStorage.IsLayoutBusy){reason="Ожидание завершения перемещения вещей";return false;}
             if (ZombieSurvival.Services.Trader.RestockIsBusy) { reason = "Ожидание завершения пополнения товаров"; return false; }
             if (ZombieSurvival.Services.RepairService.IsBusy) { reason = "Ожидание завершения ремонта"; return false; }
             if (PlayerWeapons.IsBusy || ItemStorage.IsWeaponUseBusy) { reason = "Ожидание завершения применения оружия"; return false; }
@@ -192,6 +195,8 @@ namespace ZombieSurvival.Persistence
                 foreach(var item in row.slots)Decode(item,catalog,ids);
             }
             if(storageIds.Count!=stores.Count)throw new InvalidOperationException("Набор хранилищ сцены изменился; требуется миграция сохранения.");
+            var equipment=GetComponent<PlayerEquipment>();
+            if(equipment!=null && !equipment.ValidateSaved(data.storages,GetComponent<SaveIdentity>()?.Id,out var equipmentError))throw new InvalidOperationException(equipmentError);
             var hotbar=GetComponent<PlayerHotbar>();
             if(hotbar!=null)
             {

@@ -1,0 +1,38 @@
+EQUIPMENT_PASS fresh player has five base slots and separate equipment
+EQUIPMENT_PASS test items fit base pockets
+EQUIPMENT_PASS wear backpack original enables twelve additional slots
+EQUIPMENT_PASS generic add/extract/transfer cannot bypass wearable rules
+EQUIPMENT_PASS split creates another stack conserving quantity
+EQUIPMENT_PASS split uses distinct ID
+EQUIPMENT_PASS merge retains receiving ID
+EQUIPMENT_PASS targeted move keeps original weapon state
+EQUIPMENT_PASS swap retains both originals
+EQUIPMENT_PASS remove backpack compacts occupied tail without losing items
+EQUIPMENT_PASS rewear backpack
+EQUIPMENT_PASS fill extra capacity
+EQUIPMENT_PASS overfilled backpack cannot be removed and layout stays exact
+EQUIPMENT_PASS prepare actual UI food in first slot
+EQUIPMENT_PASS actual Tab opens inventory with owner lock
+EQUIPMENT_PASS GUI MouseDown/Up selects selects item
+EQUIPMENT_PASS GUI right click opens dropdown
+EQUIPMENT_PASS actual dropdown Split conserves total and creates distinct stack
+EQUIPMENT_PASS drag target empty
+EQUIPMENT_PASS GUI drag moves original into specified empty slot
+EQUIPMENT_PASS actual dropdown Use consumes exactly one
+EQUIPMENT_PASS actual dropdown Drop preserves inventory plus world quantity
+EQUIPMENT_PASS actual wearable context removes backpack and hides extra slots
+EQUIPMENT_PASS returned backpack in free first pocket
+EQUIPMENT_PASS actual drag equips original backpack to correct wearable slot
+EQUIPMENT_PASS inventory renders and clicks without exceptions including empty serialized slots
+EQUIPMENT_PASS save full player and equipped original backpack
+EQUIPMENT_PASS change capacity before restore
+EQUIPMENT_PASS load restores equipment ID and derived capacity atomically
+EQUIPMENT_PASS weapon magazine/durability survives save load and swaps
+EQUIPMENT_PASS repeat load retires old equipped handles
+EQUIPMENT_PASS wear original in Body
+EQUIPMENT_PASS wear original in Head
+EQUIPMENT_PASS wear original in Legs
+EQUIPMENT_PASS wear original in Shoulders
+EQUIPMENT_PASS reentrant load rejected during equipment publish
+EQUIPMENT_PASS no runtime errors after complete lifecycle
+INVENTORY_EQUIPMENT_OK checks=37

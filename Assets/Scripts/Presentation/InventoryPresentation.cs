@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using ZombieSurvival.Combat;
 using ZombieSurvival.Economy;
 using ZombieSurvival.Inventory;
@@ -9,7 +10,7 @@ using ZombieSurvival.Progression;
 namespace ZombieSurvival.Presentation
 {
     /// <summary>Read-only layout and explicit commands to the existing inventory owner.</summary>
-    internal sealed class InventoryPresentation : IDisposable
+    internal sealed partial class InventoryPresentation : IDisposable
     {
         private static readonly Color Paper = new Color(.85f, .83f, .75f);
         private static readonly Color Muted = new Color(.53f, .56f, .52f);
@@ -20,6 +21,13 @@ namespace ZombieSurvival.Presentation
         private GameObject shownModel;
         private GUIStyle small, body, title, number, wrap, button;
         private Vector2 ownScroll, containerScroll;
+        private ItemStorage dragStorage;
+        private int dragIndex=-1, dragGear=-1;
+        private string dragId, contextId;
+        private Vector2 pressedAt, contextScreen;
+        private bool dragging, contextOpen;
+        private int contextGear=-1, splitAmount=1;
+        private Rect contextBounds;
         internal InventoryPresentation(PlayerInventory owner) { this.owner = owner; }
         internal void Tick()
         {
@@ -60,8 +68,19 @@ namespace ZombieSurvival.Presentation
             // Fit a fixed, legible composition to the right; the left stays an open view of the live world.
             float offset = width - 1920;
             GUI.matrix = Matrix4x4.TRS(new Vector3(offset * scale, (height - 1080) * .5f * scale, 0), Quaternion.identity, Vector3.one * scale);
-            DrawCharacter(); DrawBackpack(); DrawStats();
+            BeginPointerLayout(GUI.matrix);
+            if(Mouse.current!=null && Event.current.type==EventType.ScrollWheel)Event.current.Use();
+            if(Mouse.current==null && contextOpen && Event.current.type==EventType.MouseDown && !contextBounds.Contains(Event.current.mousePosition))contextOpen=false;
+            bool enabled=GUI.enabled;GUI.enabled=enabled&&!contextOpen;
+            DrawCharacter(); DrawEquipment(); DrawBackpack(); DrawStats();
             if (owner.Container != null) DrawContainer();
+            GUI.enabled=enabled;
+            DrawContext();
+            if(dragging && !string.IsNullOrEmpty(dragId))
+            {
+                var p=Event.current.mousePosition;Text(new Rect(p.x+15,p.y+15,250,30),"ПЕРЕМЕСТИТЬ ПРЕДМЕТ",body);
+            }
+            if(Mouse.current==null && Event.current.type==EventType.MouseUp){dragging=false;dragId=null;dragStorage=null;dragGear=-1;}
             GUI.color = color; GUI.matrix = matrix;
         }
         private void DrawCharacter()
@@ -97,15 +116,19 @@ namespace ZombieSurvival.Presentation
         {
             const int columns = 4; float cell = (viewport.width - 30) / columns, pitch = cell + 10;
             float contentHeight = Mathf.Ceil(storage.SlotCount / (float)columns) * pitch - 10;
-            scroll = GUI.BeginScrollView(viewport, scroll, new Rect(0, 0, viewport.width - (contentHeight > viewport.height ? 18 : 0), contentHeight), false, false);
-            if (contentHeight > viewport.height) cell -= 4.5f;
-            pitch = cell + 10;
+            bool bar=contentHeight>viewport.height;
+            if(bar){cell-=4.5f;pitch=cell+10;contentHeight=Mathf.Ceil(storage.SlotCount/(float)columns)*pitch-10;}
+            scroll.y=Mathf.Clamp(scroll.y,0,Mathf.Max(0,contentHeight-viewport.height));
+            RecordScroll(viewport,container,Mathf.Max(0,contentHeight-viewport.height));
+            scroll = GUI.BeginScrollView(viewport, scroll, new Rect(0, 0, viewport.width - (bar ? 18 : 0), Mathf.Max(viewport.height,contentHeight)), false, false);
             for (int i = 0; i < storage.SlotCount; i++)
             {
                 var rect = new Rect(i % columns * pitch, i / columns * pitch, cell, cell);
                 bool selected = owner.SelectedIndex == i && owner.SelectedContainer == container;
                 var stack = storage.GetSlot(i);
-                if (Slot(rect, stack, (i + 1).ToString("00"), selected)) owner.SelectSlot(i, container);
+                RecordCell(new Rect(viewport.position+rect.position-scroll,rect.size),viewport,storage,i,-1);
+                HandleSlot(rect,storage,i,container);
+                Slot(rect, stack, (i + 1).ToString("00"), selected);
             }
             GUI.EndScrollView();
         }
@@ -113,7 +136,11 @@ namespace ZombieSurvival.Presentation
         {
             Fill(rect, selected ? new Color(.16f, .18f, .14f, .98f) : new Color(.095f, .11f, .095f, .86f));
             Fill(new Rect(rect.x, rect.yMax - 2, rect.width, 2), selected ? Amber : new Color(.3f, .34f, .29f, .6f));
-            bool clicked = GUI.Button(rect, new GUIContent("", stack != null ? stack.Definition.DisplayName : "Свободный слот"), GUIStyle.none);
+            bool valid=stack!=null&&!stack.IsEmpty;
+            // Пустые Unity-сериализованные ItemStack не равны null и не имеют Definition.
+            // Не выбрасывать исключение между BeginScrollView/EndScrollView: иначе ломаются hit testing и GUIClip.
+            bool clicked = false;
+            GUI.Label(rect,new GUIContent("",valid?stack.Definition.DisplayName:"Свободный слот"),GUIStyle.none);
             Text(new Rect(rect.x + 8, rect.y + 4, 35, 20), key, small);
             if (stack != null && !stack.IsEmpty)
             {
@@ -130,6 +157,86 @@ namespace ZombieSurvival.Presentation
                 }
             }
             return clicked;
+        }
+        private void HandleSlot(Rect rect,ItemStorage storage,int index,bool container)
+        {
+            if(Mouse.current!=null)return; // ПК-курсор обрабатывает один Input System маршрут, не второй IMGUI клик.
+            if(contextOpen)return;var e=Event.current;var item=storage.GetSlot(index);
+            if(e.type==EventType.MouseDown && rect.Contains(e.mousePosition))
+            {
+                owner.SelectSlot(index,container);
+                if(e.button==1 && item!=null&&!item.IsEmpty){contextOpen=true;contextId=item.InstanceId;contextGear=-1;contextScreen=GUIUtility.GUIToScreenPoint(e.mousePosition);splitAmount=Mathf.Max(1,item.Quantity/2);e.Use();}
+                else if(e.button==0){dragStorage=storage;dragIndex=index;dragGear=-1;dragId=item!=null&&!item.IsEmpty?item.InstanceId:null;pressedAt=GUIUtility.GUIToScreenPoint(e.mousePosition);dragging=false;e.Use();}
+            }
+            if(e.type==EventType.MouseDrag && dragId!=null){dragging|=Vector2.Distance(pressedAt,GUIUtility.GUIToScreenPoint(e.mousePosition))>5;}
+            if(e.type==EventType.MouseUp && e.button==0 && dragging && rect.Contains(e.mousePosition))
+            {
+                var equipment=owner.GetComponent<PlayerEquipment>();
+                if(dragGear>=0)
+                {
+                    if(storage==owner.Storage && equipment?.Get((WearSlot)(dragGear+1))?.InstanceId==dragId){equipment.TryUnequip((WearSlot)(dragGear+1),index);owner.Report(equipment.Status);}
+                }
+                else owner.MoveItem(dragStorage,dragIndex,dragId,storage,index);
+                dragging=false;dragId=null;dragStorage=null;dragGear=-1;e.Use();
+            }
+        }
+        private void DrawEquipment()
+        {
+            var equipment=owner.GetComponent<PlayerEquipment>();if(equipment==null)return;
+            Text(new Rect(485,205,210,24),"ЭКИПИРОВКА",small);
+            string[] labels={"ТУЛОВИЩЕ","ГОЛОВА","НОГИ","ПЛЕЧИ","РЮКЗАК"};
+            for(int i=0;i<5;i++)
+            {
+                var rect=new Rect(486,242+i*113,100,88);var item=equipment.Get((WearSlot)(i+1));var e=Event.current;
+                RecordCell(rect,rect,equipment.Storage,i,i);
+                if(Mouse.current==null && !contextOpen && rect.Contains(e.mousePosition))
+                {
+                    if(e.type==EventType.MouseDown && item!=null&&!item.IsEmpty)
+                    {
+                        if(e.button==1){contextOpen=true;contextGear=i;contextId=item.InstanceId;contextScreen=GUIUtility.GUIToScreenPoint(e.mousePosition);}
+                        else if(e.button==0){dragStorage=equipment.Storage;dragIndex=i;dragGear=i;dragId=item.InstanceId;pressedAt=GUIUtility.GUIToScreenPoint(e.mousePosition);dragging=false;}
+                        e.Use();
+                    }
+                    if(e.type==EventType.MouseUp && e.button==0 && dragging && dragGear<0 && dragStorage==owner.Storage)
+                    {
+                        var source=dragStorage.GetSlot(dragIndex);
+                        if(source!=null&&!source.IsEmpty && source.InstanceId==dragId && source.Definition.WearSlot==(WearSlot)(i+1)){equipment.TryEquip(dragIndex);owner.Report(equipment.Status);}
+                        else owner.Report("Этот предмет не подходит для выбранной части тела");
+                        dragging=false;dragId=null;dragStorage=null;e.Use();
+                    }
+                }
+                Slot(rect,item,"",false);Text(new Rect(rect.x,rect.yMax+2,130,22),labels[i],small);
+            }
+            Text(new Rect(605,816,450,24),"КАРМАНЫ / РЮКЗАК: "+equipment.Capacity+" СЛОТОВ",small);
+        }
+        private void DrawContext()
+        {
+            if(!contextOpen)return;
+            var equipment=owner.GetComponent<PlayerEquipment>();var item=contextGear>=0?equipment?.Get((WearSlot)(contextGear+1)):owner.SelectedStack;
+            if(item==null || item.IsEmpty || item.InstanceId!=contextId){contextOpen=false;CancelPointerClick();return;}
+            var pos=Mouse.current!=null?(Vector2)pointerMatrix.inverse.MultiplyPoint3x4(contextScreen):GUIUtility.ScreenToGUIPoint(contextScreen);float height=contextGear>=0?110:355;
+            contextBounds=new Rect(Mathf.Clamp(pos.x,20,1665),Mathf.Clamp(pos.y,20,1060-height),235,height);
+            // Нативные Rect-кнопки после scroll views: курсор и меню находятся в одной GUI.matrix.
+            Fill(contextBounds,new Color(.045f,.055f,.045f,1));float x=contextBounds.x+8,y=contextBounds.y+8;var width=contextBounds.width-16;
+            Text(new Rect(x,y,width,30),item.Definition.DisplayName,wrap);y+=36;
+            if(contextGear>=0)
+            {
+                if(Button(new Rect(x,y,width,32),"Снять")){equipment.TryUnequip((WearSlot)(contextGear+1));owner.Report(equipment.Status);contextOpen=false;}
+                return;
+            }
+            bool mine=!owner.SelectedContainer;
+            var needs=owner.GetComponent<PlayerNeeds>();bool usable=mine&&(item.Definition.Weapon!=null || item.Definition.WearSlot!=WearSlot.None || item.Definition.Flashlight!=null || needs!=null&&needs.CanConsume(item.Definition));
+            if(Button(new Rect(x,y,width,32),item.Definition.WearSlot!=WearSlot.None?"Надеть":"Использовать",usable)){contextOpen=false;owner.UseSelected();}y+=38;
+            bool split=!item.Definition.IsIndividual&&item.Quantity>1;
+            Text(new Rect(x,y,width,22),"Отделить: "+splitAmount+" шт.",small);y+=22;
+            var slider=new Rect(x,y,width,18);RecordSlider(slider,item.Quantity);
+            if(Mouse.current==null)splitAmount=Mathf.Clamp(Mathf.RoundToInt(GUI.HorizontalSlider(slider,splitAmount,1,Mathf.Max(1,item.Quantity-1))),1,Mathf.Max(1,item.Quantity-1));
+            else{Fill(new Rect(x,y+6,width,3),Muted);float fraction=item.Quantity>2?(splitAmount-1f)/(item.Quantity-2):0;Fill(new Rect(x+fraction*(width-8),y,8,16),Amber);}y+=22;
+            if(Button(new Rect(x,y,width,32),"Разделить",split)){owner.SplitSelected(splitAmount);contextOpen=false;}y+=38;
+            if(Button(new Rect(x,y,width,32),"Перенести в "+(mine?"контейнер":"карманы"),owner.Container!=null)){owner.TransferSelected(int.MaxValue);contextOpen=false;}y+=38;
+            if(Button(new Rect(x,y,width,32),"Выкинуть 1",mine)){owner.DropSelected(false);contextOpen=false;}y+=38;
+            if(Button(new Rect(x,y,width,32),"Выкинуть всё",mine)){owner.DropSelected(true);contextOpen=false;}y+=38;
+            if(Button(new Rect(x,y,width,25),"Закрыть"))contextOpen=false;
         }
         private void DrawDetails(Rect rect)
         {
@@ -161,7 +268,7 @@ namespace ZombieSurvival.Presentation
             else
             {
                 if (Button(new Rect(1148, 619, 218, 34), "УПОТРЕБИТЬ 1", mine && needs != null && needs.CanConsume(stack.Definition))) owner.ConsumeSelected();
-                if (Button(new Rect(1376, 619, 227, 34), "ЭКИПИРОВАТЬ", mine && stack.Definition.Weapon != null)) owner.EquipSelected();
+                if (Button(new Rect(1376, 619, 227, 34), "ЭКИПИРОВАТЬ", mine && (stack.Definition.Weapon != null || stack.Definition.WearSlot!=WearSlot.None))) owner.EquipSelected();
             }
             if (Button(new Rect(1148, 665, 218, 34), "ВЫБРОСИТЬ 1", mine)) owner.DropSelected(false);
             if (Button(new Rect(1376, 665, 227, 34), "ВЫБРОСИТЬ ВСЁ", mine)) owner.DropSelected(true);
@@ -182,7 +289,7 @@ namespace ZombieSurvival.Presentation
                 var texture = assigned != null ? ItemModelIcons.Get(assigned.Definition) : null;
                 float iconHeight = height - 25;
                 if (texture != null) GUI.DrawTexture(new Rect(rect.x + 25, rect.y + 2, width - 49, iconHeight), texture, ScaleMode.ScaleToFit, true);
-                if (GUI.Button(new Rect(rect.x, rect.y, width - 20, iconHeight), GUIContent.none, GUIStyle.none)) hotbar.Select(i);
+                if (Button(new Rect(rect.x, rect.y, width - 20, iconHeight), "")) hotbar.Select(i);
                 if (Button(new Rect(rect.xMax - 20, rect.y, 20, 20), "×")) hotbar.Clear(i);
                 bool canAssign = !owner.SelectedContainer && selected != null && !selected.IsEmpty && selected.Definition.AllowInHotbar;
                 if (Button(new Rect(rect.x + 3, rect.yMax - 24, width - 6, 21), "НАЗНАЧИТЬ", canAssign)) owner.AssignSelected(i);
@@ -220,9 +327,16 @@ namespace ZombieSurvival.Presentation
         private bool Button(Rect rect, string text, bool enabled = true)
         {
             bool previous = GUI.enabled; GUI.enabled = previous && enabled;
-            Fill(rect, enabled && rect.Contains(Event.current.mousePosition) ? new Color(.25f, .27f, .21f) : new Color(.13f, .15f, .12f));
-            Fill(new Rect(rect.x, rect.yMax - 1, rect.width, 1), enabled ? Muted : new Color(.2f, .22f, .19f));
-            bool clicked = GUI.Button(rect, text, button); GUI.enabled = previous; return clicked;
+            if(!string.IsNullOrEmpty(text))
+            {
+                bool hover=Mouse.current!=null?Pixels(rect).Contains(pointerPosition):rect.Contains(Event.current.mousePosition);
+                Fill(rect, enabled && hover ? new Color(.25f, .27f, .21f) : new Color(.13f, .15f, .12f));
+                Fill(new Rect(rect.x, rect.yMax - 1, rect.width, 1), enabled ? Muted : new Color(.2f, .22f, .19f));
+            }
+            bool clicked;
+            if(Mouse.current!=null){RecordButton(rect,GUI.enabled);GUI.Label(rect,text,button);clicked=TakeClick(rect);}
+            else clicked=GUI.Button(rect,text,button);
+            GUI.enabled = previous; return clicked;
         }
         private static void Text(Rect rect, string text, GUIStyle style) => GUI.Label(rect, text, style);
         private static void Fill(Rect rect, Color color)

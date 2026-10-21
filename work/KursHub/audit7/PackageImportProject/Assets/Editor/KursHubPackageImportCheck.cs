@@ -14,21 +14,22 @@ using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 using UnityEngine.SceneManagement;
 
-/// <summary>Temporary independent check: import the deliverable into a fresh project.</summary>
-public static class KursHubPackageImportCheck
+/// <summary>Temporary independent revision-8 archive check; existing Unity Library cache is retained, authored Kurs assets are absent before import.</summary>
+public static class KursHubPackageImportCheck8
 {
     private const string Folder = "Assets/Environment/KursHub";
     private const string Hub = Folder + "/KursHub.prefab";
     private const string Demo = Folder + "/Scenes/KursHubDemo.unity";
-    [Serializable] private sealed class Config { public string packagePath; public string reportPath; public string previewFolder; public string expectedPath; public int expectedPrefabCount; }
-    [Serializable] private sealed class Entry { public string path; public string guid; }
-    [Serializable] private sealed class Expected { public string packageSha256; public Entry[] entries; public int prefabCount; }
+    [Serializable] private sealed class Config { public string receiverProjectPath; public string packagePath; public string reportPath; public string previewFolder; public string expectedPath; public int expectedPrefabCount; }
+    [Serializable] private sealed class Entry { public string path; public string guid; public string contentSha256; }
+    [Serializable] private sealed class Expected { public string packageSha256; public Entry[] entries; public int prefabCount; public int propCount; public int modelCount; public int pngCount; public int familyCount; public int nestedPropInstances; }
     [Serializable] private sealed class Props { public Prop[] props; }
     [Serializable] private sealed class Prop { public string id; public float[] boundsMin; public float[] boundsMax; public SourceLod[] lods; }
     [Serializable] private sealed class SourceLod { public int level; public int triangles; public string model; }
     [Serializable] private sealed class Surfaces { public Surface[] families; }
     [Serializable] private sealed class Surface { public string name; public int resolution; public float tiling; }
-    [Serializable] private sealed class HubManifest { public float width; public float depth; public float floorHeight; }
+    [Serializable] private sealed class HubManifest { public int stage; public float width; public float depth; public float floorHeight; public Placement[] propInstances; public Placement[] interiorInstances; public Placement[] settlementInstances; }
+    [Serializable] private sealed class Placement { public string id; public string prop; }
     [Serializable] private sealed class AssetCheck
     {
         public string path; public string guid; public int renderers; public int lodGroups; public long[] lodTriangles;
@@ -40,10 +41,10 @@ public static class KursHubPackageImportCheck
     {
         public string status = "RUNNING"; public string unityVersion; public string urpVersion; public string pipeline;
         public string packagePath; public string packageSha256; public string generatedUtc; public int archiveEntries; public int guidChecks;
-        public int prefabCount; public int materialCount; public int independentCollisionChecks; public int nestedPropInstances;
+        public int prefabCount; public int propCount; public int modelCount; public int pngCount; public int familyCount; public int contentHashChecks; public int materialCount; public int independentCollisionChecks; public int nestedPropInstances;
         public string demoScene; public string[] dependencies; public string[] externalDependencies; public string[] errors; public string[] warnings;
         public AssetCheck[] assets; public TextureCheck[] textures; public CaptureCheck[] captures;
-        public string limitation = "Fresh archive import, static asset structure and native URP renders. No player/controller, NPC, baked lighting, populated FPS or photographic-reference acceptance is claimed.";
+        public string limitation = "Fresh authored-asset archive import into a settings-only receiver using its cached Unity Library; static structure and native URP renders. No player/controller, NPC, baked lighting, populated FPS or photographic-reference acceptance is claimed.";
     }
     private static Config config;
     private static Report report;
@@ -53,11 +54,15 @@ public static class KursHubPackageImportCheck
 
     public static void ImportAndCheck()
     {
-        config = JsonUtility.FromJson<Config>(File.ReadAllText("ValidationConfig.json", Encoding.UTF8));
+        config = JsonUtility.FromJson<Config>(File.ReadAllText("ValidationConfig8.json", Encoding.UTF8));
         report = new Report { unityVersion = Application.unityVersion, generatedUtc = DateTime.UtcNow.ToString("o"), packagePath = config.packagePath };
         Application.logMessageReceived += CaptureLog;
         try
         {
+            errors.Clear(); warnings.Clear();
+            Require(Path.GetFullPath(Path.GetDirectoryName(Application.dataPath)).TrimEnd(Path.DirectorySeparatorChar) == Path.GetFullPath(config.receiverProjectPath).TrimEnd(Path.DirectorySeparatorChar), "Wrong owned receiver project.");
+            AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+            Require(AssetDatabase.LoadAssetAtPath<GameObject>(Hub) == null, "Cached Kurs asset is present before archive import.");
             Require(Application.unityVersion == "6000.6.3f1", "Wrong Unity version: " + Application.unityVersion);
             report.urpVersion = UnityEditor.PackageManager.PackageInfo.FindForAssembly(typeof(UniversalRenderPipeline).Assembly)?.version;
             Require(report.urpVersion == "17.6.0", "Wrong URP version: " + report.urpVersion);
@@ -67,7 +72,7 @@ public static class KursHubPackageImportCheck
             var expected = JsonUtility.FromJson<Expected>(File.ReadAllText(config.expectedPath, Encoding.UTF8));
             report.packageSha256 = Hash(config.packagePath);
             Require(report.packageSha256 == expected.packageSha256, "Package differs from its expected GUID snapshot.");
-            Require(expected.prefabCount == config.expectedPrefabCount && expected.prefabCount >= 55, "Archive has lost existing prefab entries.");
+            Require(expected.prefabCount == config.expectedPrefabCount && expected.prefabCount == expected.propCount + 1 && expected.propCount > 0, "Dynamic archive prefab/prop count mismatch.");
             expectedImport = expected;
             PreparePipeline();
             WriteReport();
@@ -85,6 +90,29 @@ public static class KursHubPackageImportCheck
         {
             Fail(exception);
         }
+    }
+
+    // Additional framing review only; the original fresh-import report/log remain intact.
+    public static void CaptureImported()
+    {
+        config = JsonUtility.FromJson<Config>(File.ReadAllText("ValidationConfig8.json", Encoding.UTF8));
+        config.reportPath = Path.Combine(Path.GetDirectoryName(config.reportPath),"package_import_additional_views8.json");
+        config.previewFolder = Path.Combine(Path.GetDirectoryName(config.previewFolder),"package_import_additional_views8");
+        report = new Report { unityVersion=Application.unityVersion,generatedUtc=DateTime.UtcNow.ToString("o"),packagePath=config.packagePath,
+            limitation="Additional native URP camera framing review of the already imported package. The separate original package_import_validation8.json is the fresh archive import proof." };
+        errors.Clear();warnings.Clear();Application.logMessageReceived += CaptureLog;
+        try
+        {
+            Require(Path.GetFullPath(Path.GetDirectoryName(Application.dataPath))==Path.GetFullPath(config.receiverProjectPath),"Wrong owned receiver.");
+            Require(Application.unityVersion=="6000.6.3f1","Wrong native Unity version.");
+            report.urpVersion=UnityEditor.PackageManager.PackageInfo.FindForAssembly(typeof(UniversalRenderPipeline).Assembly)?.version;
+            Require(report.urpVersion=="17.6.0","Wrong native URP version.");
+            expectedImport=JsonUtility.FromJson<Expected>(File.ReadAllText(config.expectedPath,Encoding.UTF8));
+            report.packageSha256=Hash(config.packagePath);Require(report.packageSha256==expectedImport.packageSha256,"Package changed since binding.");
+            PreparePipeline();CheckSceneAndCapture();Require(errors.Count==0,"Additional capture errors.");
+            report.status="PASS";WriteReport();Debug.Log("KURS_PACKAGE_ADDITIONAL_VIEWS8_PASS");EditorApplication.Exit(0);
+        }
+        catch(Exception exception){Fail(exception);}
     }
 
     private static void Imported(string packageName)
@@ -112,29 +140,44 @@ public static class KursHubPackageImportCheck
             {
                 Require(AssetDatabase.AssetPathToGUID(entry.path) == entry.guid, "GUID mismatch after import: " + entry.path);
                 report.guidChecks++;
+                if (!string.IsNullOrEmpty(entry.contentSha256))
+                {
+                    var physical = PhysicalPath(entry.path);
+                    Require(File.Exists(physical) && Hash(physical) == entry.contentSha256, "Imported bytes differ from the archive: " + entry.path);
+                    report.contentHashChecks++;
+                }
             }
             Require(Directory.GetFiles(Folder, "*.cs", SearchOption.AllDirectories).Length == 0, "Deliverable unexpectedly contains authoring/gameplay scripts.");
             var prefabPaths = Directory.GetFiles(Folder, "*.prefab", SearchOption.AllDirectories).Select(p => p.Replace('\\', '/')).OrderBy(p => p, StringComparer.Ordinal).ToArray();
             report.prefabCount = prefabPaths.Length;
             Require(prefabPaths.Length == expected.prefabCount, "Imported prefab count differs from the actual final archive.");
             var props = JsonUtility.FromJson<Props>(File.ReadAllText(Folder + "/Props/KursHubPropsManifest.json", Encoding.UTF8));
-            Require(props.props.Length >= 54 && props.props.Length + 1 == prefabPaths.Length, "Standalone prop manifest does not cover every prefab.");
+            Require(props.props.Length == expected.propCount && props.props.Length + 1 == prefabPaths.Length, "Standalone prop manifest does not cover every archived prefab.");
+            report.propCount = props.props.Length;
+            var fbxPaths = Directory.GetFiles(Folder,"*",SearchOption.AllDirectories).Where(p=>p.EndsWith(".fbx",StringComparison.OrdinalIgnoreCase)).ToArray();
+            report.modelCount = fbxPaths.Length;
+            Require(report.modelCount == expected.modelCount,"Imported FBX count differs from the actual archive.");
+            foreach (var modelPath in fbxPaths) Require(AssetDatabase.LoadAssetAtPath<GameObject>(modelPath.Replace('\\','/')) != null,"FBX failed native Unity import: "+modelPath);
             var manifest = JsonUtility.FromJson<HubManifest>(File.ReadAllText(Folder + "/KursHubManifest.json", Encoding.UTF8));
-            Require(manifest.width == 93 && manifest.depth == 130 && Mathf.Abs(manifest.floorHeight - 5.5f) < .0001f, "Building dimensional contract changed.");
+            Require(manifest.stage == 8 && manifest.width == 93 && manifest.depth == 130 && Mathf.Abs(manifest.floorHeight - 5.5f) < .0001f, "Building dimensional contract changed.");
+            Require(manifest.propInstances.Length + manifest.interiorInstances.Length + manifest.settlementInstances.Length == expected.nestedPropInstances,"Manifest placement count differs from archive binding.");
             report.assets = prefabPaths.Select(path => CheckAsset(path, props.props.FirstOrDefault(p => path.EndsWith("/" + p.id + ".prefab", StringComparison.Ordinal)))).ToArray();
             foreach (var asset in report.assets) errors.AddRange(asset.errors.Select(error => asset.path + ": " + error));
             report.dependencies = AssetDatabase.GetDependencies(prefabPaths.Append(Demo).ToArray(), true).OrderBy(p => p, StringComparer.Ordinal).ToArray();
             report.externalDependencies = report.dependencies.Where(p => !AllowedDependency(p)).ToArray();
             Require(report.externalDependencies.Length == 0, "Package depends on assets outside its own folder / URP / builtins.");
+            report.pngCount = Directory.GetFiles(Folder,"*",SearchOption.AllDirectories).Count(p=>p.EndsWith(".png",StringComparison.OrdinalIgnoreCase));
+            Require(report.pngCount == expected.pngCount,"Imported PNG count differs from archive.");
             report.textures = CheckTextures();
             var allMaterials = prefabPaths.Select(AssetDatabase.LoadAssetAtPath<GameObject>).SelectMany(a => a.GetComponentsInChildren<MeshRenderer>(true)).SelectMany(r => r.sharedMaterials).Where(m => m != null).Distinct().ToArray();
             report.materialCount = allMaterials.Length;
             foreach (var material in allMaterials) CheckMaterial(material);
             CheckSceneAndCapture();
             Require(errors.Count == 0, "Validation accumulated errors.");
+            Require(Hash(config.packagePath) == report.packageSha256,"Package changed during native import/validation.");
             report.status = "PASS";
             WriteReport();
-            Debug.Log("KURS_PACKAGE_IMPORT_PASS: " + report.prefabCount + " prefabs; " + report.guidChecks + " GUIDs; URP " + report.urpVersion);
+            Debug.Log("KURS_PACKAGE_IMPORT8_PASS: " + report.prefabCount + " prefabs; " + report.guidChecks + " GUIDs; URP " + report.urpVersion);
             EditorApplication.Exit(0);
         }
         catch (Exception exception) { Fail(exception); }
@@ -142,7 +185,7 @@ public static class KursHubPackageImportCheck
     private static void Fail(Exception exception)
     {
         errors.Add(exception.ToString()); report.status = "FAIL"; WriteReport();
-        Debug.LogError("KURS_PACKAGE_IMPORT_FAIL: " + exception.Message);
+        Debug.LogError("KURS_PACKAGE_IMPORT8_FAIL: " + exception.Message);
         EditorApplication.Exit(1);
     }
 
@@ -208,7 +251,7 @@ public static class KursHubPackageImportCheck
                     if (Mathf.Abs(bounds.min[axis] - prop.boundsMin[axis]) > .02f || Mathf.Abs(bounds.max[axis] - prop.boundsMax[axis]) > .02f) failures.Add("Metre dimensions differ from the source manifest, axis " + axis);
         }
         var colliders = root.GetComponentsInChildren<Collider>(true);
-        result.enabledColliders = colliders.Count(c => c.enabled && c.gameObject.activeInHierarchy); result.disabledColliders = colliders.Count(c => !c.enabled);
+        result.enabledColliders = colliders.Count(c => c.enabled && ActiveInsidePrefab(c.transform,root.transform)); result.disabledColliders = colliders.Count(c => !c.enabled);
         if (colliders.OfType<MeshCollider>().Any(c => c.sharedMesh == null)) failures.Add("MeshCollider lost its mesh.");
         if (colliders.OfType<BoxCollider>().Any(c => !Finite(c.size) || c.size.x <= 0 || c.size.y <= 0 || c.size.z <= 0)) failures.Add("Invalid BoxCollider dimensions.");
         var groups = root.GetComponentsInChildren<LODGroup>(true); result.lodGroups = groups.Length;
@@ -245,14 +288,15 @@ public static class KursHubPackageImportCheck
             report.independentCollisionChecks++;
         }
         finally { UnityEngine.Object.DestroyImmediate(instance); }
-        if (result.missingUv2 > 0) warnings.Add(path + ": " + result.missingUv2 + " meshes have no UV2; baked lighting is not claimed.");
+        if (result.missingUv2 > 0) failures.Add(result.missingUv2 + " meshes have no UV2.");
         result.errors = failures.Distinct().ToArray(); return result;
     }
 
     private static TextureCheck[] CheckTextures()
     {
         var surfaces = JsonUtility.FromJson<Surfaces>(File.ReadAllText(Folder + "/Textures/Audit7PBRManifest.json", Encoding.UTF8));
-        Require(surfaces.families.Length >= 25 && surfaces.families.Any(s => s.name == "LeafGreen"), "PBR family set lost existing surfaces.");
+        Require(surfaces.families.Length == expectedImport.familyCount && surfaces.families.Any(s => s.name == "LeafGreen"), "PBR families differ from the archived manifest.");
+        report.familyCount = surfaces.families.Length;
         var checks = new List<TextureCheck>();
         foreach (var surface in surfaces.families)
             foreach (var suffix in new[] { "BaseColor", "Normal", "Roughness", "Metallic", "Occlusion", "Height", "MetallicSmoothness" })
@@ -288,7 +332,7 @@ public static class KursHubPackageImportCheck
         Require(AssetDatabase.GetAssetPath(material.GetTexture("_BaseMap")) == basePath, "Base map lost: " + name);
         foreach (var slot in new[] { new[] { "_BumpMap", "Normal" }, new[] { "_MetallicGlossMap", "MetallicSmoothness" }, new[] { "_OcclusionMap", "Occlusion" } })
             Require(AssetDatabase.GetAssetPath(material.GetTexture(slot[0])) == Folder + "/Textures/" + family + "_" + slot[1] + ".png", "PBR slot lost: " + name + " " + slot[0]);
-        if (name == "Glass") Require(material.GetFloat("_Surface") == 1 && material.GetFloat("_ZWrite") == 0, "Glass lost its transparent state.");
+        if (name == "Glass" || name == "Hub8SkylightGlass" || name == "Hub8FloorWear") Require(material.GetFloat("_Surface") == 1 && material.GetFloat("_ZWrite") == 0, "Glass lost its transparent state.");
         if (name == "FirNeedles") Require(material.GetFloat("_Surface") == 0 && material.GetFloat("_ZWrite") == 1
             && material.GetFloat("_AlphaClip") == 1 && Mathf.Abs(material.GetFloat("_Cutoff") - .4f) < .0001f
             && material.IsKeywordEnabled("_ALPHATEST_ON"), "Frond atlas lost its opaque cutout / shadow state.");
@@ -304,13 +348,15 @@ public static class KursHubPackageImportCheck
         var hub = roots.SingleOrDefault(r => PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(r) == Hub);
         Require(hub != null, "Demo does not contain the linked building prefab.");
         report.nestedPropInstances = hub.GetComponentsInChildren<Transform>(true).Count(t => PrefabUtility.IsAnyPrefabInstanceRoot(t.gameObject) && PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(t.gameObject).StartsWith(Folder + "/Props/Prefabs/", StringComparison.Ordinal));
-        Require(report.nestedPropInstances >= 700, "Reusable prop instances were lost / unpacked.");
+        Require(report.nestedPropInstances == expectedImport.nestedPropInstances, "Reusable prop instances differ from the archive manifest / were unpacked.");
         var camera = roots.SelectMany(r => r.GetComponentsInChildren<Camera>(true)).Single();
         Require(camera.GetUniversalAdditionalCameraData() != null, "Demo camera has no native URP data.");
         Directory.CreateDirectory(config.previewFolder);
         report.captures = new[] {
             Capture(camera, "package_front", new Vector3(-90,43,-115), new Vector3(0,6,-1), 42),
-            Capture(camera, "package_market", new Vector3(0,1.7f,-35), new Vector3(0,3.1f,-3), 76)
+            Capture(camera, "package_market", new Vector3(0,1.7f,-35), new Vector3(0,3.1f,-3), 76),
+            Capture(camera, "package_kitchen", new Vector3(-29,1.65f,55.7f), new Vector3(-37,1.15f,51.7f), 75),
+            Capture(camera, "package_clinic", new Vector3(33,7.15f,-16), new Vector3(36.7f,6.6f,-18.3f), 76)
         };
     }
 
@@ -342,6 +388,22 @@ public static class KursHubPackageImportCheck
         finally { RenderTexture.active=previous;camera.targetTexture=null;UnityEngine.Object.DestroyImmediate(texture);rt.Release();UnityEngine.Object.DestroyImmediate(rt); }
     }
 
+    private static string PhysicalPath(string assetPath)
+    {
+        if(!assetPath.StartsWith("Packages/",StringComparison.Ordinal))return assetPath;
+        var package=UnityEditor.PackageManager.PackageInfo.FindForAssetPath(assetPath);
+        Require(package!=null && assetPath.StartsWith(package.assetPath+"/",StringComparison.Ordinal),"Cannot resolve native package path: "+assetPath);
+        return Path.Combine(package.resolvedPath,assetPath.Substring(package.assetPath.Length+1));
+    }
+    private static bool ActiveInsidePrefab(Transform child,Transform root)
+    {
+        for(var current=child;current!=null;current=current.parent)
+        {
+            if(!current.gameObject.activeSelf)return false;
+            if(current==root)return true;
+        }
+        return false;
+    }
     private static Bounds LocalBounds(Transform root, IEnumerable<MeshRenderer> renderers)
     {
         var first=true;var total=new Bounds();
