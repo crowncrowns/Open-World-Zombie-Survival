@@ -1,0 +1,1 @@
+var m=UnityEditor.AssetDatabase.LoadAssetAtPath<Material>("Assets/Maps/Buildings/Textures/RedDoorHandle_01/M_RedDoorHandle_01_URP.mat");foreach(var n in new[]{"_BaseMap","_BumpMap","_MetallicGlossMap","_OcclusionMap","_ParallaxMap"})if(!m.GetTexture(n))throw new Exception(n);return new{material=m.name,shaderErrors=UnityEditor.ShaderUtil.ShaderHasError(m.shader),mapsConnected=5};

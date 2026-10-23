@@ -1,0 +1,1 @@
+return UnityEngine.Object.FindObjectsByType<MeshRenderer>(FindObjectsSortMode.None).Where(r=>r.sharedMaterials.Any(m=>m&&m.name=="M_GreenStairwellWall_World")&&r.bounds.size.y>2.9f).Take(4).Select(r=>new{name=r.name,y=r.bounds.min.y}).ToArray();

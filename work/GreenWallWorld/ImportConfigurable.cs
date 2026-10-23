@@ -1,0 +1,2 @@
+string p="Assets/Maps/Buildings/Textures/PeelingGreenStairwellWall_01/SG_GreenStairwellWall_World.shadergraph";UnityEditor.AssetDatabase.ImportAsset(p,UnityEditor.ImportAssetOptions.ForceSynchronousImport|UnityEditor.ImportAssetOptions.ForceUpdate);var sh=UnityEditor.AssetDatabase.LoadAssetAtPath<Shader>(p);return new{errors=UnityEditor.ShaderUtil.ShaderHasError(sh),messages=UnityEditor.ShaderUtil.GetShaderMessages(sh).Select(m=>m.message).ToArray(),baseHeightExposed=sh.FindPropertyIndex("_BuildingBaseHeight")>=0};
+

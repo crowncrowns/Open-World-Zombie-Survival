@@ -1,0 +1,9 @@
+# White Stairwell Ceiling 01
+Отдельная белая штукатурка для потолка, созданная встроенным image_gen по белой верхней части PGW01_BaseColor. Это продолжение фактуры по референсу, не буквальная вырезка.
+Материал M_WhiteCeiling_World.mat; граф SG_WhiteCeiling_World.shadergraph на основе SG_Brick_World, мировая трипланарная проекция без этажного повторения по Y. Brick_Tile=1/3, Brick_Blend=1, Brick_Smoothness_Mult=1 — как базовые настройки зелёной стены. Повтор3×3м, размер не зависит от UV/Transform. Metallic=0, Roughness=.94.
+8 PNG2048²: BaseColor, Normal_OpenGL, Height16, AO, Roughness, Metallic, MetallicSmoothness, ORM. Исходник1254², пересчитан2048². BaseColor sRGB, Normal импортированNormalMap, прочие linear; RepeatUV, mipmaps, Trilinear, anisotropy8.
+Высота приближённо оценена из мелкой фактуры BaseColor, широкая неравномерность цвета отфильтрована; нормали вычислены. Это художественный материал, не измеренный скан. Height/Parallax в исходном SG отсутствует; мировая версия использует Normal/AO.
+Проверены карты и компиляция шейдера. Исходная зелёная стена и сцены не изменялись, материал автоматически не назначался, Play не запускался.
+## Prompt, built-in image_gen edit
+Edit supplied plaster texture for a game ceiling. Use ONLY the off-white upper half as appearance reference. Extend that exact aged white skim-coat/plaster finish across the ENTIRE square image, entirely remove ALL green paint and the color boundary. Match the upper white part's warm off-white color, subtle dusty beige mottling, shallow fine pores, sparse hairline cracks, restrained low contrast wear. No extra damage, large flakes, holes, green tints, heavy stains. Full bleed square seamless tile on all four sides, flat orthographic delit PBR albedo with no lighting shadows highlights labels borders or objects. Similar real scale detail as reference upper white portion, white plaster ceiling of same stairwell.
+

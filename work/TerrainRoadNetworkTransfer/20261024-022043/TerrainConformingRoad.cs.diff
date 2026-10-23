@@ -1,0 +1,29 @@
+--- Assets/TerrainRoads/TerrainConformingRoad.cs before
++++ Assets/TerrainRoads/TerrainConformingRoad.cs after
+@@ -7,6 +7,7 @@
+ namespace TerrainRoads {
+ [ExecuteAlways, DisallowMultipleComponent, RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
+ public sealed class TerrainConformingRoad : MonoBehaviour {
++ [Tooltip("Общая сеть владеет геометрией перекрёстков и бордюров; Rebuild перестраивает всю сеть.")] public TerrainRoadNetwork network;
+  public SplineContainer route;
+  public Terrain terrain;
+  [Min(0)] public int splineIndex;
+@@ -24,15 +25,16 @@
+  [NonSerialized] public string diagnostic = "Rebuild required";
+  [NonSerialized] public readonly List<Vector3> earthwork = new List<Vector3>();
+  public Mesh GeneratedMesh => generatedMesh;
+- void OnEnable(){ if(Application.isPlaying) Rebuild();
++ void OnEnable(){ if(network)return; if(Application.isPlaying) Rebuild();
+ #if UNITY_EDITOR
+- UnityEditor.EditorApplication.delayCall += DeferredRebuild;
++ if(!network)UnityEditor.EditorApplication.delayCall += DeferredRebuild;
+ #endif
+  }
+ #if UNITY_EDITOR
+  void DeferredRebuild(){if(this && !Application.isPlaying) Rebuild();}
+ #endif
+  public bool Rebuild(){
++  if(network)return network.Rebuild();
+   earthwork.Clear();
+   try { Build(); return true; }
+   catch(Exception e){diagnostic=e.Message; GetComponent<MeshFilter>().sharedMesh=null; if(generatedCollider)generatedCollider.sharedMesh=null; return false;}

@@ -1,0 +1,1 @@
+return UnityEngine.Object.FindObjectsByType<MeshRenderer>(FindObjectsSortMode.None).Where(r=>r.sharedMaterials.Any(m=>m&&m.name=="M_GreenStairwellWall_World")&&r.bounds.size.y>2.9f).GroupBy(r=>Math.Round(r.bounds.min.y,2)).Select(g=>new{y=g.Key,count=g.Count(),sample=g.First().transform.root.name}).OrderBy(g=>g.y).ToArray();

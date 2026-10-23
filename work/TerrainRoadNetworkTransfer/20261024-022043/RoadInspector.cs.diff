@@ -1,0 +1,11 @@
+--- Assets/TerrainRoads/Editor/RoadInspector.cs before
++++ Assets/TerrainRoads/Editor/RoadInspector.cs after
+@@ -27,7 +27,7 @@
+  static readonly System.Collections.Generic.Dictionary<TerrainConformingRoad,int> hashes=new();
+  static void Update(){if(EditorApplication.timeSinceStartup<next||EditorApplication.isPlayingOrWillChangePlaymode||EditorApplication.isCompiling||EditorApplication.isUpdating)return;next=EditorApplication.timeSinceStartup+.75;
+   foreach(var r in Object.FindObjectsByType<TerrainConformingRoad>(FindObjectsInactive.Exclude)){
+-   if(!r.autoRefresh||EditorUtility.IsPersistent(r)||!r.gameObject.scene.IsValid())continue;
++   if(r.network||!r.autoRefresh||EditorUtility.IsPersistent(r)||!r.gameObject.scene.IsValid())continue;
+    int hash=EditorJsonUtility.ToJson(r).GetHashCode()^r.transform.localToWorldMatrix.GetHashCode();if(r.route)hash^=r.route.transform.localToWorldMatrix.GetHashCode();if(r.terrain)hash^=r.terrain.transform.localToWorldMatrix.GetHashCode();
+    var id=r;if(dirty||!hashes.TryGetValue(id,out int old)||old!=hash||!r.GeneratedMesh){r.Rebuild();hashes[id]=hash;}
+   } dirty=false;

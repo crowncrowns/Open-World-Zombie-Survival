@@ -30,3 +30,8 @@ Use case: photorealistic-natural. Asset type: seamless PBR BASE COLOR / ALBEDO f
 
 HEIGHT
 undefined
+
+## Материал с мировыми координатами
+Назначайте M_CheckerFloor_World.mat. SG_CheckerFloor_World.shadergraph — отдельная копия SG_Brick_World с мировой трипланарной проекцией. Подключены существующие WCF01_BaseColor, Normal_OpenGL, AO, Roughness, Metallic; исходные карты и старый URP материал сохранены.
+Brick_Tile=0.8333333: полный повтор8×8 плиток занимает1.2×1.2м, отдельная плитка ориентировочно15×15см. Размер сохраняется при изменении UV и Transform. Чем больше Brick_Tile, тем мельче плитка. Один материал на соседних блоках обеспечивает общую мировую сетку рисунка; рисунок остаётся привязанным к миру при перемещении меша.
+Brick_Blend=1, Brick_Smoothness_Mult=1. В исходном графе нет Height/Parallax: рельеф здесь Normal/AO, Height16 сохранена для других шейдеров. Проверены все5 карт, ShaderHasError=false. Сцены, префабы и назначения материалов не изменялись, Play не запускался. Внешний вид стыков и наклонных граней проверить на модели.
