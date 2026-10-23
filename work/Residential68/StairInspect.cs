@@ -1,0 +1,1 @@
+return UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.GameObject>("Assets/Maps/Buildings/Stairs/Prefabs/Stairwell_3m_UShape.prefab").GetComponentsInChildren<UnityEngine.MeshFilter>(true).Where(m=>m.name=="Stairs_Visual").Select(m=>new {m.name,mesh=UnityEditor.AssetDatabase.GetAssetPath(m.sharedMesh)}).ToArray();
