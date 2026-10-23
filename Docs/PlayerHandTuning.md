@@ -2,6 +2,8 @@
 
 21.10.2026. Дополнение к PlayerPistolPresentation.md и PlayerUALAnimations.md.
 
+23.10.2026: отдельные модели могут явно назначать `WeaponDefinition.handPose` (WeaponHandPose). АК-74 использует собственный профиль и винтовочные клипы тела: [AK74Gameplay.md](AK74Gameplay.md). Корневые параметры ниже остаются источником пистолета и другого оружия без профиля; runtime Animator bridge по-прежнему не становится источником авторских значений.
+
 ## Где редактировать
 
 Выбрать корневой CharacterTestPlayer в сцене либо открыть Assets/CharacterTesting/Prefabs/CharacterTestPlayer.prefab. Настройки доступны до Play, менять скрипты и искать кости не требуется.

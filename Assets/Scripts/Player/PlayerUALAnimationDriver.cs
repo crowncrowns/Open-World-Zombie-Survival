@@ -46,6 +46,8 @@ namespace ZombieSurvival.Player
         private Health health;
         private Animator animator;
         private RuntimeAnimatorController controller;
+        private Animator bodyAnimator;
+        private RuntimeAnimatorController originalBodyController, appliedBodyController;
         private PlayerUALAnimatorIK bridge;
         private readonly Dictionary<string, AnimatorControllerParameterType> parameters = new Dictionary<string, AnimatorControllerParameterType>();
         private bool wasBlocked;
@@ -85,7 +87,7 @@ namespace ZombieSurvival.Player
             if(interactor!=null)interactor.SuccessfulInteraction-=Pickup;
             if(health!=null) { health.WorldStateRestored-=ResetPresentation; health.Revived-=ResetPresentation; health.Died-=ResetPresentation; }
         }
-        private void OnDisable() { Unsubscribe(); ClearTriggers(); if(bridge!=null)bridge.Configure(null); if(animator!=null && upperLayer>=0)animator.SetLayerWeight(upperLayer,0); }
+        private void OnDisable() { Unsubscribe(); ClearTriggers(); if(bridge!=null)bridge.Configure(null); if(animator!=null && upperLayer>=0)animator.SetLayerWeight(upperLayer,0); RestoreBodyController(); }
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void ResetForPlay()
         {
@@ -95,6 +97,7 @@ namespace ZombieSurvival.Player
         private void ResolveAnimator()
         {
             var current=visual!=null?visual.ModelAnimator:null;
+            ResolveBodyController(current);
             if(current==animator && (current==null || controller==current.runtimeAnimatorController))return;
             if(bridge!=null)bridge.Configure(null);
             animator=current; controller=animator!=null?animator.runtimeAnimatorController:null; parameters.Clear(); upperLayer=-1;
@@ -105,6 +108,28 @@ namespace ZombieSurvival.Player
             bridge=animator.GetComponent<PlayerUALAnimatorIK>();
             if(bridge==null)bridge=animator.gameObject.AddComponent<PlayerUALAnimatorIK>();
             bridge.Configure(this); ClearTriggers();
+        }
+        private void RestoreBodyController()
+        {
+            if(bodyAnimator!=null && appliedBodyController!=null && bodyAnimator.runtimeAnimatorController==appliedBodyController)
+                bodyAnimator.runtimeAnimatorController=originalBodyController;
+            bodyAnimator=null; originalBodyController=appliedBodyController=null;
+        }
+        private void ResolveBodyController(Animator current)
+        {
+            if(current!=bodyAnimator)
+            {
+                RestoreBodyController(); bodyAnimator=current;
+                originalBodyController=current!=null?current.runtimeAnimatorController:null;
+            }
+            if(current==null)return;
+            // Не перетираем внешний SetModel/controller и возвращаем прежний controller при смене оружия.
+            if(current.runtimeAnimatorController!=(appliedBodyController??originalBodyController))
+            { originalBodyController=current.runtimeAnimatorController; appliedBodyController=null; }
+            var overrides=weapons!=null?weapons.Equipped?.Definition.Weapon?.bodyAnimations:null;
+            var desired=overrides!=null && overrides.runtimeAnimatorController==originalBodyController ? overrides : originalBodyController;
+            if(current.runtimeAnimatorController!=desired)current.runtimeAnimatorController=desired;
+            appliedBodyController=desired!=originalBodyController?desired:null;
         }
         private bool Has(string name, AnimatorControllerParameterType type) => animator!=null && parameters.TryGetValue(name,out var actual) && actual==type;
         private void Float(string name,float value,bool damp=false) { if(Has(name,AnimatorControllerParameterType.Float)) { if(damp)animator.SetFloat(name,value,Mathf.Max(0,motionDamping),Time.deltaTime); else animator.SetFloat(name,value); } }
@@ -134,7 +159,7 @@ namespace ZombieSurvival.Player
         private void Land(float speed) => Trigger("Land");
         private void Fire(WeaponDefinition data) { actionRate=1; Trigger("Fire"); }
         private void Melee(WeaponDefinition data) { actionRate=Mathf.Clamp(meleeClipImpactTime/Mathf.Max(.01f,data.windup),.1f,8); Trigger("Melee"); }
-        private void Reload(WeaponDefinition data) { actionRate=Mathf.Clamp(reloadClipSeconds/Mathf.Max(.01f,data.reloadSeconds),.1f,8); Trigger("Reload"); }
+        private void Reload(WeaponDefinition data) { ResolveAnimator(); actionRate=Mathf.Clamp((data.bodyAnimations!=null && animator!=null && animator.runtimeAnimatorController==data.bodyAnimations?data.bodyReloadSeconds:reloadClipSeconds)/Mathf.Max(.01f,data.reloadSeconds),.1f,8); Trigger("Reload"); }
         private void Equip(WeaponDefinition data) { ResolveAnimator(); ResetUpperBody(); Trigger("Equip"); }
         private void Pickup()
         {

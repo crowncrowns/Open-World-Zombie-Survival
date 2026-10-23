@@ -52,8 +52,11 @@ namespace ZombieSurvival.Weapons
         public ItemStack Equipped => equipped;
         public GameObject View => view;
         public bool UsesHandBoundVisual => handBoundVisual;
-        public Vector3 FirearmHandPosition => firearmHandPosition;
-        public Quaternion FirearmHandRotation => Quaternion.Euler(firearmHandEuler);
+        public WeaponHandPose ActiveHandPose => equipped?.Definition.Weapon?.handPose;
+        public Vector3 FirearmHandPosition => ActiveHandPose!=null
+            ? FirearmHandRotation*Vector3.Scale(Quaternion.Inverse(FirearmHandRotation)*ActiveHandPose.handPosition,HandModelScale) : firearmHandPosition;
+        public Quaternion FirearmHandRotation => Quaternion.Euler(ActiveHandPose!=null ? ActiveHandPose.handEuler : firearmHandEuler);
+        public Vector3 HandModelScale => Vector3.Scale(equipped?.Definition.Weapon?.viewScale ?? Vector3.one,handVisualScale);
         public float VisualRecoil => recoilAngle;
         public event System.Action<WeaponDefinition> ShotFired;
         public event System.Action<WeaponDefinition> SwingStarted;
@@ -138,6 +141,8 @@ namespace ZombieSurvival.Weapons
                 foreach(var source in view.GetComponentsInChildren<AudioSource>(true)) source.enabled=false;
                 foreach(var renderer in view.GetComponentsInChildren<Renderer>(true)) renderer.shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.Off;
                 view.transform.localScale=data.viewScale;
+                // Модель получает только события представления; единственный боевой backend остаётся здесь.
+                foreach(var animation in view.GetComponentsInChildren<WeaponModelAnimation>(true)) animation.Initialize(this);
             }
         }
         private void Cycle(int direction)
@@ -274,8 +279,8 @@ namespace ZombieSurvival.Weapons
                 {
                     if(view.transform.parent!=anchor)view.transform.SetParent(anchor,false);
                     bool firearm=equipped.Definition.Weapon.kind==WeaponKind.Firearm;
-                    view.transform.localPosition=firearm?firearmHandPosition:meleeHandPosition;
-                    view.transform.localRotation=Quaternion.Euler(firearm?firearmHandEuler:meleeHandEuler);
+                    view.transform.localPosition=firearm?FirearmHandPosition:meleeHandPosition;
+                    view.transform.localRotation=firearm?FirearmHandRotation:Quaternion.Euler(meleeHandEuler);
                     view.transform.localScale=Vector3.Scale(equipped.Definition.Weapon.viewScale,handVisualScale);
                     // Visual-only near-wall suppression; hit query, muzzle and damage remain authoritative.
                     bool obstructed=viewCamera!=null && WeaponHitQuery.Cast(viewCamera.transform.position,viewCamera.transform.forward,.55f,.05f,transform,hitMask,out _);

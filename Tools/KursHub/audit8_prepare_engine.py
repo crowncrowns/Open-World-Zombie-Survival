@@ -1,15 +1,19 @@
 """Install staged authored assets into the owned Unity copy, never main."""
 from pathlib import Path
-import hashlib,json,re,shutil
+import hashlib,json,re,shutil,sys
 R=Path(__file__).resolve().parents[2];W=R/'work/KursHub/audit8';A=W/'authoring';T=R/'work/KursHub/UnityProject';D=Path('Assets/Environment/KursHub')
 assert T.resolve()==(R/'work/KursHub/UnityProject').resolve()
 sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
 guid=lambda p:re.search(r'^guid: ([a-f0-9]+)',p.read_text(encoding='utf-8-sig'),re.M)[1]
 changes=[]
+previous=json.loads((W/'engine_input8.json').read_text(encoding='utf8'))['inputFiles'] if '--incremental' in sys.argv else {}
 for s in sorted((A/D).rglob('*'),key=lambda p:p.as_posix()):
  if not s.is_file():continue
  t=T/s.relative_to(A)
  if s.suffix=='.meta' and t.exists():assert guid(s)==guid(t),str(t)
+ # An unchanged authored input must not reset the native materials/prefabs
+ # or importer metadata that the previous engine build deliberately authored.
+ if t.exists() and previous.get(s.relative_to(A).as_posix())==sha(s):continue
  if not t.exists() or sha(s)!=sha(t):
   t.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(s,t);changes.append(s.relative_to(A).as_posix())
 for p in (R/'Assets/Editor').glob('KursHub*.cs'):shutil.copy2(p,T/'Assets/Editor'/p.name)

@@ -8,12 +8,42 @@ using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using Newtonsoft.Json.Linq;
 public static class KursHubBuild8
 {
     const string Folder="Assets/Environment/KursHub";
     static string Hash(string path) { using(var h=SHA256.Create()) return BitConverter.ToString(h.ComputeHash(File.ReadAllBytes(path))).Replace("-","").ToLowerInvariant(); }
     static string Identities() => string.Join("\n",Directory.GetFiles(Folder,"*.prefab",SearchOption.AllDirectories).OrderBy(p=>p,StringComparer.Ordinal).SelectMany(p=>
         new[]{p+"|"+AssetDatabase.AssetPathToGUID(p)}.Concat(Regex.Matches(File.ReadAllText(p),@"^--- !u!\d+ &(-?\d+)",RegexOptions.Multiline).Cast<Match>().Select(m=>p+"|"+m.Groups[1].Value))));
+    static void GuardPlacementOnly(string audit)
+    {
+        var core=JObject.Parse(File.ReadAllText(Path.Combine(audit,"native_core_receipt8.json")));
+        if(core.Value<string>("status")!="CORE_BUILD_COMPLETED_FINAL_SCENE_GUARD_FAILED" || !core.Value<bool>("twoBuildIdentityGuardPassedByControlFlow"))
+            throw new Exception("A prior full native build is required for placement-only updates");
+        if(Hash(Path.Combine(audit,core.Value<string>("buildLogPath")))!=core.Value<string>("buildLogSha256"))throw new Exception("Prior full native build evidence changed");
+        // A failed full builder can leave its temporary CPU-read flag enabled.
+        // Restore the already-verified runtime importer before comparing bytes.
+        var importer=(ModelImporter)AssetImporter.GetAtPath(Folder+"/Models/KursHubShell.fbx");
+        if(importer.isReadable){importer.isReadable=false;importer.SaveAndReimport();}
+        var expected=(JObject)core["assets"];
+        var paths=Directory.GetFiles(Folder,"*",SearchOption.AllDirectories).Select(p=>p.Replace('\\','/')).ToArray();
+        if(!paths.ToHashSet().SetEquals(expected.Properties().Select(p=>p.Name)))throw new Exception("Core asset set changed; run the full builder");
+        foreach(var path in paths.Where(p=>p!=Folder+"/KursHubManifest.json"))
+            if(Hash(path)!=(string)expected[path])throw new Exception("Non-placement core asset changed: "+path);
+    }
+    static void BuildPlacements()
+    {
+        var data=JObject.Parse(File.ReadAllText(Folder+"/KursHubManifest.json"));
+        var library=Directory.GetFiles(Folder+"/Props/Prefabs","*.prefab").ToDictionary(Path.GetFileNameWithoutExtension,p=>AssetDatabase.LoadAssetAtPath<GameObject>(p));
+        var root=PrefabUtility.LoadPrefabContents(Folder+"/KursHub.prefab");
+        try
+        {
+            foreach(var pair in new[]{("propInstances","Exterior props"),("interiorInstances","Interior architecture"),("settlementInstances","Interior settlement")})
+                KursHubPropSetup.Place(root,library,data[pair.Item1].ToObject<KursHubPropSetup.Placement[]>(),pair.Item2);
+            PrefabUtility.SaveAsPrefabAsset(root,Folder+"/KursHub.prefab");
+        }
+        finally{PrefabUtility.UnloadPrefabContents(root);}
+    }
     public static void Run()
     {
         try
@@ -27,9 +57,12 @@ public static class KursHubBuild8
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Single);
             PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(Folder+"/KursHub.prefab"));
             if(!EditorSceneManager.SaveScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene(),"Assets/Kurs8Authoring.unity"))throw new Exception("Cannot save owned verification scene");
-            KursHubSetup.BuildPrefab();AssetDatabase.SaveAssets();
+            bool placementOnly=Environment.GetEnvironmentVariable("KURS8_PLACEMENT_ONLY")=="1";
+            if(placementOnly)GuardPlacementOnly(audit);
+            Action build=placementOnly?(Action)BuildPlacements:KursHubSetup.BuildPrefab;
+            build();AssetDatabase.SaveAssets();
             var first=Identities();
-            KursHubSetup.BuildPrefab();AssetDatabase.SaveAssets();
+            build();AssetDatabase.SaveAssets();
             if(first!=Identities())throw new Exception("Second build changed native prefab GUID/local IDs");
             var old=Regex.Matches(File.ReadAllText(Path.Combine(audit,"baseline",Folder,"KursHub.prefab")),@"^--- !u!\d+ &(-?\d+)",RegexOptions.Multiline).Cast<Match>().Select(m=>m.Groups[1].Value).ToHashSet();
             var current=Regex.Matches(File.ReadAllText(Folder+"/KursHub.prefab"),@"^--- !u!\d+ &(-?\d+)",RegexOptions.Multiline).Cast<Match>().Select(m=>m.Groups[1].Value).ToHashSet();
@@ -55,6 +88,7 @@ public static class KursHubBuild8
             KursHubQualitySetup.AuditAndExport();
             if(Hash(scenePath)!=sceneSha)throw new Exception("Main scene changed during verification; inspect before publication");
             var proof="KURS8_NATIVE_BUILD_PASS\nUnity="+Application.unityVersion+"\nTwoBuildIdentitiesStable=True\nOldRootIdsPreserved="+old.Count+"\nMainSceneSaved=False\nOwnedAuthoringAndDemoScenesSaved=True\nMainSceneNativeTargets="+refs.Length+"\nMainSceneSHA256="+sceneSha+"\nPACKAGE_SHA256="+Hash(Path.Combine(audit,"delivery/KursHub_Final.unitypackage"))+"\nFBXSHA256="+Hash(Folder+"/Models/KursHubShell.fbx")+"\nPREFABSHA256="+Hash(Folder+"/KursHub.prefab")+"\nMANIFESTSHA256="+Hash(Folder+"/KursHubManifest.json")+"\n";
+            proof+="BuildScope="+(placementOnly?"PlacementOnlyOnByteIdenticalPreviouslyVerifiedGeometry":"FullNativeAuthoring")+"\n";
             File.WriteAllText(Path.Combine(audit,"native_build8.txt"),proof);Debug.Log(proof);EditorApplication.Exit(0);
         }
         catch(Exception e){Debug.LogException(e);EditorApplication.Exit(1);}

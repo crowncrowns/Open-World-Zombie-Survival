@@ -1,0 +1,418 @@
+{
+  "schemaVersion": 1,
+  "asset": "AK74",
+  "rig": "AK74_Rig",
+  "fps": 60,
+  "coordinateSystem": "Blender metres; muzzle -X, width Y, up Z",
+  "bones": [
+    "WeaponRoot",
+    "Magazine",
+    "SpareMagazine",
+    "Trigger",
+    "Selector",
+    "Bolt",
+    "Stock"
+  ],
+  "clips": [
+    {
+      "name": "Idle",
+      "file": "AK74_Idle.fbx",
+      "frameStart": 1,
+      "frameEnd": 181,
+      "fps": 60,
+      "duration": 3.0,
+      "durationSeconds": 3.0,
+      "loop": true,
+      "events": [],
+      "description": "Three-second breathing and settling cycle; no component drift."
+    },
+    {
+      "name": "Fire_Single",
+      "file": "AK74_Fire_Single.fbx",
+      "frameStart": 1,
+      "frameEnd": 22,
+      "fps": 60,
+      "duration": 0.35,
+      "durationSeconds": 0.35,
+      "loop": false,
+      "events": [
+        {
+          "frame": 2,
+          "time": 0.016666666666666666,
+          "timeSeconds": 0.016666666666666666,
+          "function": "OnWeaponFire",
+          "functionName": "OnWeaponFire",
+          "intParameter": 1,
+          "floatParameter": 0.0,
+          "stringParameter": ""
+        }
+      ],
+      "description": "One 0.35-second recoil, trigger and bolt cycle."
+    },
+    {
+      "name": "Fire_Auto",
+      "file": "AK74_Fire_Auto.fbx",
+      "frameStart": 1,
+      "frameEnd": 25,
+      "fps": 60,
+      "duration": 0.4,
+      "durationSeconds": 0.4,
+      "loop": true,
+      "events": [
+        {
+          "frame": 1,
+          "time": 0.0,
+          "timeSeconds": 0.0,
+          "function": "OnWeaponFire",
+          "functionName": "OnWeaponFire",
+          "intParameter": 1,
+          "floatParameter": 0.0,
+          "stringParameter": ""
+        },
+        {
+          "frame": 7,
+          "time": 0.1,
+          "timeSeconds": 0.1,
+          "function": "OnWeaponFire",
+          "functionName": "OnWeaponFire",
+          "intParameter": 1,
+          "floatParameter": 0.0,
+          "stringParameter": ""
+        },
+        {
+          "frame": 13,
+          "time": 0.2,
+          "timeSeconds": 0.2,
+          "function": "OnWeaponFire",
+          "functionName": "OnWeaponFire",
+          "intParameter": 1,
+          "floatParameter": 0.0,
+          "stringParameter": ""
+        },
+        {
+          "frame": 19,
+          "time": 0.3,
+          "timeSeconds": 0.3,
+          "function": "OnWeaponFire",
+          "functionName": "OnWeaponFire",
+          "intParameter": 1,
+          "floatParameter": 0.0,
+          "stringParameter": ""
+        }
+      ],
+      "description": "Four shots at 600 rounds/min; seamless 0.4-second cycle."
+    },
+    {
+      "name": "Reload_Tactical",
+      "file": "AK74_Reload_Tactical.fbx",
+      "frameStart": 1,
+      "frameEnd": 91,
+      "fps": 60,
+      "duration": 1.5,
+      "durationSeconds": 1.5,
+      "loop": false,
+      "events": [
+        {
+          "frame": 30,
+          "time": 0.48333333333333334,
+          "timeSeconds": 0.48333333333333334,
+          "function": "OnMagazineRemoved",
+          "functionName": "OnMagazineRemoved",
+          "intParameter": 0,
+          "floatParameter": 0.0,
+          "stringParameter": ""
+        },
+        {
+          "frame": 39,
+          "time": 0.6333333333333333,
+          "timeSeconds": 0.6333333333333333,
+          "function": "OnSpareMagazineShown",
+          "functionName": "OnSpareMagazineShown",
+          "intParameter": 0,
+          "floatParameter": 0.0,
+          "stringParameter": ""
+        },
+        {
+          "frame": 65,
+          "time": 1.0666666666666667,
+          "timeSeconds": 1.0666666666666667,
+          "function": "OnMagazineInserted",
+          "functionName": "OnMagazineInserted",
+          "intParameter": 0,
+          "floatParameter": 0.0,
+          "stringParameter": ""
+        },
+        {
+          "frame": 91,
+          "time": 1.5,
+          "timeSeconds": 1.5,
+          "function": "OnReloadComplete",
+          "functionName": "OnReloadComplete",
+          "intParameter": 0,
+          "floatParameter": 0.0,
+          "stringParameter": ""
+        }
+      ],
+      "description": "1.5-second visible rock-out/rock-in exchange; no bolt operation."
+    },
+    {
+      "name": "Reload_Empty",
+      "file": "AK74_Reload_Empty.fbx",
+      "frameStart": 1,
+      "frameEnd": 133,
+      "fps": 60,
+      "duration": 2.2,
+      "durationSeconds": 2.2,
+      "loop": false,
+      "events": [
+        {
+          "frame": 32,
+          "time": 0.5166666666666667,
+          "timeSeconds": 0.5166666666666667,
+          "function": "OnMagazineRemoved",
+          "functionName": "OnMagazineRemoved",
+          "intParameter": 0,
+          "floatParameter": 0.0,
+          "stringParameter": ""
+        },
+        {
+          "frame": 47,
+          "time": 0.7666666666666667,
+          "timeSeconds": 0.7666666666666667,
+          "function": "OnSpareMagazineShown",
+          "functionName": "OnSpareMagazineShown",
+          "intParameter": 0,
+          "floatParameter": 0.0,
+          "stringParameter": ""
+        },
+        {
+          "frame": 79,
+          "time": 1.3,
+          "timeSeconds": 1.3,
+          "function": "OnMagazineInserted",
+          "functionName": "OnMagazineInserted",
+          "intParameter": 0,
+          "floatParameter": 0.0,
+          "stringParameter": ""
+        },
+        {
+          "frame": 108,
+          "time": 1.7833333333333334,
+          "timeSeconds": 1.7833333333333334,
+          "function": "OnBoltPulled",
+          "functionName": "OnBoltPulled",
+          "intParameter": 0,
+          "floatParameter": 0.0,
+          "stringParameter": ""
+        },
+        {
+          "frame": 114,
+          "time": 1.8833333333333333,
+          "timeSeconds": 1.8833333333333333,
+          "function": "OnBoltReleased",
+          "functionName": "OnBoltReleased",
+          "intParameter": 0,
+          "floatParameter": 0.0,
+          "stringParameter": ""
+        },
+        {
+          "frame": 133,
+          "time": 2.2,
+          "timeSeconds": 2.2,
+          "function": "OnReloadComplete",
+          "functionName": "OnReloadComplete",
+          "intParameter": 0,
+          "floatParameter": 0.0,
+          "stringParameter": ""
+        }
+      ],
+      "description": "2.2-second magazine exchange followed by manual charging; AK bolt does not lock open."
+    },
+    {
+      "name": "Equip",
+      "file": "AK74_Equip.fbx",
+      "frameStart": 1,
+      "frameEnd": 43,
+      "fps": 60,
+      "duration": 0.7,
+      "durationSeconds": 0.7,
+      "loop": false,
+      "events": [],
+      "description": "0.7-second rise from a lowered carry pose into neutral."
+    },
+    {
+      "name": "Unequip",
+      "file": "AK74_Unequip.fbx",
+      "frameStart": 1,
+      "frameEnd": 37,
+      "fps": 60,
+      "duration": 0.6,
+      "durationSeconds": 0.6,
+      "loop": false,
+      "events": [],
+      "description": "0.6-second lowering from neutral to the matching carry pose."
+    },
+    {
+      "name": "Inspect",
+      "file": "AK74_Inspect.fbx",
+      "frameStart": 1,
+      "frameEnd": 193,
+      "fps": 60,
+      "duration": 3.2,
+      "durationSeconds": 3.2,
+      "loop": false,
+      "events": [],
+      "description": "3.2-second inspection with two stable views and a controlled neutral return."
+    },
+    {
+      "name": "Aim_In",
+      "file": "AK74_Aim_In.fbx",
+      "frameStart": 1,
+      "frameEnd": 16,
+      "fps": 60,
+      "duration": 0.25,
+      "durationSeconds": 0.25,
+      "loop": false,
+      "events": [],
+      "description": "0.25-second relative weapon-mount offset; camera alignment is the FPS controller's responsibility."
+    },
+    {
+      "name": "Aim_Out",
+      "file": "AK74_Aim_Out.fbx",
+      "frameStart": 1,
+      "frameEnd": 16,
+      "fps": 60,
+      "duration": 0.25,
+      "durationSeconds": 0.25,
+      "loop": false,
+      "events": [],
+      "description": "Inverse relative weapon-mount offset, 0.25 second."
+    },
+    {
+      "name": "Walk",
+      "file": "AK74_Walk.fbx",
+      "frameStart": 1,
+      "frameEnd": 73,
+      "fps": 60,
+      "duration": 1.2,
+      "durationSeconds": 1.2,
+      "loop": true,
+      "events": [],
+      "description": "1.2-second two-step sway cycle."
+    },
+    {
+      "name": "Run",
+      "file": "AK74_Run.fbx",
+      "frameStart": 1,
+      "frameEnd": 49,
+      "fps": 60,
+      "duration": 0.8,
+      "durationSeconds": 0.8,
+      "loop": true,
+      "events": [],
+      "description": "0.8-second two-step sway cycle with greater inertia."
+    },
+    {
+      "name": "Sprint",
+      "file": "AK74_Sprint.fbx",
+      "frameStart": 1,
+      "frameEnd": 37,
+      "fps": 60,
+      "duration": 0.6,
+      "durationSeconds": 0.6,
+      "loop": true,
+      "events": [],
+      "description": "0.6-second lowered and canted two-step sprint cycle."
+    },
+    {
+      "name": "Recoil_Recovery",
+      "file": "AK74_Recoil_Recovery.fbx",
+      "frameStart": 1,
+      "frameEnd": 25,
+      "fps": 60,
+      "duration": 0.4,
+      "durationSeconds": 0.4,
+      "loop": false,
+      "events": [],
+      "description": "0.4-second damped return from the Fire_Single recoil apex."
+    },
+    {
+      "name": "Bolt_Interaction",
+      "file": "AK74_Bolt_Interaction.fbx",
+      "frameStart": 1,
+      "frameEnd": 61,
+      "fps": 60,
+      "duration": 1.0,
+      "durationSeconds": 1.0,
+      "loop": false,
+      "events": [
+        {
+          "frame": 28,
+          "time": 0.45,
+          "timeSeconds": 0.45,
+          "function": "OnBoltPulled",
+          "functionName": "OnBoltPulled",
+          "intParameter": 0,
+          "floatParameter": 0.0,
+          "stringParameter": ""
+        },
+        {
+          "frame": 36,
+          "time": 0.5833333333333334,
+          "timeSeconds": 0.5833333333333334,
+          "function": "OnBoltReleased",
+          "functionName": "OnBoltReleased",
+          "intParameter": 0,
+          "floatParameter": 0.0,
+          "stringParameter": ""
+        }
+      ],
+      "description": "One-second deliberate charging-handle pull, hold and spring return."
+    },
+    {
+      "name": "Safety_Interaction",
+      "file": "AK74_Safety_Interaction.fbx",
+      "frameStart": 1,
+      "frameEnd": 67,
+      "fps": 60,
+      "duration": 1.1,
+      "durationSeconds": 1.1,
+      "loop": false,
+      "events": [
+        {
+          "frame": 23,
+          "time": 0.36666666666666664,
+          "timeSeconds": 0.36666666666666664,
+          "function": "OnSafetyChanged",
+          "functionName": "OnSafetyChanged",
+          "intParameter": 1,
+          "floatParameter": 0.0,
+          "stringParameter": ""
+        },
+        {
+          "frame": 48,
+          "time": 0.7833333333333333,
+          "timeSeconds": 0.7833333333333333,
+          "function": "OnSafetyChanged",
+          "functionName": "OnSafetyChanged",
+          "intParameter": 0,
+          "floatParameter": 0.0,
+          "stringParameter": ""
+        }
+      ],
+      "description": "1.1-second selector check; switch to safe, pause and return to the authored fire position."
+    }
+  ],
+  "defaultVisibility": {
+    "Magazine": true,
+    "SpareMagazine": false
+  },
+  "notes": [
+    "Weapon-only animation set, with no hands, arms or FPS camera animation.",
+    "All 16 clips are independently baked; each bone has a keyed transform at every frame.",
+    "SpareMagazine starts and ends hidden. Unity presentation events own magazine visibility.",
+    "Canceling a reload must restore Magazine visible and SpareMagazine hidden.",
+    "Aim transitions are relative offsets. The consuming FPS mount must align rear/front sights with its camera.",
+    "These clips provide presentation. Ammunition, shot timing, audio and damage remain the game's responsibility."
+  ]
+}

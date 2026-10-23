@@ -42,6 +42,10 @@ public static class KursHubPropSetup
         public float lightIntensity;
         [Tooltip("Дальность света конкретного прожектора в метрах. 0 — сохранить настройку общего префаба.")]
         public float lightRange;
+        [Tooltip("Внутренний угол светового пучка конкретного прожектора, градусы. 0 — сохранить общий префаб.")]
+        public float lightInnerAngle;
+        [Tooltip("Точка наведения прожектора в локальных координатах здания, метры X/Y/Z. Пусто — сохранить направление общего префаба.")]
+        public float[] lightTarget;
     }
 
     private static Prop[] Read()
@@ -276,12 +280,20 @@ public static class KursHubPropSetup
             }
             child.SetLocalPositionAndRotation(V(placement.position), Quaternion.Euler(V(placement.rotation)));
             child.localScale = V(placement.scale);
-            if (placement.lightIntensity > 0 || placement.lightRange > 0)
+            if (HasLightOverride(placement))
             {
                 var light = DirectChild(child, "Work light")?.GetComponent<Light>();
                 if (light == null) throw new InvalidOperationException("Нет источника Work light: " + placement.id);
                 if (placement.lightIntensity > 0) light.intensity = placement.lightIntensity;
                 if (placement.lightRange > 0) light.range = placement.lightRange;
+                if (placement.lightInnerAngle > 0) light.innerSpotAngle = placement.lightInnerAngle;
+                if (placement.lightTarget != null)
+                {
+                    var direction = root.transform.TransformPoint(V(placement.lightTarget)) - light.transform.position;
+                    if (direction.sqrMagnitude < .0001f) throw new InvalidOperationException("Точка наведения совпала со светильником: " + placement.id);
+                    light.transform.rotation = Quaternion.LookRotation(direction, root.transform.up);
+                    PrefabUtility.RecordPrefabInstancePropertyModifications(light.transform);
+                }
                 // The shared reusable prefab keeps its defaults. Only this
                 // authored fixture records the explicitly requested setting.
                 PrefabUtility.RecordPrefabInstancePropertyModifications(light);
@@ -375,12 +387,20 @@ public static class KursHubPropSetup
                 || Vector3.Distance(child.localScale, V(placement.scale)) > .001f
                 || Quaternion.Angle(child.localRotation, Quaternion.Euler(V(placement.rotation))) > .001f)
                 throw new InvalidOperationException("Поза prop не соответствует manifest: " + placement.id);
-            if (placement.lightIntensity > 0 || placement.lightRange > 0)
+            if (HasLightOverride(placement))
             {
                 var light = DirectChild(child, "Work light")?.GetComponent<Light>();
                 if (light == null || (placement.lightIntensity > 0 && !Mathf.Approximately(light.intensity, placement.lightIntensity))
-                    || (placement.lightRange > 0 && !Mathf.Approximately(light.range, placement.lightRange)))
-                    throw new InvalidOperationException("Свет prop не соответствует manifest: " + placement.id);
+                    || (placement.lightRange > 0 && !Mathf.Approximately(light.range, placement.lightRange))
+                    || (placement.lightInnerAngle > 0 && !Mathf.Approximately(light.innerSpotAngle, placement.lightInnerAngle))
+                    || (placement.lightTarget != null && Vector3.Angle(light.transform.forward,
+                        root.transform.TransformPoint(V(placement.lightTarget)) - light.transform.position) > .1f))
+                    throw new InvalidOperationException("Свет prop не соответствует manifest: " + placement.id
+                        + " intensity=" + (light == null ? -1 : light.intensity) + "/" + placement.lightIntensity
+                        + " range=" + (light == null ? -1 : light.range) + "/" + placement.lightRange
+                        + " inner=" + (light == null ? -1 : light.innerSpotAngle) + "/" + placement.lightInnerAngle
+                        + " directionError=" + (light == null || placement.lightTarget == null ? -1 : Vector3.Angle(light.transform.forward,
+                            root.transform.TransformPoint(V(placement.lightTarget)) - light.transform.position)));
             }
         }
     }
@@ -400,10 +420,15 @@ public static class KursHubPropSetup
                 throw new InvalidOperationException("Scale prop должен быть положительным: " + placement.id);
             if (float.IsNaN(placement.lightIntensity) || float.IsInfinity(placement.lightIntensity) || placement.lightIntensity < 0
                 || float.IsNaN(placement.lightRange) || float.IsInfinity(placement.lightRange) || placement.lightRange < 0
-                || ((placement.lightIntensity > 0 || placement.lightRange > 0) && placement.prop != "KH_Floodlight"))
+                || float.IsNaN(placement.lightInnerAngle) || float.IsInfinity(placement.lightInnerAngle) || placement.lightInnerAngle < 0 || placement.lightInnerAngle > 100
+                || (HasLightOverride(placement) && placement.prop != "KH_Floodlight"))
                 throw new InvalidOperationException("Некорректная настройка конкретного прожектора: " + placement.id);
+            if (placement.lightTarget != null) CheckVector(placement.lightTarget, placement.id);
         }
     }
+
+    private static bool HasLightOverride(Placement placement) => placement.lightIntensity > 0 || placement.lightRange > 0
+        || placement.lightInnerAngle > 0 || placement.lightTarget != null;
 
     private static void CheckVector(float[] values, string id)
     {

@@ -1,0 +1,30 @@
+{
+    "result": "PASS",
+    "checks": [
+        "All sixteen Animator states produce evaluated common-rig motion in Play mode at 60 Hz",
+        "Muzzle follows animated WeaponRoot with constant local offset",
+        "Tactical and empty reload events dispatched exactly once each; normal/spare visibility restored",
+        "Interrupted reload state exit restores every magazine renderer",
+        "Disable/re-enable clears transient magazine visibility",
+        "Every LOD skinned mesh evaluates on the same rig with nonempty deformed geometry",
+        "Stock surface area is preserved across all three evaluated LODs"
+    ],
+    "movedClips": [
+        "Idle",
+        "Fire_Single",
+        "Fire_Auto",
+        "Reload_Tactical",
+        "Reload_Empty",
+        "Equip",
+        "Unequip",
+        "Inspect",
+        "Aim_In",
+        "Aim_Out",
+        "Walk",
+        "Run",
+        "Sprint",
+        "Recoil_Recovery",
+        "Bolt_Interaction",
+        "Safety_Interaction"
+    ]
+}

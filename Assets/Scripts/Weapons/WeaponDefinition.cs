@@ -28,6 +28,12 @@ namespace ZombieSurvival.Weapons
         [Tooltip("Скорость возврата отдачи к нулю, градусов/с.")][Min(.1f)] public float recoilRecovery = 7;
         [Tooltip("Шум для слуха AI: X — громкость, Y — радиус в метрах. Независим от AudioSource.")] public Vector2 noise = new Vector2(2,12);
         [Tooltip("Префаб только внешнего вида. Физика и коллайдеры в руках отключаются.")] public GameObject viewPrefab;
+        [InspectorName("Профиль хвата модели"), Tooltip("Необязательная посадка этой модели на кисть и двухручный IK. Пусто — прежние настройки на корне игрока (пистолет). Не меняет урон или сохранения.")]
+        public WeaponHandPose handPose;
+        [InspectorName("Анимации тела"), Tooltip("Необязательные замены клипов рук совместимого UAL-контроллера. Пусто — обычные анимации игрока. Не содержит боевых AnimationEvents.")]
+        public AnimatorOverrideController bodyAnimations;
+        [InspectorName("Исходная перезарядка тела"), Min(.1f), Tooltip("Длительность исходного клипа рук в профиле, с. Масштабируется до reloadSeconds; боезапас меняет только PlayerWeapons.")]
+        public float bodyReloadSeconds = 1.7f;
         [Tooltip("Позиция модели относительно камеры от бедра, м.")] public Vector3 holdPosition = new Vector3(.3f,-.3f,.55f);
         [Tooltip("Позиция модели при прицеливании, м.")] public Vector3 aimPosition = new Vector3(0,-.18f,.55f);
         [Tooltip("Поворот модели относительно камеры, градусы.")] public Vector3 holdEuler;

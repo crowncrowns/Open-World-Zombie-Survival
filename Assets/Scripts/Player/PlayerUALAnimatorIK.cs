@@ -91,7 +91,8 @@ namespace ZombieSurvival.Player
                 && weapons.Equipped?.Definition.Weapon?.kind==WeaponKind.Firearm && !weapons.IsReloading
                 && weapons.View!=null && weapons.View.transform.parent==animator.GetBoneTransform(HumanBodyBones.RightHand)
                 && animator.GetCurrentAnimatorStateInfo(handLayer).shortNameHash!=Animator.StringToHash("Pickup");
-            handsWeight=handSafe?Mathf.MoveTowards(handsWeight,firearm?Mathf.Clamp01(aimWeight):0,Time.deltaTime*12):0;
+            var handPose=weapons!=null?weapons.ActiveHandPose:null;
+            handsWeight=handSafe?Mathf.MoveTowards(handsWeight,firearm?Mathf.Clamp01(handPose!=null?handPose.weight:aimWeight):0,Time.deltaTime*12):0;
             firearmAimBlend=Mathf.MoveTowards(firearmAimBlend,weapons!=null&&weapons.IsAiming?1:0,Time.deltaTime*8);
             bool ready=handSafe && camera!=null && owner.Weapons!=null && !owner.Weapons.IsAttacking && !owner.Weapons.IsRecovering
                 && !owner.Weapons.IsReloading && owner.Weapons.Equipped?.Definition.Weapon?.kind==WeaponKind.Melee
@@ -113,19 +114,21 @@ namespace ZombieSurvival.Player
         }
         private void PoseFirearm(Camera camera,PlayerWeapons weapons)
         {
-            // Weapon +X is its barrel axis. Solve its desired pose first, then invert the exact
-            // same hand mount that PlayerWeapons uses after IK. The weapon never floats separately.
-            Vector3 local=Vector3.Lerp(firearmHipPosition,firearmAimPosition,Mathf.SmoothStep(0,1,firearmAimBlend));
+            // Сначала решаем позу модели с её собственными осями (+X у старого пистолета,
+            // +Z у АК), затем инвертируем то же крепление, которое применяет PlayerWeapons.
+            // Оружие остаётся на кости кисти, а не отдельной плавающей моделью камеры.
+            var profile=weapons.ActiveHandPose;
+            Vector3 local=Vector3.Lerp(profile!=null?profile.hipPosition:firearmHipPosition,profile!=null?profile.aimPosition:firearmAimPosition,Mathf.SmoothStep(0,1,firearmAimBlend));
             // A side-held pistol forces the supporting forearm across the eye when pointing
             // almost vertically up. Centre the shared grip smoothly; gameplay ADS is unchanged.
             float upward=Mathf.SmoothStep(0,1,Mathf.InverseLerp(.5f,.95f,camera.transform.forward.y));
             local.x=Mathf.Lerp(local.x,0,upward);
             local.z-=weapons.VisualRecoil*.004f;
-            Quaternion gunRotation=camera.transform.rotation*Quaternion.Euler(-weapons.VisualRecoil*1.5f,0,0)*Quaternion.Euler(0,-90,0);
+            Quaternion gunRotation=camera.transform.rotation*Quaternion.Euler(-weapons.VisualRecoil*1.5f,0,0)*Quaternion.Euler(profile!=null?profile.cameraEuler:new Vector3(0,-90,0));
             Vector3 gunPosition=camera.transform.TransformPoint(local);
             Quaternion handRotation=gunRotation*Quaternion.Inverse(weapons.FirearmHandRotation);
             Vector3 mountOffset=handRotation*weapons.FirearmHandPosition;
-            Vector3 leftOffset=gunRotation*leftFirearmGrip;
+            Vector3 leftOffset=gunRotation*(profile!=null?Vector3.Scale(profile.leftGrip,weapons.HandModelScale):leftFirearmGrip);
             // Project the shared weapon pose into BOTH reachable arm volumes. Moving the shared
             // pose keeps two-hand contact; independent clamps used to separate the hands and grip.
             for(int i=0;i<5;i++)
@@ -151,8 +154,10 @@ namespace ZombieSurvival.Player
             // Keep the bending plane outside the torso, including near-vertical aim.
             // This is a hint only: the hand solver still respects the physical arm length.
             animator.SetIKHintPositionWeight(hint,handsWeight);
-            animator.SetIKHintPosition(hint,shoulder.position+owner.transform.right*(side*firearmElbowHint.x)
-                +owner.transform.up*firearmElbowHint.y+owner.transform.forward*firearmElbowHint.z);
+            var profile=owner.Weapons!=null?owner.Weapons.ActiveHandPose:null;
+            Vector3 elbow=profile!=null?profile.elbowHint:firearmElbowHint;
+            animator.SetIKHintPosition(hint,shoulder.position+owner.transform.right*(side*elbow.x)
+                +owner.transform.up*elbow.y+owner.transform.forward*elbow.z);
         }
         private void CorrectFoot(AvatarIKGoal goal,Vector3 direction,float yaw)
         {

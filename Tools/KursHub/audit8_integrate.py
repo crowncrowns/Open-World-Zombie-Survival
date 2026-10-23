@@ -384,10 +384,20 @@ def integrate(root=AUTHORING, work=WORK, building_only=False):
         obj.rotation_quaternion = _rotation((35, 180, 0))
         # Blender lights look along local -Z; Unity Spot lights look along +Z.
         obj.rotation_quaternion @= Quaternion((1, 0, 0), math.pi/2)
+        if placement.get("lightTarget") is not None:
+            target = placement["lightTarget"]
+            source_target = Vector((target[0], target[2], target[1]))
+            source_position = instance.matrix_basis @ obj.location
+            direction = source_target - source_position
+            if direction.length < .01:
+                raise AssertionError("Source Spot target coincides with fixture: "+identifier)
+            world_rotation = direction.to_track_quat('-Z', 'Y')
+            obj.rotation_quaternion = instance.rotation_quaternion.inverted() @ world_rotation
+            obj["KursHub8TargetUnityMetres"] = target
         obj.data.color = (1, .73, .43)
         obj.data.energy = float(placement.get("lightIntensity", 0) or 3) * 4
         obj.data.spot_size = math.radians(100)
-        obj.data.spot_blend = .35
+        obj.data.spot_blend = 1-float(placement["lightInnerAngle"])/100 if placement.get("lightInnerAngle", 0) else .35
         obj.data.cutoff_distance = float(placement.get("lightRange", 0) or 14)
         obj.data.use_custom_distance = True
         obj["KursHub8PreviewOnly"] = "Mirror of native KH_Floodlight Work light; not an additional Unity light"
