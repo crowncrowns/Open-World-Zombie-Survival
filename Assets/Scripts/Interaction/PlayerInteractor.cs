@@ -116,7 +116,8 @@ namespace ZombieSurvival.Interaction
         private void SelectTarget()
         {
             ClearTarget();
-            int count = Physics.RaycastNonAlloc(viewCamera.transform.position, viewCamera.transform.forward,
+            var aimRay = motor.GetAimRay(viewCamera);
+            int count = Physics.RaycastNonAlloc(aimRay.origin, aimRay.direction,
                 hits, interactionDistance, occlusionMask.value | targetMask.value, QueryTriggerInteraction.Ignore);
             if (count == hits.Length) return;
             float nearest = float.PositiveInfinity;

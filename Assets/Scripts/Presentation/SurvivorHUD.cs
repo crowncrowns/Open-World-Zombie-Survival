@@ -34,6 +34,14 @@ namespace ZombieSurvival.Presentation
         private float referenceNoiseDb = 50f;
         [SerializeField, InspectorName("Размер интерфейса"), Range(.75f, 1.4f), Tooltip("Множитель масштаба относительно макета 1920×1080. Все блоки учитывают безопасную область экрана.")]
         private float interfaceScale = 1f;
+        [SerializeField, InspectorName("Длина луча прицела"), Range(2f, 20f), Tooltip("Длина каждого из четырёх лучей перекрестья, пиксели. Не зависит от масштаба панелей HUD.")]
+        private float reticleSize = 6f;
+        [SerializeField, InspectorName("Толщина перекрестья"), Range(1f, 4f), Tooltip("Толщина светлой линии перекрестья, пиксели. По умолчанию тонкая линия в 1 пиксель.")]
+        private float reticleThickness = 1f;
+        [SerializeField, InspectorName("Просвет в центре прицела"), Range(0f, 12f), Tooltip("Расстояние от центра попадания до начала каждого луча, пиксели. Центр не закрывает цель.")]
+        private float reticleGap = 3f;
+        [SerializeField, InspectorName("Обводка перекрестья"), Range(0f, 2f), Tooltip("Толщина тёмной обводки вокруг лучей, пиксели. Помогает видеть прицел на светлом фоне; 0 выключает обводку.")]
+        private float reticleOutline = 1f;
 
         private static readonly Color Paper = new Color(.85f, .83f, .75f);
         private static readonly Color Muted = new Color(.53f, .56f, .52f);
@@ -59,7 +67,7 @@ namespace ZombieSurvival.Presentation
         private ContextualHudGroup hpGroup, staminaGroup, foodGroup, waterGroup, hotbarGroup, weaponGroup, noiseGroup, promptGroup, toastGroup;
         private Meter hpMeter, staminaMeter, foodMeter, waterMeter;
         private Image flash, criticalMark;
-        private Graphic reticle;
+        private Color reticleColor = Paper;
         private Text weaponName, ammo, weaponState, noiseText, targetName, targetAction, feedback, toast, deathText;
         private RectTransform death;
         private Rect lastSafe;
@@ -127,6 +135,46 @@ namespace ZombieSurvival.Presentation
             legacyCanvases.Clear();
         }
         private void OnDestroy() { if (canvas != null) Destroy(canvas.gameObject); }
+        private void OnGUI()
+        {
+            if (Event.current.type != EventType.Repaint || motor == null || !motor.IsAlive
+                || !motor.isActiveAndEnabled || !motor.GameplayInputEnabled) return;
+            // Перекрестье — постоянный слой того же HUD, без шрифтового глифа,
+            // самодельного UGUI mesh и затухания контекстных панелей. Ввод он не читает.
+            var camera = interactor != null ? interactor.ViewCamera : null;
+            Vector3 point = camera != null ? camera.ViewportToScreenPoint(new Vector3(.5f + motor.AimReticleViewportOffset, .5f, 0))
+                : new Vector3(Screen.width * (.5f + motor.AimReticleViewportOffset), Screen.height * .5f, 0);
+            var matrix = GUI.matrix; var tint = GUI.color; int depth = GUI.depth;
+            GUI.matrix = Matrix4x4.identity; GUI.depth = -1000;
+            DrawAimCrosshair(new Vector2(point.x, Screen.height - point.y), reticleColor,
+                reticleSize, reticleGap, reticleThickness, reticleOutline);
+            GUI.depth = depth; GUI.color = tint; GUI.matrix = matrix;
+        }
+        internal static void DrawAimCrosshair(Vector2 center, Color ink, float length = 6f,
+            float gap = 3f, float thickness = 1f, float outline = 1f)
+        {
+            center = new Vector2(Mathf.Round(center.x), Mathf.Round(center.y));
+            length = Mathf.Round(Mathf.Clamp(length, 2f, 20f));
+            gap = Mathf.Round(Mathf.Clamp(gap, 0f, 12f));
+            thickness = Mathf.Round(Mathf.Clamp(thickness, 1f, 4f));
+            outline = Mathf.Clamp(outline, 0f, 2f);
+            float x = Mathf.Round(center.x - thickness * .5f), y = Mathf.Round(center.y - thickness * .5f);
+            var tint = GUI.color;
+            DrawAimLine(new Rect(center.x - gap - length, y, length, thickness), ink, outline);
+            DrawAimLine(new Rect(center.x + gap, y, length, thickness), ink, outline);
+            DrawAimLine(new Rect(x, center.y - gap - length, thickness, length), ink, outline);
+            DrawAimLine(new Rect(x, center.y + gap, thickness, length), ink, outline);
+            GUI.color = tint;
+        }
+        private static void DrawAimLine(Rect line, Color ink, float outline)
+        {
+            if (outline > 0)
+            {
+                GUI.color = new Color(0, 0, 0, .85f);
+                GUI.DrawTexture(new Rect(line.x - outline, line.y - outline, line.width + outline * 2, line.height + outline * 2), Texture2D.whiteTexture);
+            }
+            GUI.color = ink; GUI.DrawTexture(line, Texture2D.whiteTexture);
+        }
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void RestoreForPlay()
         {
@@ -254,8 +302,7 @@ namespace ZombieSurvival.Presentation
             feedback.text = active ? interactor.Feedback : "";
             if (hotbar != null && !string.IsNullOrEmpty(hotbar.PresentationFeedback)) feedback.text = hotbar.PresentationFeedback;
             if (!visible) feedback.text = "";
-            reticle.enabled = visible;
-            reticle.color = weapons != null && weapons.HitMarkerVisible ? Red : usable ? Amber : Paper;
+            reticleColor = weapons != null && weapons.HitMarkerVisible ? Red : usable ? Amber : Paper;
         }
         private void UpdateNotifications()
         {
@@ -311,9 +358,6 @@ namespace ZombieSurvival.Presentation
             feedback = Label(fb, "Feedback text", Vector2.zero, new Vector2(760, 46), 16, Paper, TextAnchor.MiddleCenter);
             var note = Panel("Notification", new Vector2(.5f, 1), new Vector2(0, -78), new Vector2(700, 70), out toastGroup);
             toast = Label(note, "Notification text", Vector2.zero, new Vector2(700, 70), 17, Paper, TextAnchor.MiddleCenter);
-            var aim = Rect(safe, "Reticle", new Vector2(.5f, .5f), new Vector2(.5f, .5f), Vector2.zero, new Vector2(4, 4));
-            reticle = aim.gameObject.AddComponent<HudDot>(); reticle.raycastTarget = false;
-            var outline = aim.gameObject.AddComponent<Outline>(); outline.effectColor = new Color(0, 0, 0, .75f); outline.effectDistance = new Vector2(.7f, .7f);
             flash = Rect(go.transform, "Damage flash", Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero).gameObject.AddComponent<Image>();
             flash.raycastTarget = false; flash.color = Color.clear;
             death = Rect(safe, "Death", Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);

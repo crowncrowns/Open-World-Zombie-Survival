@@ -309,7 +309,7 @@ namespace ZombieSurvival.Inventory
                 GUI.Label(new Rect(rect.x + 5, rect.y + 5, rect.width - 10, rect.height - 10), label,
                     new GUIStyle(GUI.skin.label) { fontSize = 12, wordWrap = true, alignment = TextAnchor.MiddleCenter });
             }
-            string hint = Time.unscaledTime < statusUntil ? status : "1–5 / колесо — выбор · ЛКМ — использовать · Q — выбросить 1 · Tab — назначить";
+            string hint = Time.unscaledTime < statusUntil ? status : "1–5 / колесо — выбор · ЛКМ — использовать · G — выбросить 1 · Tab — назначить";
             GUI.Label(new Rect(20, height - 104, width - 40, 24), hint,
                 new GUIStyle(GUI.skin.label) { fontSize = 13, alignment = TextAnchor.MiddleCenter });
             GUI.color = old; GUI.matrix = matrix;

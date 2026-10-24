@@ -41,9 +41,11 @@ namespace ZombieSurvival.Weapons
         private PlayerNoiseEmitter noise;
         private PlayerHotbar hotbar;
         private PlayerStatModifiers modifiers;
+        private WeaponShotVisuals shotVisuals;
         private InputAction attack, reload, aim, previous, next;
         private ItemStack equipped, pending;
         private GameObject view;
+        private Transform viewMuzzle;
         private AudioSource audioSource;
         private float swingStarted = -100, attackAt, reloadAt, readyAt, recoilAngle, hitUntil, aimWeight;
         private bool armed, committingAttack;
@@ -88,6 +90,8 @@ namespace ZombieSurvival.Weapons
         {
             motor=GetComponent<FirstPersonController>(); storage=GetComponent<ItemStorage>(); noise=GetComponent<PlayerNoiseEmitter>();
             hotbar=GetComponent<PlayerHotbar>(); modifiers=GetComponent<PlayerStatModifiers>();
+            shotVisuals=GetComponent<WeaponShotVisuals>();
+            if(shotVisuals==null) shotVisuals=gameObject.AddComponent<WeaponShotVisuals>();
             if(viewCamera==null) viewCamera=GetComponentInChildren<Camera>(true);
             if(storage!=null) { storage.Changed-=OnStorageChanged; storage.Changed+=OnStorageChanged; }
             if(audioSource==null)
@@ -102,7 +106,7 @@ namespace ZombieSurvival.Weapons
         }
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void RestoreForPlay() { foreach(var w in Object.FindObjectsByType<PlayerWeapons>(FindObjectsInactive.Include)) if(w.isActiveAndEnabled) w.Initialize(); }
-        private void OnDisable() { if(storage!=null) storage.Changed-=OnStorageChanged; Cancel(); if(view!=null) Destroy(view); view=null; equipped=null; }
+        private void OnDisable() { if(storage!=null) storage.Changed-=OnStorageChanged; Cancel(); shotVisuals?.Clear(); if(view!=null) Destroy(view); view=null; equipped=null; }
         private void OnStorageChanged() { if(equipped!=null && !storage.Contains(equipped)) Unequip(); }
         private void Cancel() { pending=null; swingStarted=-100; attackAt=reloadAt=0; IsAiming=false; if(audioSource!=null) audioSource.Stop(); }
         public void Unequip() { if(committingAttack)return; Cancel(); equipped=null; armed=false; if(view!=null) Destroy(view); view=null; }
@@ -136,6 +140,7 @@ namespace ZombieSurvival.Weapons
             if(data.viewPrefab!=null && parent!=null)
             {
                 view=Instantiate(data.viewPrefab,parent,false); view.name="HeldWeapon";
+                viewMuzzle=string.IsNullOrWhiteSpace(data.muzzleTransformPath)?null:view.transform.Find(data.muzzleTransformPath);
                 foreach(var c in view.GetComponentsInChildren<Collider>(true)) c.enabled=false;
                 foreach(var body in view.GetComponentsInChildren<Rigidbody>(true)) { body.isKinematic=true; body.detectCollisions=false; }
                 foreach(var source in view.GetComponentsInChildren<AudioSource>(true)) source.enabled=false;
@@ -239,19 +244,23 @@ namespace ZombieSurvival.Weapons
         {
             Vector3 eye=viewCamera.transform.position;
             var offset=Random.insideUnitCircle*Mathf.Tan((IsAiming?data.aimSpread:data.hipSpread)*Mathf.Deg2Rad);
-            Vector3 direction=(viewCamera.transform.forward+viewCamera.transform.right*offset.x+viewCamera.transform.up*(offset.y+Mathf.Tan(recoilAngle*Mathf.Deg2Rad))).normalized;
-            Vector3 muzzle=viewCamera.transform.TransformPoint(Vector3.Lerp(data.muzzleOffset,data.aimMuzzleOffset,aimWeight));
+            Vector3 reticleDirection = motor.GetAimRay(viewCamera).direction;
+            Vector3 direction=(reticleDirection+viewCamera.transform.right*offset.x+viewCamera.transform.up*(offset.y+Mathf.Tan(recoilAngle*Mathf.Deg2Rad))).normalized;
+            Vector3 muzzle=viewMuzzle!=null ? viewMuzzle.position : viewCamera.transform.position+motor.GetAimRotation(viewCamera)*Vector3.Lerp(data.muzzleOffset,data.aimMuzzleOffset,aimWeight);
             if(OriginBlocked(eye)) return;
-            // Проверяем путь от центра тела через камеру до ствола: камера может выглянуть из-за стены,
-            // но дульная точка справа всё ещё может быть перекрыта.
-            Vector3 body=new Vector3(transform.position.x,eye.y,transform.position.z);
-            if(WeaponHitQuery.Cast(body, (eye-body).normalized,Vector3.Distance(body,eye),0,transform,hitMask,out var blocked)) { Impact(blocked,data); return; }
-            if(WeaponHitQuery.Cast(eye,(muzzle-eye).normalized,Vector3.Distance(eye,muzzle),0,transform,hitMask,out blocked)) { Impact(blocked,data); return; }
+            // При выглядывании плечи и ствол вынесены в сторону от капсулы.
+            // Проверяем реальный путь глаз→дуло→цель, а не фиктивную линию от центра тела.
+            if(WeaponHitQuery.Cast(eye,(muzzle-eye).normalized,Vector3.Distance(eye,muzzle),0,transform,hitMask,out var blocked))
+            { ShowShotVisuals(data,muzzle,blocked.point,direction,true,blocked.normal); Impact(blocked,data); return; }
             bool found=WeaponHitQuery.Cast(eye,direction,data.range,0,transform,hitMask,out var target);
             Vector3 point=found?target.point:eye+direction*data.range;
             if(OriginBlocked(muzzle)) return;
-            if(WeaponHitQuery.Cast(muzzle,(point-muzzle).normalized,Vector3.Distance(muzzle,point)+.02f,0,transform,hitMask,out var hit)) Impact(hit,data);
+            if(WeaponHitQuery.Cast(muzzle,(point-muzzle).normalized,Vector3.Distance(muzzle,point)+.02f,0,transform,hitMask,out var hit))
+            { ShowShotVisuals(data,muzzle,hit.point,direction,true,hit.normal); Impact(hit,data); }
+            else ShowShotVisuals(data,muzzle,point,direction,false,Vector3.zero);
         }
+        private void ShowShotVisuals(WeaponDefinition data,Vector3 muzzle,Vector3 endpoint,Vector3 direction,bool hit,Vector3 normal)
+        { if(shotVisuals!=null) shotVisuals.Show(data,muzzle,endpoint,direction,hit,normal); }
         private void MeleeImpact(WeaponDefinition data)
         {
             Vector3 origin=viewCamera.transform.position;
@@ -283,7 +292,7 @@ namespace ZombieSurvival.Weapons
                     view.transform.localRotation=firearm?FirearmHandRotation:Quaternion.Euler(meleeHandEuler);
                     view.transform.localScale=Vector3.Scale(equipped.Definition.Weapon.viewScale,handVisualScale);
                     // Visual-only near-wall suppression; hit query, muzzle and damage remain authoritative.
-                    bool obstructed=viewCamera!=null && WeaponHitQuery.Cast(viewCamera.transform.position,viewCamera.transform.forward,.55f,.05f,transform,hitMask,out _);
+                    bool obstructed=viewCamera!=null && WeaponHitQuery.Cast(viewCamera.transform.position,motor.GetAimRay(viewCamera).direction,.55f,.05f,transform,hitMask,out _);
                     view.SetActive(CanPresent && !obstructed);
                 }
                 return;
@@ -316,7 +325,7 @@ namespace ZombieSurvival.Weapons
             {
                 var oldColor=GUI.color; GUI.color=new Color(.055f,.075f,.095f,1);
                 GUI.DrawTexture(new Rect(w-330,15,315,100),Texture2D.whiteTexture); GUI.color=oldColor;
-                GUI.Label(new Rect(w-318,23,295,85),"ОРУЖИЕ\nE — взять · Tab — назначить\n1–5 / колесо · ЛКМ — атака\nПКМ — прицел · R — перезарядка",new GUIStyle(GUI.skin.label){fontSize=15});
+                GUI.Label(new Rect(w-318,23,295,85),"ОРУЖИЕ\nF — взять · Tab — назначить\n1–5 / колесо · ЛКМ — атака\nПКМ — прицел · R — перезарядка",new GUIStyle(GUI.skin.label){fontSize=15});
             }
             var style=new GUIStyle(GUI.skin.label){fontSize=17,alignment=TextAnchor.MiddleRight};
             string text="Оружие не выбрано\nTab — рюкзак / экипировка";
@@ -332,10 +341,14 @@ namespace ZombieSurvival.Weapons
                 float bottom=hasHotbar ? 205 : 115;
                 GUI.Box(new Rect(w-330,h-bottom,315,100),GUIContent.none); GUI.Label(new Rect(w-320,h-bottom+5,295,90),text,style);
             }
-            if(equipped!=null && CanAct)
+            // If the shared SurvivorHUD is absent/disabled, retain a small central aim point
+            // even when the player has not equipped a weapon yet.
+            if(motor.IsAlive && motor.GameplayInputEnabled)
             {
-                GUI.color=Time.time<hitUntil?Color.red:Color.white;
-                GUI.Label(new Rect(w/2-8,h/2-12,25,25),Time.time<hitUntil?"×":"+",new GUIStyle(GUI.skin.label){fontSize=20}); GUI.color=Color.white;
+                bool hit=equipped!=null && CanAct && Time.time<hitUntil;
+                GUI.matrix=Matrix4x4.identity;
+                ZombieSurvival.Presentation.SurvivorHUD.DrawAimCrosshair(
+                    new Vector2(Screen.width * (.5f + motor.AimReticleViewportOffset), Screen.height * .5f), hit?Color.red:Color.white);
             }
             GUI.matrix=old;
         }

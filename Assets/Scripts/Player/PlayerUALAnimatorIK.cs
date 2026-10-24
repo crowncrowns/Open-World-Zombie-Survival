@@ -34,6 +34,39 @@ namespace ZombieSurvival.Player
         private float firearmAimBlend;
         private Quaternion rightBoneFromGoal;
         private bool handFrameKnown;
+        private Transform leanedSpine;
+        private Quaternion spineBeforePeek;
+        private readonly Transform[] peekArmBones = new Transform[6];
+        private readonly Quaternion[] armsBeforePeek = new Quaternion[6];
+        private int peekArmCount;
+        internal void RestorePeekPose()
+        {
+            for (int i = 0; i < peekArmCount; i++)
+                if (peekArmBones[i] != null) peekArmBones[i].localRotation = armsBeforePeek[i];
+            peekArmCount = 0;
+            if (leanedSpine != null) leanedSpine.localRotation = spineBeforePeek;
+            leanedSpine = null;
+        }
+        private void LateUpdate()
+        {
+            if (owner == null || !owner.isActiveAndEnabled || animator == null || !animator.isHuman) return;
+            var motor = owner.Motor;
+            if (motor == null || !motor.IsAlive || !motor.GameplayInputEnabled || !motor.isActiveAndEnabled
+                || motor.IsProne || motor.IsSprinting || motor.Parkour != null && motor.Parkour.OwnsMovement
+                || Mathf.Abs(motor.PeekAmount) < .0001f) return;
+            var spine = animator.GetBoneTransform(HumanBodyBones.Spine);
+            if (spine == null) return;
+            // Humanoid заново строит скелет после OnAnimatorIK, поэтому наклон и финальный
+            // двухкостный хват выполняются после него. Ни один callback Animator не сотрёт позу.
+            leanedSpine = spine; spineBeforePeek = spine.localRotation;
+            spine.rotation = Quaternion.AngleAxis(-motor.PeekAmount * owner.PeekTorsoAngle, owner.transform.forward) * spine.rotation;
+            var weapons = owner.Weapons; var camera = owner.GetComponent<PlayerInteractor>()?.ViewCamera;
+            if (camera == null || weapons == null || !owner.FirearmAimIK || !weapons.UsesHandBoundVisual
+                || weapons.IsReloading || weapons.Equipped?.Definition.Weapon?.kind != WeaponKind.Firearm
+                || weapons.View == null || handsWeight <= 0
+                || animator.GetCurrentAnimatorStateInfo(owner.UpperBodyLayerIndex >= 0 ? owner.UpperBodyLayerIndex : 0).shortNameHash == Animator.StringToHash("Pickup")) return;
+            PoseFirearm(camera, weapons, true);
+        }
         internal void SetHandSettings(Vector3 hip, Vector3 aim, Vector3 leftGrip, float weight,
             Vector3 elbow, Vector3 melee, float meleeWeight)
         {
@@ -43,11 +76,12 @@ namespace ZombieSurvival.Player
         }
         public void Configure(PlayerUALAnimationDriver value)
         {
+            RestorePeekPose();
             owner=value; animator=GetComponent<Animator>(); feetWeight=handsWeight=meleeWeight=0;
             handFrameKnown=false;
             firearmAimBlend=0;
         }
-        private void OnDisable() { feetWeight=handsWeight=meleeWeight=0; }
+        private void OnDisable() { RestorePeekPose(); feetWeight=handsWeight=meleeWeight=0; }
         private void OnAnimatorIK(int layerIndex)
         {
             if(owner==null || !owner.isActiveAndEnabled || animator==null || !animator.isHuman || animator.avatar==null || !animator.avatar.isValid)return;
@@ -112,7 +146,7 @@ namespace ZombieSurvival.Player
             if(!handSafe || camera==null || !firearm || handsWeight<=0)return;
             PoseFirearm(camera,weapons);
         }
-        private void PoseFirearm(Camera camera,PlayerWeapons weapons)
+        private void PoseFirearm(Camera camera,PlayerWeapons weapons,bool finalPeek = false)
         {
             // Сначала решаем позу модели с её собственными осями (+X у старого пистолета,
             // +Z у АК), затем инвертируем то же крепление, которое применяет PlayerWeapons.
@@ -124,8 +158,9 @@ namespace ZombieSurvival.Player
             float upward=Mathf.SmoothStep(0,1,Mathf.InverseLerp(.5f,.95f,camera.transform.forward.y));
             local.x=Mathf.Lerp(local.x,0,upward);
             local.z-=weapons.VisualRecoil*.004f;
-            Quaternion gunRotation=camera.transform.rotation*Quaternion.Euler(-weapons.VisualRecoil*1.5f,0,0)*Quaternion.Euler(profile!=null?profile.cameraEuler:new Vector3(0,-90,0));
-            Vector3 gunPosition=camera.transform.TransformPoint(local);
+            Quaternion aimFrame=owner.Motor.GetAimRotation(camera);
+            Quaternion gunRotation=aimFrame*Quaternion.Euler(-weapons.VisualRecoil*1.5f,0,0)*Quaternion.Euler(profile!=null?profile.cameraEuler:new Vector3(0,-90,0));
+            Vector3 gunPosition=camera.transform.position+aimFrame*local;
             Quaternion handRotation=gunRotation*Quaternion.Inverse(weapons.FirearmHandRotation);
             Vector3 mountOffset=handRotation*weapons.FirearmHandPosition;
             Vector3 leftOffset=gunRotation*(profile!=null?Vector3.Scale(profile.leftGrip,weapons.HandModelScale):leftFirearmGrip);
@@ -138,6 +173,16 @@ namespace ZombieSurvival.Player
                 Vector3 left=gunPosition+leftOffset;
                 gunPosition+=Reachable(AvatarIKGoal.LeftHand,left)-left;
             }
+            if (finalPeek)
+            {
+                var right = animator.GetBoneTransform(HumanBodyBones.RightHand);
+                var left = animator.GetBoneTransform(HumanBodyBones.LeftHand);
+                if (right == null || left == null) return;
+                Quaternion leftRotation = handRotation * Quaternion.Inverse(right.rotation) * left.rotation;
+                SolvePeekArm(false, gunPosition - mountOffset, handRotation);
+                SolvePeekArm(true, gunPosition + leftOffset, leftRotation);
+                return;
+            }
             Quaternion sourceRight=animator.GetIKRotation(AvatarIKGoal.RightHand);
             Quaternion sourceLeft=animator.GetIKRotation(AvatarIKGoal.LeftHand);
             Quaternion rightGoal=handRotation*Quaternion.Inverse(rightBoneFromGoal);
@@ -146,6 +191,35 @@ namespace ZombieSurvival.Player
             AimHand(AvatarIKGoal.LeftHand,gunPosition+leftOffset,leftGoal);
             PoseElbow(AvatarIKHint.LeftElbow,HumanBodyBones.LeftUpperArm,-1);
             PoseElbow(AvatarIKHint.RightElbow,HumanBodyBones.RightUpperArm,1);
+        }
+        private void SolvePeekArm(bool leftSide, Vector3 target, Quaternion rotation)
+        {
+            var upper = animator.GetBoneTransform(leftSide ? HumanBodyBones.LeftUpperArm : HumanBodyBones.RightUpperArm);
+            var lower = animator.GetBoneTransform(leftSide ? HumanBodyBones.LeftLowerArm : HumanBodyBones.RightLowerArm);
+            var hand = animator.GetBoneTransform(leftSide ? HumanBodyBones.LeftHand : HumanBodyBones.RightHand);
+            if (upper == null || lower == null || hand == null) return;
+            CapturePeekBone(upper); CapturePeekBone(lower); CapturePeekBone(hand);
+            float a = Vector3.Distance(upper.position, lower.position), b = Vector3.Distance(lower.position, hand.position);
+            if (a < .001f || b < .001f) return;
+            target = Vector3.Lerp(hand.position, target, handsWeight);
+            rotation = Quaternion.Slerp(hand.rotation, rotation, handsWeight);
+            Vector3 delta = target - upper.position; float distance = Mathf.Clamp(delta.magnitude, Mathf.Abs(a-b) + .0001f, (a+b) * .999f);
+            Vector3 direction = delta.sqrMagnitude > .000001f ? delta.normalized : owner.transform.forward;
+            var profile = owner.Weapons.ActiveHandPose;
+            Vector3 elbow = profile != null ? profile.elbowHint : firearmElbowHint;
+            Vector3 hint = owner.transform.right * ((leftSide ? -1 : 1) * elbow.x) + owner.transform.up * elbow.y + owner.transform.forward * elbow.z;
+            Vector3 bend = Vector3.ProjectOnPlane(hint, direction);
+            if (bend.sqrMagnitude < .000001f) bend = Vector3.ProjectOnPlane(lower.position - upper.position, direction);
+            if (bend.sqrMagnitude < .000001f) bend = Vector3.Cross(direction, owner.transform.up);
+            float cosine = Mathf.Clamp((a*a + distance*distance - b*b) / (2*a*distance), -1f, 1f);
+            Vector3 elbowTarget = upper.position + direction * (a*cosine) + bend.normalized * (a*Mathf.Sqrt(Mathf.Max(0, 1-cosine*cosine)));
+            upper.rotation = Quaternion.FromToRotation(lower.position - upper.position, elbowTarget - upper.position) * upper.rotation;
+            lower.rotation = Quaternion.FromToRotation(hand.position - lower.position, target - lower.position) * lower.rotation;
+            hand.rotation = rotation;
+        }
+        private void CapturePeekBone(Transform bone)
+        {
+            peekArmBones[peekArmCount] = bone; armsBeforePeek[peekArmCount++] = bone.localRotation;
         }
         private void PoseElbow(AvatarIKHint hint,HumanBodyBones bone,float side)
         {

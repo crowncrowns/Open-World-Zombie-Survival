@@ -1389,6 +1389,8 @@ MonoBehaviour:
   jumpActionName: Jump
   rollActionName: Roll
   proneActionName: Prone
+  peekLeftActionName: LeanLeft
+  peekRightActionName: LeanRight
   releaseCursorInput:
     m_Name: ReleaseCursor
     m_Type: 1
@@ -1471,6 +1473,16 @@ MonoBehaviour:
   downwardLookLimit: 70
   downwardCameraShift: 0.13
   crouchCameraOffset: {x: 0.08, y: 0.02}
+  peekingEnabled: 1
+  peekDistance: 0.32
+  peekReticleOffset: 0.025
+  peekCameraRoll: 5
+  peekTransitionSpeed: 8
+  peekCollisionRadius: 0.1
+  peekWallClearance: 0.035
+  peekObstructionMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
   captureCursorOnEnable: 1
   requireCursorCapture: 1
   requireApplicationFocus: 1
@@ -2371,6 +2383,7 @@ MonoBehaviour:
   upperBodyLayer: Upper Body
   directionalFootIK: 1
   firearmAimIK: 1
+  peekTorsoAngle: 32
   firearmHipPosition: {x: 0.11, y: -0.16, z: 0.4}
   firearmAimPosition: {x: 0, y: -0.04, z: 0.44}
   leftFirearmGrip: {x: -0.12, y: -0.055, z: 0.035}
@@ -2400,6 +2413,10 @@ MonoBehaviour:
   noiseThreshold: 1.5
   referenceNoiseDb: 50
   interfaceScale: 1
+  reticleSize: 6
+  reticleThickness: 1
+  reticleGap: 3
+  reticleOutline: 1
 --- !u!114 &1667989998539673551
 MonoBehaviour:
   m_ObjectHideFlags: 0

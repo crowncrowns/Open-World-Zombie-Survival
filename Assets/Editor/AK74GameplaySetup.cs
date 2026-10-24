@@ -130,6 +130,7 @@ public static class AK74GameplaySetup
             w.noise=new Vector2(16,85); w.volume=.45f; w.viewPrefab=view; w.handPose=hand;
             w.holdPosition=hand.hipPosition; w.aimPosition=hand.aimPosition; w.holdEuler=Vector3.zero;
             w.muzzleOffset=new Vector3(.16f,-.19f,.99f); w.aimMuzzleOffset=new Vector3(0,-.055f,.93f);
+            w.muzzleTransformPath="AK74_Reference/Visual/AK74_Rig/WeaponRoot/Muzzle";
             Set(w,"ammo",ammo); Set(w,"magazineSize",30);
             w.attacks=Enumerable.Range(1,3).Select(i=>AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Props/FreeWeaponSFX_v1.1/AssaultRifle/Gunshots/sfx_wpn_ar_gunshot_0"+i+".wav")).ToArray();
             w.reloadSound=AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/Generated/AK74/AK74_Reload.wav");

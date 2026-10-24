@@ -23,6 +23,8 @@ namespace ZombieSurvival.Player
         [SerializeField, Tooltip("Имя необязательного masked слоя рук контроллера UAL.")] private string upperBodyLayer = "Upper Body";
         [SerializeField, Tooltip("Приближённо перенаправлять шаги вперёд для бокового/обратного движения, без разворота тела.")] private bool directionalFootIK = true;
         [SerializeField, Tooltip("Прицеливание руками относительно камеры; действует только с огнестрельным оружием.")] private bool firearmAimIK = true;
+        [SerializeField, InspectorName("Наклон корпуса при выглядывании"), Range(0, 40), Tooltip("Наклон верхней части тела при полном Q/E, градусы. Переносит плечи, обе руки и оружие; стопы и капсула остаются на месте. Стена уменьшает наклон вместе с фактическим смещением камеры.")]
+        private float peekTorsoAngle = 32f;
         [Header("Руки и пистолет — положение относительно камеры")]
         [SerializeField, Tooltip("Без ПКМ, метры: X вправо, Y вверх, Z вперёд от камеры. Цель ограничена длиной рук.")]
         private Vector3 firearmHipPosition = new Vector3(.11f,-.16f,.4f);
@@ -59,6 +61,7 @@ namespace ZombieSurvival.Player
         public Vector3 LocalVelocity { get; private set; }
         public bool DirectionalFootIK => directionalFootIK;
         public bool FirearmAimIK => firearmAimIK;
+        internal float PeekTorsoAngle => Mathf.Clamp(peekTorsoAngle, 0f, 40f);
         public int UpperBodyLayerIndex => upperLayer;
 
         // Read the root's serialized values on every IK pass, including edits made during Play.
@@ -168,6 +171,7 @@ namespace ZombieSurvival.Player
         }
         private void Update()
         {
+            bridge?.RestorePeekPose();
             ResolveAnimator(); if(animator==null || controller==null || motor==null)return;
             var parkour=motor.Parkour; bool traversal=parkour!=null && parkour.OwnsMovement;
             // Cursor/focus only stops gameplay; owner/base locks also suspend the presentation.

@@ -34,10 +34,31 @@ namespace ZombieSurvival.Weapons
         public AnimatorOverrideController bodyAnimations;
         [InspectorName("Исходная перезарядка тела"), Min(.1f), Tooltip("Длительность исходного клипа рук в профиле, с. Масштабируется до reloadSeconds; боезапас меняет только PlayerWeapons.")]
         public float bodyReloadSeconds = 1.7f;
+        [Header("Визуальный след выстрела")]
+        [InspectorName("Показывать трассер"), Tooltip("Рисует короткий светящийся след от дула к цели. Это только визуальный эффект: попадание и урон по-прежнему рассчитывает PlayerWeapons.")]
+        public bool showShotTracer;
+        [InspectorName("Цвет трассера"), Tooltip("Цвет следа пули, включая яркость в начале и плавное затухание к концу.")]
+        public Color shotTracerColor = new Color(1f, .63f, .24f, 1f);
+        [InspectorName("Ширина трассера"), Min(.001f), Tooltip("Ширина светового следа, м.")]
+        public float shotTracerWidth = .016f;
+        [InspectorName("Время трассера"), Min(.01f), Tooltip("Сколько секунд виден след выстрела.")]
+        public float shotTracerSeconds = .085f;
+        [InspectorName("Максимальная длина трассера"), Min(.1f), Tooltip("Максимальная длина светового следа, м. Реальная точка попадания остаётся прежней.")]
+        public float shotTracerMaxLength = 40f;
+        [InspectorName("Вспышка у дула"), Tooltip("Показывает короткую вспышку частиц у дула при каждом выстреле.")]
+        public bool showMuzzleFlash;
+        [InspectorName("Искры попадания"), Tooltip("Показывает короткие искры на поверхности или актёре, куда попал луч.")]
+        public bool showImpactSparks;
+        [InspectorName("Цвет искр"), Tooltip("Цвет визуальных искр при попадании. Не меняет тип цели или урон.")]
+        public Color impactSparkColor = new Color(1f, .56f, .2f, 1f);
+        [InspectorName("Количество искр"), Range(1, 16), Tooltip("Количество частиц на попадание.")]
+        public int impactSparkCount = 7;
         [Tooltip("Позиция модели относительно камеры от бедра, м.")] public Vector3 holdPosition = new Vector3(.3f,-.3f,.55f);
         [Tooltip("Позиция модели при прицеливании, м.")] public Vector3 aimPosition = new Vector3(0,-.18f,.55f);
         [Tooltip("Поворот модели относительно камеры, градусы.")] public Vector3 holdEuler;
         [Tooltip("Масштаб модели в руках.")] public Vector3 viewScale = Vector3.one;
+        [Tooltip("Путь к дульной точке внутри viewPrefab, например Model/Rig/Muzzle. Пусто — прежние смещения от камеры. При Q/E заданная точка следует реальному оружию и рукам.")]
+        public string muzzleTransformPath;
         [Tooltip("Дульная точка от бедра относительно камеры, м. Путь до неё проверяется на стены.")] public Vector3 muzzleOffset = new Vector3(.28f,-.22f,.64f);
         [Tooltip("Дульная точка при прицеливании относительно камеры, м. Плавно следует за позой модели.")] public Vector3 aimMuzzleOffset = new Vector3(0,-.015f,.64f);
         [Tooltip("Звуки удара или выстрела. Случайный вариант на атаку.")] public AudioClip[] attacks;

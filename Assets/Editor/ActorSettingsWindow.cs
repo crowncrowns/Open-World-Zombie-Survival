@@ -92,7 +92,7 @@ public sealed class ActorSettingsWindow : EditorWindow
             case "FirstPersonController": return 1;
             case "PlayerParkour": return 2;
             case "PlayerNoiseEmitter": case "PlayerInteractor": case "EnemyBrain": case "EnemyCrawlPursuit": case "MeleeAttack": case "NoiseEmitter": return 3;
-            case "PlayerCameraMotion": case "PlayerVisual": case "PlayerModelDefinition": case "PlayerCrawlAnimation": case "HumanoidCrawlPose": case "HumanoidGrounding": case "EnemyAnimationBridge": return 4;
+            case "PlayerCameraMotion": case "PlayerVisual": case "PlayerUALAnimationDriver": case "PlayerModelDefinition": case "PlayerCrawlAnimation": case "HumanoidCrawlPose": case "HumanoidGrounding": case "EnemyAnimationBridge": return 4;
             case "PlayerEquipment": case "ItemStorage": case "PlayerInventory": case "PlayerServiceSession": case "TraderServicePoint": case "WorkbenchServicePoint": case "RepairWorkbench": case "ServiceVisual": case "Trader": return 5;
             case "PlayerProgression": case "PlayerStatModifiers": case "PlayerProgressionMenu": case "PlayerHotbar": return 10;
             case "Wallet": case "TraderBudget": return 8;
@@ -111,6 +111,7 @@ public sealed class ActorSettingsWindow : EditorWindow
             case "CombatTarget": return "Точка обнаружения и попадания";
             case "PlayerStamina": return "Выносливость";
             case "FirstPersonController": return "Управление и движение";
+            case "PlayerUALAnimationDriver": return "Анимация, хват оружия и наклон корпуса";
             case "EnemyBrain": return "Поведение, зрение и слух зомби";
             case "EnemyCrawlPursuit": return "Преследование ползком";
             case "PlayerNoiseEmitter": return "Шум игрока";

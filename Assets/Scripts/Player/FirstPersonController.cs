@@ -29,6 +29,10 @@ namespace ZombieSurvival.Player
         [SerializeField] private string rollActionName = "Roll";
         [Tooltip("Имя команды положения лёжа в карте Input Actions игрока. Привязки клавиш меняются в Input Actions, не в этом поле.")]
         [SerializeField] private string proneActionName = "Prone";
+        [Tooltip("Имя команды выглядывания влево в карте Input Actions. По умолчанию удержание Q.")]
+        [SerializeField] private string peekLeftActionName = "LeanLeft";
+        [Tooltip("Имя команды выглядывания вправо в карте Input Actions. По умолчанию удержание E.")]
+        [SerializeField] private string peekRightActionName = "LeanRight";
         [Tooltip("Команда освобождения курсора, по умолчанию Escape. Привязки редактируются без изменения кода.")]
         [SerializeField] private InputAction releaseCursorInput = new InputAction("ReleaseCursor", InputActionType.Button, "<Keyboard>/escape");
         [Tooltip("Команда захвата курсора для обзора; по умолчанию левая кнопка мыши.")]
@@ -135,6 +139,24 @@ namespace ZombieSurvival.Player
         [Tooltip("Локальное смещение камеры X/Z в полном приседе, м. Плавно исчезает при вставании и переходе в ползание; ограничено сечением капсулы. Ноль сохраняет прежнее положение.")]
         [SerializeField] private Vector2 crouchCameraOffset;
 
+        [Header("Выглядывание из-за укрытия")]
+        [Tooltip("Разрешить плавное смещение камеры в сторону при удержании Q/E. Персонаж не перемещается и не проходит сквозь препятствия.")]
+        [SerializeField] private bool peekingEnabled = true;
+        [Tooltip("Максимальное смещение камеры в сторону, м. Стена ограничивает фактическую дистанцию.")]
+        [SerializeField, Range(0f, .6f)] private float peekDistance = .32f;
+        [Tooltip("Смещение точки прицела вместе с выглядыванием, доля ширины экрана от центра. 0,025 = 2,5% в сторону; оружейный луч идёт через эту точку.")]
+        [SerializeField, Range(0f, .1f)] private float peekReticleOffset = .025f;
+        [Tooltip("Небольшой крен камеры в сторону выглядывания, градусов.")]
+        [SerializeField, Range(0f, 15f)] private float peekCameraRoll = 5f;
+        [Tooltip("Скорость плавного входа и возврата из выглядывания, 1/с.")]
+        [SerializeField, Min(.1f)] private float peekTransitionSpeed = 8f;
+        [Tooltip("Радиус сферы для проверки пути камеры, м. Увеличьте, если камера слишком близко подходит к стенам.")]
+        [SerializeField, Range(.01f, .25f)] private float peekCollisionRadius = .1f;
+        [Tooltip("Зазор камеры до стены после проверки, м.")]
+        [SerializeField, Min(0f)] private float peekWallClearance = .035f;
+        [Tooltip("Слои, о которые камера не должна проходить при выглядывании.")]
+        [SerializeField] private LayerMask peekObstructionMask = ~0;
+
         [Header("Курсор и фокус окна")]
         [Tooltip("Захватывать курсор при включении управления и возвращении в игру.")]
         [SerializeField] private bool captureCursorOnEnable = true;
@@ -154,6 +176,7 @@ namespace ZombieSurvival.Player
         private InputAction jumpAction;
         private InputAction rollAction;
         private InputAction proneAction;
+        private InputAction peekLeftAction, peekRightAction;
         private PlayerStamina stamina;
         private PlayerStatModifiers statModifiers;
         private bool proneRequested, proneToggleArmed;
@@ -180,7 +203,12 @@ namespace ZombieSurvival.Player
         private float standingStepOffset;
         private Vector3 standingCenter;
         private Vector3 standingCameraPosition;
+        private Vector3 lastCameraPosturePosition;
+        private bool hasCameraPosturePosition;
         private readonly Collider[] standingOverlaps = new Collider[32];
+        private readonly RaycastHit[] peekHits = new RaycastHit[24];
+        private float peekAmount;
+        private float appliedPeekDistance;
 
         private bool GameplayInputRequested
         {
@@ -206,6 +234,15 @@ namespace ZombieSurvival.Player
             && (proneRequested || controller != null && controller.height < Mathf.Clamp(crouchHeight, controller.radius * 2f, standingHeight) - .05f);
         public bool IsSprinting { get; private set; }
         public bool IsSlowWalking { get; private set; }
+        public float PeekAmount => peekDistance > .001f ? Mathf.Clamp(appliedPeekDistance / peekDistance, -1f, 1f) : 0f;
+        public float AimReticleViewportOffset => peekingEnabled ? PeekAmount * Mathf.Clamp(peekReticleOffset, 0f, .1f) : 0f;
+        // HUD, взаимодействие, хват и выстрел используют одну точку в viewport камеры.
+        public Ray GetAimRay(Camera camera)
+        {
+            var ray = camera.ViewportPointToRay(new Vector3(.5f + AimReticleViewportOffset, .5f, 0f));
+            return new Ray(camera.transform.position, ray.direction);
+        }
+        public Quaternion GetAimRotation(Camera camera) => Quaternion.LookRotation(GetAimRay(camera).direction, camera.transform.up);
         public PlayerStamina Stamina => stamina;
         public bool IsGrounded => controller != null && controller.isGrounded && verticalVelocity <= 0f
             && (parkour == null || !parkour.OwnsMovement);
@@ -297,6 +334,10 @@ namespace ZombieSurvival.Player
             jumpAction = gameplayMap?.FindAction(jumpActionName);
             rollAction = gameplayMap?.FindAction(rollActionName);
             proneAction = gameplayMap?.FindAction(proneActionName);
+            peekLeftAction = gameplayMap?.FindAction(peekLeftActionName);
+            peekRightAction = gameplayMap?.FindAction(peekRightActionName);
+            if (peekLeftAction != null) peekLeftAction.wantsInitialStateCheck = true;
+            if (peekRightAction != null) peekRightAction.wantsInitialStateCheck = true;
             if (parkour != null && rollAction == null || proneEnabled && proneAction == null)
                 Debug.LogWarning("Player Input Actions are missing Roll or Prone. Restore those actions/bindings to enable traversal controls.", this);
             if (moveAction == null || lookAction == null || sprintAction == null || crouchAction == null || jumpAction == null)
@@ -407,6 +448,8 @@ namespace ZombieSurvival.Player
 
             bool acceptingInput = GameplayInputEnabled && HasFocus
                 && (!requireCursorCapture || Cursor.lockState == CursorLockMode.Locked);
+            UpdatePeek(acceptingInput);
+            if (hasCameraPosturePosition) SetCameraPosition(lastCameraPosturePosition);
             if (!acceptingInput) lastJumpPress = float.NegativeInfinity;
             IsSprinting = false; IsSlowWalking = false;
             if (stamina != null) stamina.Tick(Time.deltaTime, acceptingInput);
@@ -420,6 +463,7 @@ namespace ZombieSurvival.Player
             {
                 lastJumpPress = float.NegativeInfinity;
                 proneToggleArmed = crouchToggleArmed = false;
+                if (parkour == null || !parkour.OwnsMovement) ApplyViewRotation(0f);
                 return;
             }
             if (acceptingInput && lookEnabled && !skipLook)
@@ -431,9 +475,9 @@ namespace ZombieSurvival.Player
                 look.y *= verticalLookMultiplier * (invertVerticalLook ? -1f : 1f);
                 transform.Rotate(0f, look.x, 0f);
                 pitch = ClampViewPitch(pitch - look.y);
-                playerCamera.localRotation = Quaternion.Euler(pitch, 0f, 0f);
             }
             skipLook = false;
+            if (parkour == null || !parkour.OwnsMovement) ApplyViewRotation(0f);
 
             Vector2 movement = acceptingInput && movementEnabled
                 ? Vector2.ClampMagnitude(moveAction.ReadValue<Vector2>(), 1f) : Vector2.zero;
@@ -510,6 +554,8 @@ namespace ZombieSurvival.Player
             IsAlive = alive;
             if (!alive)
             {
+                peekAmount = 0f;
+                if (hasCameraPosturePosition) SetCameraPosition(lastCameraPosturePosition);
                 if (parkour != null) parkour.ResetTraversal();
                 ReleaseParkour(Vector3.zero);
                 IsSprinting = false; IsSlowWalking = false;
@@ -524,7 +570,8 @@ namespace ZombieSurvival.Player
             controller.enabled = false;
             transform.SetPositionAndRotation(position, Quaternion.Euler(0f, rotation.eulerAngles.y, 0f));
             controller.height = standingHeight; controller.center = standingCenter; controller.stepOffset = standingStepOffset;
-            playerCamera.position = transform.TransformPoint(standingCameraPosition);
+            peekAmount = 0f;
+            SetCameraPosition(standingCameraPosition);
             playerCamera.localRotation = Quaternion.identity;
             pitch = 0f; IsStandingBlocked = false; IsSprinting = false; IsSlowWalking = false;
             crouchRequested = proneRequested = crouchToggleArmed = proneToggleArmed = false;
@@ -543,7 +590,7 @@ namespace ZombieSurvival.Player
             proneRequested = prone; crouchRequested = crouched && !prone;
             pitch = ClampViewPitch(savedPitch);
             SetParkourPosture(SavedPoseHeight(prone, crouched), prone ? proneCameraDrop : crouched ? crouchCameraDrop : 0);
-            playerCamera.localRotation = Quaternion.Euler(pitch, 0, 0);
+            ApplyViewRotation(0f);
             SetAlive(true); Physics.SyncTransforms();
         }
         private void UpdateCrouch(bool acceptingInput)
@@ -601,7 +648,7 @@ namespace ZombieSurvival.Player
             float clearance = Mathf.Min(cameraHeadClearance, height * 0.5f);
             cameraPosition.y = Mathf.Clamp(standingCameraPosition.y - cameraDrop,
                 bottom + clearance, bottom + height - clearance);
-            playerCamera.position = transform.TransformPoint(ApplyDownwardCameraShift(cameraPosition));
+            SetCameraPosition(cameraPosition);
         }
 
         internal void SetParkourPosture(float height, float cameraDrop)
@@ -612,7 +659,7 @@ namespace ZombieSurvival.Player
             controller.center = new Vector3(standingCenter.x, BottomOffset + height * .5f, standingCenter.z);
             Vector3 position = standingCameraPosition;
             position.y = Mathf.Clamp(standingCameraPosition.y - cameraDrop, BottomOffset + .1f, BottomOffset + height - .1f);
-            playerCamera.position = transform.TransformPoint(ApplyDownwardCameraShift(position));
+            SetCameraPosition(position);
         }
 
         internal void ReleaseParkour(Vector3 horizontalVelocity, float fallSpeed = 0f)
@@ -626,7 +673,56 @@ namespace ZombieSurvival.Player
 
         internal void AddParkourCameraTilt(float angle)
         {
-            playerCamera.localRotation = Quaternion.Euler(pitch, 0f, angle);
+            ApplyViewRotation(angle);
+        }
+
+        private void UpdatePeek(bool acceptingInput)
+        {
+            bool canPeek = peekingEnabled && acceptingInput && IsAlive && !IsProne
+                && (parkour == null || !parkour.OwnsMovement)
+                && (sprintAction == null || !sprintAction.IsPressed());
+            float target = 0f;
+            if (canPeek)
+            {
+                bool left = peekLeftAction != null && peekLeftAction.IsPressed();
+                bool right = peekRightAction != null && peekRightAction.IsPressed();
+                if (left != right) target = right ? 1f : -1f;
+            }
+            peekAmount = Mathf.MoveTowards(peekAmount, target, peekTransitionSpeed * Time.unscaledDeltaTime);
+        }
+
+        private void SetCameraPosition(Vector3 postureLocalPosition)
+        {
+            lastCameraPosturePosition = postureLocalPosition;
+            hasCameraPosturePosition = true;
+            Vector3 cameraWorld = transform.TransformPoint(ApplyDownwardCameraShift(postureLocalPosition));
+            appliedPeekDistance = 0f;
+            float requested = Mathf.Abs(peekAmount) * Mathf.Max(0f, peekDistance);
+            if (requested > .001f)
+            {
+                Vector3 direction = transform.right * Mathf.Sign(peekAmount);
+                float clearance = Mathf.Max(0f, peekWallClearance);
+                int count = Physics.SphereCastNonAlloc(cameraWorld, Mathf.Max(.01f, peekCollisionRadius), direction,
+                    peekHits, requested + clearance, peekObstructionMask, QueryTriggerInteraction.Ignore);
+                float allowed = requested;
+                for (int i = 0; i < count; i++)
+                {
+                    Collider obstacle = peekHits[i].collider;
+                    if (obstacle == null || obstacle.transform == transform || obstacle.transform.IsChildOf(transform)) continue;
+                    allowed = Mathf.Min(allowed, Mathf.Max(0f, peekHits[i].distance - clearance));
+                }
+                // An unusually dense overlap buffer is treated as blocked rather than allowing the camera through.
+                if (count == peekHits.Length) allowed = 0f;
+                cameraWorld += direction * allowed;
+                appliedPeekDistance = Mathf.Sign(peekAmount) * allowed;
+            }
+            playerCamera.position = cameraWorld;
+        }
+
+        private void ApplyViewRotation(float extraRoll)
+        {
+            float roll = extraRoll - PeekAmount * peekCameraRoll;
+            playerCamera.localRotation = Quaternion.Euler(pitch, 0f, roll);
         }
 
         internal bool CanFitHeight(float targetHeight)
