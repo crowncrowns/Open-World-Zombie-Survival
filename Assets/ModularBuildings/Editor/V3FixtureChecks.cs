@@ -28,7 +28,7 @@ namespace ZombieSurvival.ModularBuildings.Editor
         }
         public static string TerrainFixture(GeneratedBuilding b,Scene scene)
         {
-            var data=new TerrainData{heightmapResolution=65,size=new Vector3(64,3,32)};var heights=new float[65,65];
+            var data=new TerrainData{heightmapResolution=65,size=new Vector3(Mathf.Max(64,b.entrances*b.profile.section.sectionWidth+24),3,32)};var heights=new float[65,65];
             for(int z=0;z<65;z++)for(int x=0;x<65;x++)heights[z,x]=.5f+.15f*Mathf.Sin(x*Mathf.PI/32)+.15f*Mathf.Cos(z*Mathf.PI/32);
             data.SetHeights(0,0,heights);
             var layers=AssetDatabase.FindAssets("t:TerrainLayer",new[]{"Assets/Maps"}).Select(AssetDatabase.GUIDToAssetPath).Select(AssetDatabase.LoadAssetAtPath<TerrainLayer>).Where(x=>x).Take(1).ToArray();data.terrainLayers=layers;
@@ -41,10 +41,10 @@ namespace ZombieSurvival.ModularBuildings.Editor
         }
         public static List<string> CheckTerrain(GeneratedBuilding b,Terrain terrain,out int probes)
         {
-            var errors=new List<string>();probes=0;var skirt=b.transform.Find("TerrainFoundation");float last=(b.entrances-1)*9+4.5f;
+            var errors=new List<string>();probes=0;var skirt=b.transform.Find("TerrainFoundation");float width=b.profile.section.sectionWidth,half=width/2,last=(b.entrances-1)*width+half;
             var samples=new List<Vector3>();var directions=new List<Vector3>();
-            for(float x=-4.5f;x<=last+.001f;x+=.5f)foreach(int side in new[]{-1,1}){samples.Add(new Vector3(x,0,side<0?-1.5f:10.5f));directions.Add(new Vector3(0,0,-side));}
-            for(float z=-1.5f;z<=10.501f;z+=.5f)foreach(int side in new[]{-1,1}){samples.Add(new Vector3(side<0?-4.5f:last,0,z));directions.Add(new Vector3(-side,0,0));}
+            for(float x=-half;x<=last+.001f;x+=.5f)foreach(int side in new[]{-1,1}){samples.Add(new Vector3(x,0,side<0?-1.5f:10.5f));directions.Add(new Vector3(0,0,-side));}
+            for(float z=-1.5f;z<=10.501f;z+=.5f)foreach(int side in new[]{-1,1}){samples.Add(new Vector3(side<0?-half:last,0,z));directions.Add(new Vector3(-side,0,0));}
             for(int i=0;i<samples.Count;i++){
                 var point=b.transform.TransformPoint(samples[i]);float height=terrain.SampleHeight(point)+terrain.transform.position.y;float localY=b.transform.InverseTransformPoint(new Vector3(point.x,height,point.z)).y;
                 if(localY< -b.profile.foundationDepth+.05f||localY>-.05f){errors.Add("Terrain outside foundation coverage at "+point);continue;}

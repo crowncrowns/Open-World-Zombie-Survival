@@ -57,11 +57,21 @@ namespace ZombieSurvival.ModularBuildings.Editor
             foreach(var r in b.GetComponentsInChildren<MeshRenderer>()){
                 bool interiorLining=r.GetComponentsInParent<Transform>(true).Any(t=>t.name=="EntranceInteriorLining");
                 bool facade=(r.name=="Wall_Window"&&!interiorLining)||r.transform.IsChildOf(corners)||r.transform.IsChildOf(b.transform.Find("TerrainFoundation"));
+                var entryWall=r.GetComponentsInParent<Transform>(true).FirstOrDefault(t=>t.name=="Front_"+(Mathf.RoundToInt(p.section.sectionWidth/3)/2)&&t.parent&&t.parent.name=="Floor_1");
+                if(entryWall&&!r.GetComponentsInParent<Transform>(true).Any(t=>t.name=="EntranceDoor"))facade=true;
                 if(r.transform.parent&&(r.transform.parent.name=="LeftEnd"||r.transform.parent.name=="RightEnd"))facade=true;
                 if(facade&&r.sharedMaterials.Any(m=>m!=p.facadeMaterial))errors.Add("Неверная отделка фасадного модуля: "+r.name);
                 if(facade&&p.requireWorldSpaceFacade&&r.sharedMaterials.Any(m=>!m||m.shader!=p.approvedWorldFacadeShader))errors.Add("На фасаде отсутствует утверждённый World Space Mapping shader.");
             }
             foreach(var level in b.GetComponentsInChildren<Transform>().Where(t=>t.parent&&t.parent.name.StartsWith("Entrance_")&&t.name.StartsWith("Floor_"))){
+                if(p.section.sectionWidth==15){
+                    if(level.Cast<Transform>().Count(t=>t.name.StartsWith("Front_"))!=5||level.Cast<Transform>().Count(t=>t.name.StartsWith("Rear_"))!=5)errors.Add("Нужны два фасадных модуля по обе стороны подъезда.");
+                    foreach(float x in new[]{-6f,-3f,3f,6f})foreach(float z in new[]{0f,3f,6f,9f}){
+                        var foot=level.TransformPoint(new Vector3(x,.065f,z));
+                        BuildingQuality.Capsule(b,foot,errors,"Расширенное место для квартиры");
+                        if(!Physics.RaycastAll(foot+Vector3.up*.1f,Vector3.down,.3f).Any(h=>h.collider.transform.IsChildOf(b.transform)))errors.Add("Нет перекрытия в расширенной зоне.");
+                    }
+                }
                 var lining=level.Find("EntranceInteriorLining");if(!lining){errors.Add("Нет облицовки входной стены: "+level.name);continue;}
                 if(lining.GetComponentsInChildren<Transform>().Any(t=>t.name=="Door_Hinge"||t.name=="Door_Leaf"))errors.Add("Облицовка содержит лишнюю дверь.");
                 foreach(var r in lining.GetComponentsInChildren<MeshRenderer>())if(r.sharedMaterials.Any(m=>m!=p.stairWallMaterial))errors.Add("Облицовка не соответствует отделке подъезда.");

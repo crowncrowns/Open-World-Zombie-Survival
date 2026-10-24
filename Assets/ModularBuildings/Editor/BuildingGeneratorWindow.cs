@@ -14,7 +14,7 @@ namespace ZombieSurvival.ModularBuildings.Editor
         static void Open()=>GetWindow<BuildingGeneratorWindow>("Дома MVP");
         void OnDisable(){if(preview.IsValid())EditorSceneManager.ClosePreviewScene(preview);if(previewTexture)DestroyImmediate(previewTexture);}
         void OnGUI(){
-            EditorGUILayout.HelpBox("Демо V4: закрытые углы, разрешённые оконные модули, входная дверь из Building_Shk_68_FINISH, World Space фасад и внутренняя облицовка. Выберите профиль V4; прежние дома защищены от перезаписи.",MessageType.Info);
+            EditorGUILayout.HelpBox("Демо V5: секция 15×12 м, по два модуля 3 м слева и справа от подъезда, единый World Space фасад. Нажмите «Создать/выбрать демо-профиль» для V5. Старые дома не перезаписываются.",MessageType.Info);
             profile=(BuildingSeriesProfile)EditorGUILayout.ObjectField("Профиль",profile,typeof(BuildingSeriesProfile),false);
             if(GUILayout.Button("Создать/выбрать демо-профиль"))profile=BuildingGenerator.CreateProfile();
             year=EditorGUILayout.IntField("Год",year);floors=EditorGUILayout.IntField("Этажи",floors);entrances=EditorGUILayout.IntField("Подъезды",entrances);id=EditorGUILayout.TextField("Постоянный ID",id);
@@ -26,7 +26,7 @@ namespace ZombieSurvival.ModularBuildings.Editor
                 var light=new GameObject("PreviewSun").AddComponent<Light>();UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(light.gameObject,preview);
                 light.type=LightType.Directional;light.transform.rotation=Quaternion.Euler(45,-30,0);
                 var camera=new GameObject("PreviewCamera").AddComponent<Camera>();UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(camera.gameObject,preview);
-                float center=(entrances-1)*4.5f;
+                float center=(entrances-1)*profile.section.sectionWidth/2;
                 camera.transform.position=new Vector3(center+entrances*6,floors*3+10,-entrances*9-12);camera.transform.LookAt(new Vector3(center,floors*1.5f,3));
                 camera.farClipPlane=250;camera.scene=preview;
                 if(!previewTexture)previewTexture=new RenderTexture(800,450,24);

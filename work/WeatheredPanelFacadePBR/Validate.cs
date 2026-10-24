@@ -1,0 +1,2 @@
+var m=UnityEditor.AssetDatabase.LoadAssetAtPath<Material>("Assets/Maps/Buildings/Textures/WeatheredPanelFacade_01/M_WeatheredPanelFacade_01_URP.mat");foreach(var n in new[]{"_BaseMap","_BumpMap","_MetallicGlossMap","_OcclusionMap","_ParallaxMap"})if(!m.GetTexture(n))throw new Exception(n);return new{mapsConnected=5,shaderErrors=UnityEditor.ShaderUtil.ShaderHasError(m.shader),normal=((UnityEditor.TextureImporter)UnityEditor.AssetImporter.GetAtPath(UnityEditor.AssetDatabase.GetAssetPath(m.GetTexture("_BumpMap")))).textureType.ToString()};
+

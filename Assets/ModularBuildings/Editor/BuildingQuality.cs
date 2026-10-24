@@ -92,7 +92,7 @@ namespace ZombieSurvival.ModularBuildings.Editor
             if(coplanar.unreadable.Count>0)errors.Add("Проверка поверхностей неполна: "+string.Join(";",coplanar.unreadable));
             if(coplanar.overlapPairs>0)errors.Add("Coplanar-перекрытия: "+coplanar.overlapPairs+"; "+string.Join(";",coplanar.conflicts.Take(4).Select(x=>x.Key)));
             for(int e=0;e<b.entrances-1;e++)for(int f=0;f<b.floors;f++)foreach(float z in new[]{0f,3f,6f,9f}){
-                var foot=b.transform.TransformPoint(new Vector3(e*9+4.5f,f*3+.065f,z));
+                var foot=b.transform.TransformPoint(new Vector3((e+.5f)*p.section.sectionWidth,f*3+.065f,z));
                 Capsule(b,foot,errors,"Граница секций "+e+"/"+f+"/"+z);
                 if(!Physics.RaycastAll(foot+Vector3.up*.1f,Vector3.down,.3f).Any(h=>h.collider.transform.IsChildOf(b.transform)))errors.Add("Разрыв пола между секциями.");
             }

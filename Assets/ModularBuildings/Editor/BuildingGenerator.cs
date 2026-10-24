@@ -16,6 +16,16 @@ namespace ZombieSurvival.ModularBuildings.Editor
         static GameObject Load(string path) => AssetDatabase.LoadAssetAtPath<GameObject>(path);
         public static BuildingSeriesProfile CreateProfile()
         {
+            var path=Folder+"/DemoProfileV5.asset";
+            var existing=AssetDatabase.LoadAssetAtPath<BuildingSeriesProfile>(path);
+            if(existing)return existing;
+            var p=Object.Instantiate(CreateLegacyProfile());
+            p.name="DemoProfileV5";p.profileId="demo-u-stair-v5-wide";
+            p.section=new SectionTemplate {templateId="U-15x12-3-apartments-flat",sectionWidth=15};
+            AssetDatabase.CreateAsset(p,path);DemoAssetSetup.EnsureWideRoof(p);AssetDatabase.SaveAssetIfDirty(p);return p;
+        }
+        static BuildingSeriesProfile CreateLegacyProfile()
+        {
             System.IO.Directory.CreateDirectory(Folder); AssetDatabase.Refresh();
             var path=Folder+"/DemoProfileV4.asset";
             var existing=AssetDatabase.LoadAssetAtPath<BuildingSeriesProfile>(path);
@@ -37,8 +47,9 @@ namespace ZombieSurvival.ModularBuildings.Editor
             if(year<1800 || year>2200 || floors<1 || floors>9 || entrances<1 || entrances>8)
                 throw new InvalidOperationException("MVP: год 1800–2200, этажи 1–9, подъезды 1–8.");
             var s=p.section;
-            if(s.templateId!="U-9x12-3-apartments-flat" || s.sectionWidth!=9 || s.sectionDepth!=12 || s.floorHeight!=3 || s.firstFlight!=new Vector3(-.9f,.75f,5.85f) || s.secondFlight!=new Vector3(.9f,2.25f,5.85f))
-                throw new InvalidOperationException("Поддерживается демонстрационный шаблон U-9x12 с тремя квартирами и почти плоской кровлей.");
+            bool known=(s.templateId=="U-9x12-3-apartments-flat"&&s.sectionWidth==9)||(s.templateId=="U-15x12-3-apartments-flat"&&s.sectionWidth==15);
+            if(!known || s.sectionDepth!=12 || s.floorHeight!=3 || s.firstFlight!=new Vector3(-.9f,.75f,5.85f) || s.secondFlight!=new Vector3(.9f,2.25f,5.85f))
+                throw new InvalidOperationException("Поддерживаются демонстрационные шаблоны U-9x12 и U-15x12 с тремя квартирами и почти плоской кровлей.");
             foreach(var source in new[]{p.solidWall,p.windowWall,p.entranceWall,p.apartmentWall,p.door,p.floor,p.stair})
                 if(!source || !PrefabUtility.IsPartOfPrefabAsset(source)) throw new InvalidOperationException("Не назначен исходный prefab.");
             CheckBounds(p.solidWall,new Vector3(3,3,.4f));
@@ -114,7 +125,8 @@ namespace ZombieSurvival.ModularBuildings.Editor
         static void CornerClosures(BuildingSeriesProfile p,Transform root,int floors,int entrances)
         {
             var corners=Group("FacadeCornerClosures",root,Vector3.zero);float height=floors*3+p.foundationDepth;
-            foreach(int x in new[]{-1,1})foreach(int z in new[]{-1,1})FinishBox(corners,"Corner_"+x+"_"+z,new Vector3(x<0?-4.6f:(entrances-1)*9+4.6f,(floors*3-p.foundationDepth)/2,z<0?-1.5f:10.5f),new Vector3(.2f,height,.4f),p.facadeMaterial);
+            float width=p.section.sectionWidth,half=width/2;
+            foreach(int x in new[]{-1,1})foreach(int z in new[]{-1,1})FinishBox(corners,"Corner_"+x+"_"+z,new Vector3(x<0?-half-.1f:(entrances-1)*width+half+.1f,(floors*3-p.foundationDepth)/2,z<0?-1.5f:10.5f),new Vector3(.2f,height,.4f),p.facadeMaterial);
         }
         static void FacadeMaterials(BuildingSeriesProfile p,Transform root)
         {
@@ -136,12 +148,13 @@ namespace ZombieSurvival.ModularBuildings.Editor
         }
         static void Roof(BuildingSeriesProfile p,Transform parent,int floors,int entrances)
         {
+            float width=p.section.sectionWidth;
             var roof=Group("Roof_Flat_2Percent",parent,new Vector3(0,floors*3,0));
             MeshPart(roof,"WeatherRoof",p.roofMeshes[entrances-1],p.roofMaterial,Vector3.zero);
             // One continuous ceiling slab and membrane: no double faces or exposed section seams.
-            var deck=Part(p.floor,roof,"RoofCeiling",new Vector3((entrances-1)*4.5f,0,4.5f),0,new Vector3((entrances*9-.4f)/3,1,11.6f/3));Surface(deck,p.ceilingMaterial);
+            var deck=Part(p.floor,roof,"RoofCeiling",new Vector3((entrances-1)*width/2,0,4.5f),0,new Vector3((entrances*width-.4f)/3,1,11.6f/3));Surface(deck,p.ceilingMaterial);
             for(int e=0;e<entrances;e++){
-                var stack=Group("VentilationStack_E"+(e+1),roof,new Vector3(e*9+2.9f,0,7.7f));
+                var stack=Group("VentilationStack_E"+(e+1),roof,new Vector3(e*width+2.9f,0,7.7f));
                 MeshPart(stack,"FlashedCurb",p.chimneyCurb,p.roofMaterial,Vector3.zero);
                 float y=p.chimneyCurb.bounds.max.y;
                 // Hollow brick shaft, with a supported metal weather cap and an air gap beneath it.
@@ -155,7 +168,7 @@ namespace ZombieSurvival.ModularBuildings.Editor
                     }
                 }
                 Part(p.ventCap,stack,"MetalVentCap",new Vector3(0,y+1.5f,0));
-                var duct=Group("VentilationDuct_E"+(e+1),roof,new Vector3(e*9-2.8f,0,.8f));
+                var duct=Group("VentilationDuct_E"+(e+1),roof,new Vector3(e*width-2.8f,0,.8f));
                 MeshPart(duct,"FlashedCurb",p.ductCurb,p.roofMaterial,Vector3.zero);
                 Part(p.ventDuct,duct,"ExistingVentAndPipe",new Vector3(0,p.ductCurb.bounds.max.y,0),-90);
             }
@@ -176,23 +189,25 @@ namespace ZombieSurvival.ModularBuildings.Editor
             var root=new GameObject("Building_"+id); SceneManager.MoveGameObjectToScene(root,scene);
             try {
                 var b=root.AddComponent<GeneratedBuilding>();b.buildingId=id;b.profile=p;b.year=year;b.floors=floors;b.entrances=entrances;
+                float width=p.section.sectionWidth,half=width/2;int bays=Mathf.RoundToInt(width/3),middle=bays/2;
+                b.revision=width==15?"demo-v5-wide":"demo-v4";
                 for(int e=0;e<entrances;e++){
-                    var section=Group("Entrance_"+(e+1),root.transform,new Vector3(e*9,0,0));
+                    var section=Group("Entrance_"+(e+1),root.transform,new Vector3(e*width,0,0));
                     for(int f=0;f<floors;f++){
                         var level=Group("Floor_"+(f+1),section,new Vector3(0,f*3,0));
-                        for(int bay=0;bay<3;bay++){
-                            float x=(bay-1)*3;
-                            bool entry=f==0&&bay==1;
+                        for(int bay=0;bay<bays;bay++){
+                            float x=(bay-middle)*3;
+                            bool entry=f==0&&bay==middle;
                             var front=Part(entry?p.entranceWall:p.windowWall,level,"Front_"+bay,new Vector3(x,0,-1.5f),180);
                             if(!entry){ClosedWindowCollision(front.transform);ApplyGlass(front.transform,p.glassMaterial);}
-                            else Part(p.entranceDoor,front.transform,"EntranceDoor",Vector3.zero);
+                            else {Surface(front,p.facadeMaterial);Part(p.entranceDoor,front.transform,"EntranceDoor",Vector3.zero);}
                             var rear=Part(p.windowWall,level,"Rear_"+bay,new Vector3(x,0,10.5f));ClosedWindowCollision(rear.transform);ApplyGlass(rear.transform,p.glassMaterial);
                         }
                         EntranceLining(p,level,f==0);
-                        if(e==0)Part(p.solidWall,level,"LeftEnd",new Vector3(-4.5f,0,4.5f),90,new Vector3(11.6f/3,1,1));
-                        if(e==entrances-1)Part(p.solidWall,level,"RightEnd",new Vector3(4.5f,0,4.5f),90,new Vector3(11.6f/3,1,1));
+                        if(e==0)Part(p.solidWall,level,"LeftEnd",new Vector3(-half,0,4.5f),90,new Vector3(11.6f/3,1,1));
+                        if(e==entrances-1)Part(p.solidWall,level,"RightEnd",new Vector3(half,0,4.5f),90,new Vector3(11.6f/3,1,1));
                         // Section boundaries have neither a party wall nor a floor gap. Only stair enclosures remain.
-                        float left=e==0?-4.3f:-4.5f,right=e==entrances-1?4.3f:4.5f;
+                        float left=e==0?-half+.2f:-half,right=e==entrances-1?half-.2f:half;
                         Slab(p,level,"MainLandingAndOpenFloor",(left+right)/2,1.6f,right-left,5.8f,0);
                         Slab(p,level,"LeftOpenFloor",(left-1.55f)/2,6.6f,-1.55f-left,4.2f,0);
                         Slab(p,level,"RightOpenFloor",(right+1.55f)/2,6.6f,right-1.55f,4.2f,0);
@@ -215,11 +230,11 @@ namespace ZombieSurvival.ModularBuildings.Editor
                         }
                     }
                 }
-                var foundation=Group("TerrainFoundation",root.transform,Vector3.zero);float center=(entrances-1)*4.5f;
-                Part(p.solidWall,foundation,"FoundationFront",new Vector3(center,-p.foundationDepth,-1.5f),180,new Vector3(entrances*3,p.foundationDepth/3,1));
-                Part(p.solidWall,foundation,"FoundationRear",new Vector3(center,-p.foundationDepth,10.5f),0,new Vector3(entrances*3,p.foundationDepth/3,1));
-                Part(p.solidWall,foundation,"FoundationLeft",new Vector3(-4.5f,-p.foundationDepth,4.5f),90,new Vector3(11.6f/3,p.foundationDepth/3,1));
-                Part(p.solidWall,foundation,"FoundationRight",new Vector3((entrances-1)*9+4.5f,-p.foundationDepth,4.5f),90,new Vector3(11.6f/3,p.foundationDepth/3,1));
+                var foundation=Group("TerrainFoundation",root.transform,Vector3.zero);float center=(entrances-1)*width/2;
+                Part(p.solidWall,foundation,"FoundationFront",new Vector3(center,-p.foundationDepth,-1.5f),180,new Vector3(entrances*width/3,p.foundationDepth/3,1));
+                Part(p.solidWall,foundation,"FoundationRear",new Vector3(center,-p.foundationDepth,10.5f),0,new Vector3(entrances*width/3,p.foundationDepth/3,1));
+                Part(p.solidWall,foundation,"FoundationLeft",new Vector3(-half,-p.foundationDepth,4.5f),90,new Vector3(11.6f/3,p.foundationDepth/3,1));
+                Part(p.solidWall,foundation,"FoundationRight",new Vector3((entrances-1)*width+half,-p.foundationDepth,4.5f),90,new Vector3(11.6f/3,p.foundationDepth/3,1));
                 Roof(p,root.transform,floors,entrances);
                 CornerClosures(p,root.transform,floors,entrances);FacadeMaterials(p,root.transform);
                 for(int pass=0;pass<3;pass++){
@@ -257,12 +272,12 @@ namespace ZombieSurvival.ModularBuildings.Editor
             // Capsule route samples follow both ramps and the intermediate turn, not arbitrary stair placement.
             Physics.SyncTransforms();
             foreach(var t in b.GetComponentsInChildren<Transform>().Where(t=>t.name.StartsWith("Front_",StringComparison.Ordinal)||t.name.StartsWith("Rear_",StringComparison.Ordinal))){
-                if(t.name=="Front_1"&&t.parent.name=="Floor_1")continue;
+                if(t.name=="Front_"+(Mathf.RoundToInt(b.profile.section.sectionWidth/3)/2)&&t.parent.name=="Floor_1")continue;
                 if(!Physics.RaycastAll(t.TransformPoint(new Vector3(0,1.5f,-.6f)),t.forward,1.2f).Any(h=>h.collider.transform.IsChildOf(t)))errors.Add("Нет коллизии закрытого окна: "+t.name);
             }
             for(int e=0;e<b.entrances;e++)for(int f=0;f<b.floors-1;f++)for(int flight=0;flight<2;flight++)for(int n=0;n<=27;n++){
                 float u=n/27f;float z=flight==0?4.5f+2.7f*u:7.2f-2.7f*u;
-                var p=b.transform.TransformPoint(new Vector3(e*9+(flight==0?-.9f:.9f),f*3+flight*1.5f+u*1.5f,z));
+                var p=b.transform.TransformPoint(new Vector3(e*b.profile.section.sectionWidth+(flight==0?-.9f:.9f),f*3+flight*1.5f+u*1.5f,z));
                 var support=Physics.RaycastAll(p+Vector3.up*.6f,Vector3.down,1,~0,QueryTriggerInteraction.Ignore).Where(h=>h.collider.transform.IsChildOf(b.transform)).OrderBy(h=>h.distance).ToArray();
                 if(support.Length==0){errors.Add("Нет опоры марша E"+e+" F"+f);continue;}
                 p.y=support[0].point.y+.065f;

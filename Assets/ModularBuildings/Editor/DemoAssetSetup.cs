@@ -96,6 +96,14 @@ namespace ZombieSurvival.ModularBuildings.Editor
             if(FacadeDetailChecks.DoorSignature(p.entranceDoor)!=FacadeDetailChecks.DoorSignature(ReferenceEntrance()))throw new InvalidOperationException("Производная входная дверь не совпадает с Building_Shk_68_FINISH.");
             EditorUtility.SetDirty(p);AssetDatabase.SaveAssetIfDirty(p);
         }
+        public static void EnsureWideRoof(BuildingSeriesProfile p)
+        {
+            const string folder="Assets/ModularBuildings/LibraryV5";
+            System.IO.Directory.CreateDirectory(folder);AssetDatabase.Refresh();
+            p.roofMeshes=new Mesh[8];
+            for(int e=1;e<=8;e++)p.roofMeshes[e-1]=MeshAsset(folder+"/FlatRoof15m_"+e+"E.asset",()=>Roof(e,p.section.sectionWidth));
+            EditorUtility.SetDirty(p);
+        }
         static Material DerivedMaterial(Material original,string path)
         {
             if(!original)throw new InvalidOperationException("Нет материала двери.");
@@ -203,9 +211,9 @@ namespace ZombieSurvival.ModularBuildings.Editor
         }
         static Mesh MeshAsset(string path,Func<Mesh> create){var m=Load<Mesh>(path);if(m)return m;m=create();AssetDatabase.CreateAsset(m,path);return m;}
         public static float RoofHeight(float z)=>.08f+.02f*(6.2f-Mathf.Abs(z-4.5f));
-        static Mesh Roof(int entrances)
+        static Mesh Roof(int entrances,float sectionWidth=9)
         {
-            float x0=-4.7f,x1=(entrances-1)*9+4.7f;
+            float x0=-sectionWidth/2-.2f,x1=(entrances-1)*sectionWidth+sectionWidth/2+.2f;
             var mesh=new MeshData();
             foreach(var range in new[]{new Vector2(-1.7f,4.5f),new Vector2(4.5f,10.7f)}){
                 var a=new Vector3(x0,RoofHeight(range.x),range.x);var b=new Vector3(x1,RoofHeight(range.x),range.x);
