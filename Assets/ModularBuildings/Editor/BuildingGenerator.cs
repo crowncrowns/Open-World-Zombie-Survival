@@ -92,6 +92,23 @@ namespace ZombieSurvival.ModularBuildings.Editor
             var c=Group("ClosedWindowCollision",window,Vector3.zero).gameObject.AddComponent<BoxCollider>();
             c.center=new Vector3(0,1.5f,.05f);c.size=new Vector3(1.2f,1.2f,.03f);
         }
+        static void EndWall(BuildingSeriesProfile p,Transform level,string name,float x,float yaw)
+        {
+            var side=Group(name,level,new Vector3(x,0,4.5f));
+            side.localRotation=Quaternion.Euler(0,yaw,0);
+            AddEndWallModules(p,side);
+        }
+        public static void AddEndWallModules(BuildingSeriesProfile p,Transform side)
+        {
+            // Preserve the previous 11.6 m side-wall span. Two full-size 3 m windows per floor;
+            // only the two solid end fillers shorten to 2.8 m. Frames/sashes never stretch.
+            for(int bay=0;bay<4;bay++) {
+                bool window=bay==1||bay==2;
+                float offset=bay==0?-4.4f:bay==3?4.4f:(bay-1.5f)*3;
+                var module=Part(window?p.windowWall:p.solidWall,side,(window?"Window_":"Solid_")+bay,new Vector3(offset,0,0),0,window?Vector3.one:new Vector3(2.8f/3,1,1));
+                if(window){ClosedWindowCollision(module.transform);ApplyGlass(module.transform,p.glassMaterial);}
+            }
+        }
         static void ApplyGlass(Transform window,Material material)
         {
             foreach(var r in window.GetComponentsInChildren<MeshRenderer>(true)){
@@ -179,7 +196,7 @@ namespace ZombieSurvival.ModularBuildings.Editor
             go.transform.localPosition=(a+b)/2;go.transform.localRotation=Quaternion.FromToRotation(Vector3.up,b-a);
             go.transform.localScale=new Vector3(.06f,(b-a).magnitude,.06f);
         }
-        public static GeneratedBuilding Build(BuildingSeriesProfile p,int year,int floors,int entrances,string id,Scene scene,bool unique=true)
+        public static GeneratedBuilding Build(BuildingSeriesProfile p,int year,int floors,int entrances,string id,Scene scene,bool unique=true,Material exteriorMaterial=null,bool includeEntranceDoors=false,Material baseTrimMaterial=null)
         {
             Preflight(p,year,floors,entrances);
             if(string.IsNullOrWhiteSpace(id))throw new InvalidOperationException("Нужен постоянный ID здания.");
@@ -190,7 +207,7 @@ namespace ZombieSurvival.ModularBuildings.Editor
             try {
                 var b=root.AddComponent<GeneratedBuilding>();b.buildingId=id;b.profile=p;b.year=year;b.floors=floors;b.entrances=entrances;
                 float width=p.section.sectionWidth,half=width/2;int bays=Mathf.RoundToInt(width/3),middle=bays/2;
-                b.revision=width==15?"demo-v5-wide":"demo-v4";
+                b.revision=width==15?"demo-v5-wide":"demo-v4";b.endWindowRuleVersion=1;
                 for(int e=0;e<entrances;e++){
                     var section=Group("Entrance_"+(e+1),root.transform,new Vector3(e*width,0,0));
                     for(int f=0;f<floors;f++){
@@ -204,8 +221,8 @@ namespace ZombieSurvival.ModularBuildings.Editor
                             var rear=Part(p.windowWall,level,"Rear_"+bay,new Vector3(x,0,10.5f));ClosedWindowCollision(rear.transform);ApplyGlass(rear.transform,p.glassMaterial);
                         }
                         EntranceLining(p,level,f==0);
-                        if(e==0)Part(p.solidWall,level,"LeftEnd",new Vector3(-half,0,4.5f),90,new Vector3(11.6f/3,1,1));
-                        if(e==entrances-1)Part(p.solidWall,level,"RightEnd",new Vector3(half,0,4.5f),90,new Vector3(11.6f/3,1,1));
+                        if(e==0)EndWall(p,level,"LeftEnd",-half,-90);
+                        if(e==entrances-1)EndWall(p,level,"RightEnd",half,90);
                         // Section boundaries have neither a party wall nor a floor gap. Only stair enclosures remain.
                         float left=e==0?-half+.2f:-half,right=e==entrances-1?half-.2f:half;
                         Slab(p,level,"MainLandingAndOpenFloor",(left+right)/2,1.6f,right-left,5.8f,0);
@@ -242,6 +259,9 @@ namespace ZombieSurvival.ModularBuildings.Editor
                     var overlaps=CoplanarAudit.Scan(root);
                     if(overlaps.overlapPairs==0&&overlaps.unreadable.Count==0)break;
                 }
+                if(exteriorMaterial||includeEntranceDoors)BuildingExteriorMaterials.Apply(b,exteriorMaterial?exteriorMaterial:p.facadeMaterial,includeEntranceDoors,false);
+                BuildingBaseTrim.Add(b,baseTrimMaterial);
+                BuildingEntranceStairs.Refit(b,null,false,false);
                 Physics.SyncTransforms();return b;
             }catch{Object.DestroyImmediate(root);throw;}
         }

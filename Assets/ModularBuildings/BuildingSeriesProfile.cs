@@ -17,6 +17,23 @@ namespace ZombieSurvival.ModularBuildings
         public Mesh chimneyCurb, ductCurb;
         public GameObject interiorWindowLining;
         public Material facadeMaterial;
+        [Tooltip("Отдельный материал нижней полосы. Пусто — красно-коричневый WeatheredPlinth.")]
+        public Material baseTrimMaterial;
+        [Header("Входные лестницы")]
+        public Material entranceStairMaterial,entranceRailMaterial;
+        [Tooltip("Одинаковый запас лестницы вниз от порога. Лишнее остаётся под Terrain; форма от рельефа не меняется.")]
+        [Range(1f,40f)] public float entranceStairHeight=6f;
+        [Min(1.2f)] public float entranceStairWidth=1.6f;
+        [Range(.1f,.19f)] public float entranceMaxRiser=.17f;
+        [Min(.28f)] public float entranceTreadDepth=.30f;
+        [Min(1.2f)] public float entranceLandingDepth=1.5f;
+        [HideInInspector] public float entranceMaxRun=60;
+        [HideInInspector]
+        public bool autoFitEntranceStairs=false;
+        [Range(.02f,.3f),Tooltip("Зазор от верха цоколя до нижнего края окон первого этажа, м.")]
+        public float baseTrimWindowClearance=.1f;
+        [Range(.005f,.05f),Tooltip("Выступ цоколя наружу от стены, м.")]
+        public float baseTrimProjection=.02f;
         public Shader approvedWorldFacadeShader;
         public bool requireWorldSpaceFacade=true;
     }

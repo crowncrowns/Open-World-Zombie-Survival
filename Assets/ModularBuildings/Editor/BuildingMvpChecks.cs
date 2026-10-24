@@ -61,7 +61,7 @@ namespace ZombieSurvival.ModularBuildings.Editor
                     if(Physics.RaycastAll(new Vector3(e*profile.section.sectionWidth-.9f,f*3-.05f,5.85f),Vector3.up,.1f).Any(h=>h.collider.transform.IsChildOf(b.transform)))errors.Add("Floor covers stair shaft");holes++;
                 }
                 errors.AddRange(BuildingGenerator.Validate(b,true));
-                report.AppendLine("Counts: 896 ramp capsules, "+capsuleCount+" turn/entrance capsules, 60 door approaches, 60 closed apartment doors, 196 closed windows, "+holes+" shaft openings, 60 open section-boundary probes");
+                report.AppendLine("Counts: 896 ramp capsules, "+capsuleCount+" turn/entrance capsules, 60 door approaches, 60 closed apartment doors, "+b.GetComponentsInChildren<Transform>(true).Count(t=>t.name=="ClosedWindowCollision")+" closed windows, "+holes+" shaft openings, 60 open section-boundary probes");
                 if(errors.Count>0)throw new Exception(string.Join("\n",errors.Take(25)));
                 var second=BuildingGenerator.Build(profile,1980,3,2,"regeneration-proof",scene);second.transform.position=Vector3.right*100;
                 var secondErrors=BuildingGenerator.Validate(second,true);

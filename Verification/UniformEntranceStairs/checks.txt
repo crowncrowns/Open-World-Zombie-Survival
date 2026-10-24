@@ -1,0 +1,69 @@
+PASS Identical mesh independent of Terrain and house height 0
+PASS Fixed 6 m / 36 steps, no adaptive fit 0
+PASS Full fixed descent and safe riser
+PASS Structural stair validation 
+PASS No duplicate stair/rail faces 0: renderers=2 triangles=1480 overlaps=0 unreadable=0
+
+
+
+PASS Native CharacterController climbs exposed portion; elevation=0 frames=60 end=(70.00, 0.02, 98.65) goal=(70.00, 0.01, 98.70)
+PASS Identical mesh independent of Terrain and house height 0,4
+PASS Fixed 6 m / 36 steps, no adaptive fit 0,4
+PASS Full fixed descent and safe riser
+PASS Structural stair validation 
+PASS No duplicate stair/rail faces 0,4: renderers=2 triangles=1480 overlaps=0 unreadable=0
+
+
+
+PASS Native CharacterController climbs exposed portion; elevation=0,4 frames=73 end=(70.00, 0.43, 98.64) goal=(70.00, 0.41, 98.70)
+PASS Identical mesh independent of Terrain and house height 2
+PASS Fixed 6 m / 36 steps, no adaptive fit 2
+PASS Full fixed descent and safe riser
+PASS Structural stair validation 
+PASS No duplicate stair/rail faces 2: renderers=2 triangles=1480 overlaps=0 unreadable=0
+
+
+
+PASS Native CharacterController climbs exposed portion; elevation=2 frames=193 end=(70.00, 2.03, 98.65) goal=(70.00, 2.01, 98.70)
+PASS Moving house does not alter fixed mesh even if legacy flag is enabled
+PASS Sloping Terrain leaves the same full staircase
+PASS Prefab retains fixed staircase
+PASS Identical mesh independent of Terrain and house height 5,5
+PASS Fixed 6 m / 36 steps, no adaptive fit 5,5
+PASS Full fixed descent and safe riser
+PASS Structural stair validation 
+PASS No duplicate stair/rail faces 5,5: renderers=2 triangles=1480 overlaps=0 unreadable=0
+
+
+
+PASS Native CharacterController climbs exposed portion; elevation=5,5 frames=399 end=(70.00, 5.53, 98.66) goal=(70.00, 5.51, 98.70)
+PASS Identical mesh independent of Terrain and house height 8
+PASS Fixed 6 m / 36 steps, no adaptive fit 8
+PASS Full fixed descent and safe riser
+PASS Structural stair validation 
+PASS No duplicate stair/rail faces 8: renderers=2 triangles=1480 overlaps=0 unreadable=0
+
+
+
+PASS V4 without Terrain gets complete same-height stairs
+PASS Five existing houses loaded
+PASS All fifteen existing entrances replaced without changing other scene objects
+PASS Building_test-house-004 identical fixed stairs
+PASS Existing stairs structurally valid
+PASS Building_test-house-004 (1) identical fixed stairs
+PASS Existing stairs structurally valid
+PASS Building_test-house-004 (2) identical fixed stairs
+PASS Existing stairs structurally valid
+PASS Building_test-house-004 (3) identical fixed stairs
+PASS Existing stairs structurally valid
+PASS Building_test-house-004 (4) identical fixed stairs
+PASS Existing stairs structurally valid
+PASS Undo restores adaptive meshes and metadata
+PASS Redo restores uniform stairs
+PASS Save updated scene
+PASS Roundtrip retains all fixed stairs
+COMPLETE
+
+PASS Main scene: all 15 staircase meshes identical after entrance X offset
+PASS Main scene: other objects preserved, saved dirty=false
+PASS All 575 existing material files unchanged
