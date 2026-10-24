@@ -20,7 +20,7 @@ public static class RoofKitBuilder
     [Serializable] public class Check {public string name;public int[] triangles;public Vector3 bounds,min,max;public int colliders,snaps;}
     [Serializable] public class Report {public string unity,urp;public bool passed;public int textures4K;public List<Check> prefabs=new();public List<string> checks=new();}
     static Catalog catalog;
-    static readonly string[] Names={"M_Roof_Metal_Old","M_Roof_Metal_Rusted","M_Roof_Metal_Damaged","M_Gutter_Galvanized","M_Gutter_Painted","M_Gutter_HeavyRust","M_Fence_PaintedWhite","M_Fence_Rust","M_Fence_PeelingPaint"};
+    static readonly string[] Names={"M_Roof_Metal_Old","M_Roof_Metal_Rusted","M_Roof_Metal_Damaged","M_Gutter_Galvanized","M_Gutter_Painted","M_Gutter_HeavyRust","M_Fence_PaintedWhite","M_Fence_Rust","M_Fence_PeelingPaint","M_RoofProps_Brick","M_RoofProps_Organic"};
     static Dictionary<string,Material> mats=new();
     static void Require(bool good,string reason){if(!good)throw new Exception(reason);}
     static Vector3 V(float[] a)=>new(a[0],a[1],a[2]);
@@ -53,12 +53,12 @@ public static class RoofKitBuilder
     static Texture2D Tex(string folder,string name)=>AssetDatabase.LoadAssetAtPath<Texture2D>(R+"/Textures/"+folder+"/"+name+".png");
     static void MakeMaterial(int i)
     {
-        string folder=new[]{"Roof","Gutters","Fences"}[i/3];int state=new[]{0,2,1,0,1,2,0,2,1}[i];string stem=folder+"_"+state;
+        string folder=i<9?new[]{"Roof","Gutters","Fences"}[i/3]:"Props";int state=i<9?new[]{0,2,1,0,1,2,0,2,1}[i]:i-9;string stem=folder+"_"+state;
         string p=R+"/Materials/"+Names[i]+".mat";var m=AssetDatabase.LoadAssetAtPath<Material>(p);
         if(!m){m=new Material(Shader.Find("Universal Render Pipeline/Lit"));AssetDatabase.CreateAsset(m,p);}m.shader=Shader.Find("Universal Render Pipeline/Lit");
         Require(m.shader,"Missing URP Lit");m.SetTexture("_BaseMap",Tex(folder,stem+"_BaseColor"));m.SetColor("_BaseColor",Color.white);
-        m.SetTexture("_BumpMap",Tex(folder,folder+"_Normal"));m.SetFloat("_BumpScale",.65f);m.EnableKeyword("_NORMALMAP");
-        m.SetTexture("_MetallicGlossMap",Tex(folder,stem+"_UnityMask"));m.SetFloat("_Smoothness",1);m.SetFloat("_Metallic",1);m.EnableKeyword("_METALLICSPECGLOSSMAP");
+        m.SetTexture("_BumpMap",Tex(folder,folder+"_Normal"));m.SetFloat("_BumpScale",i==0?.12f:.3f);m.EnableKeyword("_NORMALMAP");
+        m.SetTexture("_MetallicGlossMap",Tex(folder,(i<9?stem:folder)+"_UnityMask"));m.SetFloat("_Smoothness",1);m.SetFloat("_Metallic",1);m.EnableKeyword("_METALLICSPECGLOSSMAP");
         m.SetTexture("_OcclusionMap",Tex(folder,folder+"_AO"));m.SetFloat("_OcclusionStrength",.7f);m.EnableKeyword("_OCCLUSIONMAP");
         EditorUtility.SetDirty(m);mats[Names[i]]=m;
     }
@@ -103,6 +103,8 @@ public static class RoofKitBuilder
     static void Label(string text,Transform parent,Vector3 pos,float size=.15f)
     {
         var g=Node(text,parent);g.transform.localPosition=pos;g.transform.localRotation=Quaternion.Euler(90,0,0);var t=g.AddComponent<TextMesh>();t.text=text;t.characterSize=size;t.fontSize=48;t.color=new Color(.16f,.20f,.21f);t.anchor=TextAnchor.MiddleCenter;
+        var renderer=g.GetComponent<MeshRenderer>();var mat=AssetDatabase.LoadAssetAtPath<Material>(R+"/Demo/Label.mat");
+        if(!mat){mat=new Material(renderer.sharedMaterial);mat.shader=Shader.Find("ZombieSurvival/RoofKit Label");AssetDatabase.CreateAsset(mat,R+"/Demo/Label.mat");}renderer.sharedMaterial=mat;
     }
     static Material SimpleMat(string name,Color color)
     {
@@ -132,7 +134,7 @@ public static class RoofKitBuilder
                 var go=Place(n,root.transform,new Vector3(x,0,z),Quaternion.identity);go.GetComponent<RoofKitModule>().variationSeed=x*31+z*17+sample;go.GetComponent<RoofKitModule>().ApplyVariation();
             }
             // Three roofs use the same modular footprint; individual sections remain replaceable.
-            var fence=RoofKitAssemblyWindow.Perimeter(8,6,root.transform);fence.transform.SetParent(root.transform,true);fence.transform.localPosition=new Vector3(0,.14f,0);
+            var fence=RoofKitAssemblyWindow.Perimeter(7,5,root.transform);fence.transform.SetParent(root.transform,true);fence.transform.localPosition=new Vector3(.5f,.14f,.5f);
             var sections=fence.GetComponentsInChildren<RoofKitModule>();
             for(int i=0;i<sections.Length;i++)if(sample>0)
             {
@@ -228,13 +230,17 @@ public static class RoofKitBuilder
             // A mismatched reducer end must be rejected before scene mutation.
             var pipe=Place("Downpipe_Straight_1m",root.transform,Vector3.zero,Quaternion.identity);var p=pipe.GetComponentsInChildren<RoofSnapPoint>().First();var fence=RoofKitAssemblyWindow.Find("RoofFence_Straight_1m").GetComponentsInChildren<RoofSnapPoint>().First();Require(!p.Compatible(fence),"Mismatched socket accepted");
             report.checks.Add("Wrong socket category rejected; pipe nominal outer diameter 100 mm, gutter width 150 mm");
+            var reducer=RoofKitAssemblyWindow.Find("Downpipe_Transition").GetComponentsInChildren<RoofSnapPoint>().Single(s=>s.name=="Out");Require(!p.Compatible(reducer),"125/100 mm reducer mismatch accepted");report.checks.Add("125 mm reducer output rejects 100 mm pipe");
+            var replace=Place("Roof_Straight_2m",root.transform,new Vector3(40,0,0),Quaternion.identity);Selection.activeGameObject=replace;
+            RoofKitAssemblyWindow.ReplaceSelected("Bent",1,123);Require(!replace&&root.GetComponentsInChildren<RoofKitModule>().Any(m=>m.name=="Roof_Bent"&&m.GetComponentsInChildren<RoofSnapPoint>().Length==4),"Roof damaged replacement contract failed");report.checks.Add("Damaged roof replacement preserves all four socket contracts");
+            var perimeter=RoofKitAssemblyWindow.Perimeter(2,2,null);perimeter.transform.SetParent(root.transform,true);var modules=perimeter.GetComponentsInChildren<RoofKitModule>();Require(modules.Length==16&&modules.Select(m=>m.transform.position).Distinct().Count()==16,"Perimeter overlaps start posts");report.checks.Add("Closed perimeter: 16 half-metre sections, 16 distinct starting posts");
         }
         finally{UnityEngine.Object.DestroyImmediate(root);}
     }
     public static void RenderViews()
     {
         Isolated();EditorSceneManager.OpenScene(R+"/Demo/RoofKit_DemoScene.unity");var cam=UnityEngine.Object.FindAnyObjectByType<Camera>();
-        var views=new[]{("Overview",new Vector3(23,24,-30),new Vector3(0,1,-4)),("Intact",new Vector3(-9,6,-12),new Vector3(-11,2.6f,-5)),("Damaged",new Vector3(2,6,-12),new Vector3(0,2.6f,-5)),("Abandoned",new Vector3(13,6,-12),new Vector3(11,2.6f,-5)),("Rear",new Vector3(24,15,6),new Vector3(0,2,-5)),("GutterDetail",new Vector3(-12.5f,3.0f,-9.0f),new Vector3(-13,2.4f,-7.8f)),("Gallery",new Vector3(30,42,35),new Vector3(0,0,35))};
+        var views=new[]{("Overview",new Vector3(23,24,-30),new Vector3(0,1,-4)),("Intact",new Vector3(-9,6,-12),new Vector3(-11,2.6f,-5)),("Damaged",new Vector3(2,6,-12),new Vector3(0,2.6f,-5)),("Abandoned",new Vector3(13,6,-12),new Vector3(11,2.6f,-5)),("Rear",new Vector3(24,15,6),new Vector3(0,2,-5)),("GutterDetail",new Vector3(-12.5f,3.0f,-9.0f),new Vector3(-13,2.4f,-7.8f)),("Gallery",new Vector3(0,46,14),new Vector3(0,0,32))};
         foreach(var view in views)
         {
             cam.transform.position=view.Item2;cam.transform.LookAt(view.Item3);cam.fieldOfView=view.Item1=="GutterDetail"?42:50;

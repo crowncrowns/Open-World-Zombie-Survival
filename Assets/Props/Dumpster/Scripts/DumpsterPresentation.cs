@@ -1,10 +1,20 @@
 using UnityEngine;
+using ZombieSurvival.Interaction;
 
 namespace ZombieSurvival.EnvironmentProps
 {
     [DisallowMultipleComponent]
-    public sealed class DumpsterPresentation : MonoBehaviour
+    // Ввод не дублируется: PlayerInteractor вызывает этот общий контракт на F,
+    // когда луч попадает в коллайдер мусорки.
+    public sealed class DumpsterPresentation : Interactable
     {
+        [Header("Взаимодействие")]
+        [SerializeField, Tooltip("Подсказка, когда крышка закрыта. Действие вызывается общей кнопкой взаимодействия F.")]
+        private string openPrompt = "Открыть";
+        [SerializeField, Tooltip("Подсказка, когда крышка открыта. Действие вызывается общей кнопкой взаимодействия F.")]
+        private string closePrompt = "Закрыть";
+
+        [Header("Оформление мусорного контейнера")]
         [SerializeField, Tooltip("Animator крышки. Параметр Open задаёт желаемое положение; действия игрока подключаются отдельно.")]
         private Animator lidAnimator;
         [SerializeField, Range(0f,1f), Tooltip("Количество грязи от 0 до 1. Меняется через маски, общие материалы не копируются.")]
@@ -26,6 +36,13 @@ namespace ZombieSurvival.EnvironmentProps
         static readonly int OpenId=Animator.StringToHash("Open");
         MaterialPropertyBlock block;
         public bool RequestedOpen { get; private set; }
+        public override string GetPrompt(PlayerInteractor actor) => RequestedOpen ? closePrompt : openPrompt;
+        protected override bool PerformInteraction(PlayerInteractor actor)
+        {
+            ToggleLid();
+            actor.ShowFeedback(RequestedOpen ? "Крышка открыта" : "Крышка закрыта");
+            return true;
+        }
         public void SetOpen(bool value) { RequestedOpen=value; if(lidAnimator) lidAnimator.SetBool(OpenId,value); }
         public void ToggleLid() => SetOpen(!RequestedOpen);
         public void SetVariation(int seed,float dirt,float fading,int announcements,int missingBags=0)

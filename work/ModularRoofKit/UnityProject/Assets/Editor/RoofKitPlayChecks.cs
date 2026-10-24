@@ -25,7 +25,7 @@ public static class RoofKitPlayChecks
     {
         if(!SessionState.GetBool(Key,false))return;
         if(state==PlayModeStateChange.EnteredPlayMode){frames=0;EditorApplication.update+=Tick;}
-        if(state==PlayModeStateChange.EnteredEditMode){SessionState.SetBool(Key,false);EditorApplication.Exit(result!=null&&result.passed?0:2);}
+        if(state==PlayModeStateChange.EnteredEditMode){SessionState.SetBool(Key,false);EditorApplication.Exit(File.Exists(Proof)&&JsonUtility.FromJson<Result>(File.ReadAllText(Proof)).passed?0:2);}
     }
     static void Check(bool passed,string name){if(!passed)throw new Exception(name);result.checks.Add(name);}
     static GameObject Spawn(string name,Vector3 pos)
@@ -35,7 +35,7 @@ public static class RoofKitPlayChecks
     static void Tick()
     {
         if(!EditorApplication.isPlaying)return;
-        if(++frames<15)return;EditorApplication.update-=Tick;result=new Result{actualPlayFrames=frames};
+        if(++frames<15||Time.frameCount<10)return;EditorApplication.update-=Tick;result=new Result{actualPlayFrames=Time.frameCount};
         try
         {
             var pipe=Spawn("Downpipe_Straight_1m",Vector3.zero);var gutter=Spawn("Gutter_Straight_1m",new Vector3(4,0,0));

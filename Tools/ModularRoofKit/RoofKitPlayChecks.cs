@@ -35,7 +35,7 @@ public static class RoofKitPlayChecks
     static void Tick()
     {
         if(!EditorApplication.isPlaying)return;
-        if(++frames<15)return;EditorApplication.update-=Tick;result=new Result{actualPlayFrames=frames};
+        if(++frames<15||Time.frameCount<10)return;EditorApplication.update-=Tick;result=new Result{actualPlayFrames=Time.frameCount};
         try
         {
             var pipe=Spawn("Downpipe_Straight_1m",Vector3.zero);var gutter=Spawn("Gutter_Straight_1m",new Vector3(4,0,0));

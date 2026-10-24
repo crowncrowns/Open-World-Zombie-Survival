@@ -1,0 +1,28 @@
+{
+    "unity": "6000.6.3f1",
+    "pipeline": "URP 17.6.0 runtime",
+    "savedHash": "",
+    "passed": true,
+    "plants": 0,
+    "blades": 0,
+    "chunks": 0,
+    "rejected": 0,
+    "draws": 0,
+    "meshBytes": 0,
+    "generationMs": 0.0,
+    "checks": [
+        "PASS zero wind ignores phase changes in rendered pixels",
+        "PASS Play camera renders grass",
+        "PASS Play rebuilds runtime LOD chunks",
+        "PASS GPU wind changes actual rendered pixels (54848)",
+        "PASS frustum culling rejects nearby chunks behind the camera",
+        "PASS distance culling rejects far chunks",
+        "PASS quality profile Low renders nearby grass",
+        "PASS quality profile Medium renders nearby grass",
+        "PASS quality profile High renders nearby grass",
+        "PASS quality profile Ultra renders nearby grass",
+        "PASS disable disposes transient renderer",
+        "PASS enable rebuilds identical mesh storage without duplication",
+        "PASS no per-blade or per-chunk GameObjects"
+    ]
+}

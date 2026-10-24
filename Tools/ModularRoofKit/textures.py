@@ -27,22 +27,26 @@ for folder,color in [('Roof',(.67,.69,.66)),('Gutters',(.31,.30,.26)),('Fences',
         d.line((x,y,x+int(rng.integers(-20,20)),y+end),fill=int(rng.integers(45,185)),width=int(rng.integers(2,12)))
     leak=np.asarray(drips.filter(ImageFilter.GaussianBlur(5)),dtype=np.float32)/255
     abrasion=np.clip((mid-.56)*5,0,1)
-    rust=np.clip((macro-.61)*4+joint*.65+basin*.22+leak*.6,0,1)
+    rust=np.clip((macro-.73)*4+joint*(.1+.7*mid)+basin*.18+leak*.5,0,1)
     peel=np.clip((macro*.55+mid*.45-.52)*8,0,1)
-    h=(mid-.5)*.07+(fine-.5)*.025-rust*.09-abrasion*.018
+    h=(mid-.5)*.025+(fine-.5)*.010-rust*.035-abrasion*.009
     dx=np.roll(h,1,1)-np.roll(h,-1,1);dy=np.roll(h,1,0)-np.roll(h,-1,0)
     normal=np.stack((dx*4,-dy*4,np.ones_like(dx)),axis=-1);normal/=np.linalg.norm(normal,axis=2)[:,:,None]
     save(normal*.5+.5,p/(folder+'_Normal.png'));del normal,dx,dy
     save(.5+h,p/(folder+'_Height.png'))
     ao=np.clip(1-rust*.22-joint*.06-abrasion*.12,.5,1);save(ao,p/(folder+'_AO.png'))
     for state in range(3):
-        r=np.clip(rust*(.5+state*.8)+peel*(.05+state*.23),0,1)
+        seed=np.clip((mid-.54)*5,0,1)
+        if state==0:r=np.clip(seed*(joint*.22+basin*.10)+leak*.10+np.maximum(macro-.86,0)*.9,0,.35)
+        elif state==1:r=np.clip(seed*(joint*.55+basin*.22)+np.maximum(macro-.74,0)*1.5+leak*.28,0,.65)
+        else:r=np.clip(seed*(joint*.95+basin*.6)+np.clip((macro-.63)*4,0,.75)+leak*.5,0,1)
         base=np.empty((N,N,3),np.float32)
         for c in range(3):
             base[:,:,c]=color[c]*(.88+macro*.19+fine*.035)*(1-r)+[.24,.105,.035][c]*(.65+mid*.6)*r
         save(base,p/(folder+f'_{state}_BaseColor.png'));del base
-        rough=np.clip(.52+state*.08+r*.24+(fine-.5)*.10+leak*.05,.23,.97)
-        metallic=np.clip((.62 if folder=='Roof' else .2)*(1-r)+peel*.36*(1-r),0,1)
+        rough=np.clip(.62+state*.06+r*.24+(fine-.5)*.06+leak*.05,.32,.97)
+        coated=.12 if folder=='Roof' else (.82 if state==0 else .04) if folder=='Gutters' else .04
+        metallic=np.clip(coated*(1-r)+peel*.24*(1-r),0,1)
         save(rough,p/(folder+f'_{state}_Roughness.png'));save(metallic,p/(folder+f'_{state}_Metallic.png'))
         mask=np.stack((metallic,ao,np.zeros_like(ao),1-rough),axis=-1)
         save(mask,p/(folder+f'_{state}_UnityMask.png'));del mask,r,rough,metallic

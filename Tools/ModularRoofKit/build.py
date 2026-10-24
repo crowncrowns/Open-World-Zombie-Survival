@@ -284,7 +284,7 @@ def fitting(kind):
         if kind in ['Gutter_Connector','Gutter_Transition','Gutter_Bracket']:
             if kind=='Gutter_Bracket':
                 m.sweep([(x,0,0) for x in [-.014,.014]],.078,n,5,wall=.003,start=-pi/2,end=pi/2,cap=False)
-                parts.append(m.obj(kind,shell=.003));m=Mesh();m.box((0,.07,.082),(.028,.14,.006),5);m.box((0,.13,.14),(.028,.006,.12),4);bolt(m,(0,.134,.17),lod,5)
+                parts.append(m.obj(kind,shell=.003));m=Mesh();m.box((0,.012,.082),(.028,.045,.006),5);m.box((0,.033,.14),(.028,.003,.12),4);bolt(m,(0,.034,.17),lod,5)
             else:
                 m.sweep([(-.045,0,0),(.045,0,0)],.077,n,5,wall=.0012,start=-pi/2,end=pi/2,cap=False);return m.obj(kind,shell=.0012)
         elif kind in ['Downpipe_Connector','Downpipe_Transition']:
