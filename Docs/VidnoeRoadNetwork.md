@@ -14,3 +14,6 @@
 
 Резервная копия до переноса: S:\Games\Unity Projects\Open-World-Zombie-Survivalgit\work\TerrainRoadNetworkTransfer\20261024-022043
 В ней исходные файлы инструмента, scene/.meta, LiveBefore.unity, TerrainData, AGENTS.md, diff и roots-before/after.json. Восстановление выполняется отдельным явным действием, не автоматически.
+
+
+Обновление24.10.2026: режим прилегания убирает прежнее зависание над Terrain; текущий проверенный зазор0,0053–0,0472м вместо подъёма до0,763м. См. Docs/RoadTerrainFit.md. Старые результаты/ограничения проектного профиля ниже — история до включения conformToTerrain.
