@@ -2,6 +2,7 @@ using UnityEngine;
 
 namespace ZombieSurvival.EnvironmentProps
 {
+    // Both prop prefab locations share this single component implementation.
     /// <summary>Presentation only: fuel, heat, damage and world saving belong to game systems.</summary>
     [DisallowMultipleComponent]
     public sealed class StoveController : MonoBehaviour

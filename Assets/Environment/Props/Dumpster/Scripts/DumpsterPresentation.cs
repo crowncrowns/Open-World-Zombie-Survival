@@ -2,6 +2,7 @@ using UnityEngine;
 
 namespace ZombieSurvival.EnvironmentProps
 {
+    // Both prop prefab locations share this single component implementation.
     [DisallowMultipleComponent]
     public sealed class DumpsterPresentation : MonoBehaviour
     {

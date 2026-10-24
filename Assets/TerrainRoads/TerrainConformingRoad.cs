@@ -8,6 +8,7 @@ namespace TerrainRoads {
 [ExecuteAlways, DisallowMultipleComponent, RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public sealed class TerrainConformingRoad : MonoBehaviour {
  [Tooltip("Общая сеть владеет геометрией перекрёстков и бордюров; Rebuild перестраивает всю сеть.")] public TerrainRoadNetwork network;
+ [Tooltip("Материал полотна этого участка. Пусто — общий материал сети. Сохраняется после Rebuild.")] public Material surfaceMaterial;
  public SplineContainer route;
  public Terrain terrain;
  [Min(0)] public int splineIndex;
