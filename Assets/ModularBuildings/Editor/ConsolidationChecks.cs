@@ -20,13 +20,13 @@ namespace ZombieSurvival.ModularBuildings.Editor
             {
                 lines.Add("Unity "+Application.unityVersion);
                 // Physics.Raycast uses the default physics scene; preview scenes are not suitable here.
-                var buildingScene=EditorSceneManager.OpenScene("Assets/ModularBuildings/Tests/DemoResidentialV4_Review.unity",OpenSceneMode.Additive);
+                var buildingScene=EditorSceneManager.OpenScene("Assets/ModularBuildings/Tests/DemoResidentialV5_Review.unity",OpenSceneMode.Additive);
                 try
                 {
                     var b=buildingScene.GetRootGameObjects().SelectMany(g=>g.GetComponentsInChildren<GeneratedBuilding>(true)).Single();
                     var errors=BuildingGenerator.Validate(b,true);
                     if(errors.Count>0)throw new Exception(string.Join("\n",errors));
-                    lines.Add("PASS saved V4 building: full validation including stairs, doors, corners, lining and coplanar audit");
+                    lines.Add("PASS saved V5 building: full validation including widened sections, facade, stairs, doors, corners, lining and coplanar audit");
                 }
                 finally {EditorSceneManager.CloseScene(buildingScene,true);}
                 var roadScene=EditorSceneManager.OpenScene("Assets/Scenes/SampleScene_TerrainRoads.unity",OpenSceneMode.Additive);

@@ -21,14 +21,14 @@ namespace ZombieSurvival.ModularBuildings.Editor
         }
         internal static Vector2 Project(Vector3 p,int axis)=>axis==0?new Vector2(p.y,p.z):axis==1?new Vector2(p.x,p.z):new Vector2(p.x,p.y);
         static string Path(Transform t,Transform root){var s=t.name;while(t.parent&&t.parent!=root){t=t.parent;s=t.name+"/"+s;}return s;}
-        public static Report Scan(GameObject root)
+        public static Report Scan(GameObject root,bool stableLocalCoordinates=false)
         {
             var report=new Report();var planes=new Dictionary<string,List<Tri>>();
             foreach(var filter in root.GetComponentsInChildren<MeshFilter>()){
                 var r=filter.GetComponent<MeshRenderer>();if(!r||!r.enabled||!filter.sharedMesh)continue;report.renderers++;
                 Vector3[] vertices;int[] indices;
                 try{vertices=filter.sharedMesh.vertices;indices=filter.sharedMesh.triangles;}catch(Exception ex){report.unreadable.Add(Path(filter.transform,root.transform)+": "+ex.Message);continue;}
-                var matrix=root.transform.worldToLocalMatrix*filter.transform.localToWorldMatrix;
+                var matrix=stableLocalCoordinates?RelativeMatrix(filter.transform,root.transform):root.transform.worldToLocalMatrix*filter.transform.localToWorldMatrix;
                 for(int i=0;i<indices.Length;i+=3){
                     var a=matrix.MultiplyPoint3x4(vertices[indices[i]]);var b=matrix.MultiplyPoint3x4(vertices[indices[i+1]]);var c=matrix.MultiplyPoint3x4(vertices[indices[i+2]]);
                     var cross=Vector3.Cross(b-a,c-a);if(cross.sqrMagnitude<1e-12f)continue;var n=cross.normalized;float d=Vector3.Dot(n,a);
@@ -54,6 +54,13 @@ namespace ZombieSurvival.ModularBuildings.Editor
                 }
             }
             return report;
+        }
+        // Avoid subtracting kilometre-scale world coordinates when inspecting a local building.
+        internal static Matrix4x4 RelativeMatrix(Transform child,Transform root)
+        {
+            var matrix=Matrix4x4.identity;
+            for(var t=child;t&&t!=root;t=t.parent)matrix=Matrix4x4.TRS(t.localPosition,t.localRotation,t.localScale)*matrix;
+            return matrix;
         }
         static float Cross(Vector2 a,Vector2 b)=>a.x*b.y-a.y*b.x;
         internal static float IntersectionArea(Vector2 a,Vector2 b,Vector2 c,Vector2 x,Vector2 y,Vector2 z)

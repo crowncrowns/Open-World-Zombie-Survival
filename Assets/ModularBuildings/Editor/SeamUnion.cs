@@ -36,14 +36,14 @@ namespace ZombieSurvival.ModularBuildings.Editor
             if(path.Contains("floor")||path.Contains("landing"))return 30;
             return 15;
         }
-        public static int Resolve(GameObject root)
+        public static int Resolve(GameObject root,ISet<MeshFilter> editable=null)
         {
             Directory.CreateDirectory(Folder);AssetDatabase.Refresh();
             var planes=new Dictionary<string,List<Cover>>();int changed=0;
-            var filters=root.GetComponentsInChildren<MeshFilter>().Where(f=>f.sharedMesh&&f.GetComponent<MeshRenderer>()&&f.GetComponent<MeshRenderer>().enabled).OrderBy(Priority).ToArray();
+            var filters=root.GetComponentsInChildren<MeshFilter>().Where(f=>f.sharedMesh&&f.GetComponent<MeshRenderer>()&&f.GetComponent<MeshRenderer>().enabled).OrderBy(f=>editable!=null&&editable.Contains(f)?1:0).ThenBy(Priority).ToArray();
             foreach(var filter in filters){
                 var source=filter.sharedMesh;var positions=source.vertices;var normals=source.normals;var uv=source.uv;var uv2=source.uv2;var tangents=source.tangents;var colors=source.colors;
-                var matrix=root.transform.worldToLocalMatrix*filter.transform.localToWorldMatrix;var inverse=matrix.inverse;
+                var matrix=editable!=null?CoplanarAudit.RelativeMatrix(filter.transform,root.transform):root.transform.worldToLocalMatrix*filter.transform.localToWorldMatrix;var inverse=matrix.inverse;
                 var output=new List<Vertex>();var submeshes=new List<int>[source.subMeshCount];bool modified=false;
                 for(int sub=0;sub<source.subMeshCount;sub++){
                     submeshes[sub]=new List<int>();var indices=source.GetTriangles(sub);
@@ -76,7 +76,7 @@ namespace ZombieSurvival.ModularBuildings.Editor
                         }covers.AddRange(accepted);
                     }
                 }
-                if(!modified)continue;changed++;
+                if(!modified||(editable!=null&&!editable.Contains(filter)))continue;changed++;
                 if(output.Count==0){filter.GetComponent<MeshRenderer>().enabled=false;continue;}
                 var mesh=new Mesh{name="Joined_"+source.name,indexFormat=output.Count>65535?UnityEngine.Rendering.IndexFormat.UInt32:UnityEngine.Rendering.IndexFormat.UInt16};
                 mesh.SetVertices(output.Select(v=>inverse.MultiplyPoint3x4(v.p)).ToList());mesh.SetNormals(output.Select(v=>v.n.normalized).ToList());mesh.SetUVs(0,output.Select(v=>v.uv).ToList());
