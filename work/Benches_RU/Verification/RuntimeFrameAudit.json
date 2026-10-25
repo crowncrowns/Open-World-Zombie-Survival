@@ -1,0 +1,10 @@
+{
+    "result": "FAIL",
+    "frames": 24,
+    "benches": 15,
+    "pipeline": "PC_RPAsset",
+    "gpuResidentDrawer": "InstancedDrawing",
+    "errors": [
+        "ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.\r\nParameter name: index\nSystem.Collections.Generic.List`1[T].get_Item (System.Int32 index) (at <c5ae8a4eeb824526b5df2932bc2395e0>:0)\nUnityEditor.Search.SearchDatabase+<EnumerateAll>d__78.MoveNext () (at <8aaef6a7a30a44989b26ade8169ec665>:0)\nSystem.Linq.Enumerable.TryGetFirst[TSource] (System.Collections.Generic.IEnumerable`1[T] source, System.Boolean& found) (at <f1b392d8fe224ca2b1f9fab1000b77eb>:0)\nSystem.Linq.Enumerable.First[TSource] (System.Collections.Generic.IEnumerable`1[T] source) (at <f1b392d8fe224ca2b1f9fab1000b77eb>:0)\nUnityEditor.Search.SearchDatabase.GetDefaultSearchDatabase () (at <8aaef6a7a30a44989b26ade8169ec665>:0)\nUnityEditor.Search.SearchInit.IndexationOnStartup () (at <8aaef6a7a30a44989b26ade8169ec665>:0)\nUnityEditor.EditorApplication.Internal_CallDelayFunctions () (at <86ff5cbd32484068aca9e84e94736ae0>:0)\nUnityEngine.StackTraceUtility:ExtractStringFromExceptionInternal(Object, String&, String&)\n"
+    ]
+}

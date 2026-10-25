@@ -6,11 +6,15 @@
 
 Z кистью, V трафаретом, O с датой 2022, Z в квадрате, V в кольце, «СВО 2022», «КОЛОННА →», «ВОЕННАЯ ПОЛИЦИЯ», «БЛОКПОСТ 2022» и многослойная Z/V с датой. Z/V/O намеренно латинские обозначения; русские надписи сверены визуально. Это игровые художественные изображения по запросу, а не проверенный справочник исторических схем маркировки.
 
+## Случайные следы попаданий
+
+Painter теперь создаёт вместе с каждым мазком от 1 до указанного максимума (0–16) отдельных следов попаданий. Три варианта альфа-текстуры изображают пулевое отверстие, сколы и радиальные трещины. Расположение внутри области граффити, вариант, масштаб и угол следов воспроизводятся по Seed и номеру мазка. Неподходящие точки и проёмы пропускаются проверкой стены. Следы используют собственные префабы/общие материалы, поддерживают Undo/Redo и групповое удаление. Подробности — `Documentation/README_RU.md`.
+
 ## Поставка и пути
 
-- Архив: `outputs/GraffitiPack_URP.unitypackage`, 164,772,060 байт; SHA-256 `2921ba717cd868779193c866ae31e03ef9579d5d37422f25753b7508b84fb4ac`.
+- Архив: `outputs/GraffitiPack_URP.unitypackage`, 164.839.228 байт; SHA-256 `ccd9757d50d6f916244b6b15625ac1c28c6a10f12b42df01c1f67b0c08c15692`.
 - Предыдущий архив на 50 вариантов: `outputs/GraffitiPack_URP_50_Backup.unitypackage`.
-- Новые текстуры: `Assets/PostApocalypse/GraffitiPack/Textures/Military2022/G51.png…G60.png`.
+- Новые текстуры: `Assets/PostApocalypse/GraffitiPack/Textures/Military2022/G51.png…G60.png`; следы попаданий — `Textures/Impacts/` (3 варианта), материалы и префабы — `Materials/Impacts/`, `Prefabs/Impacts/`.
 - Префабы/материалы с номерами и читаемыми именами: `Prefabs/` и `Materials/` внутри пака; записи `Catalog/G51.asset…G60.asset`.
 - Галерея: `Documentation/PreviewCatalog.html`; инструкция: `Documentation/README_RU.md`.
 - Демонстрация: `Demo/GraffitiGallery.unity` — 60 стен 3 × 3 м и 60 экземпляров, камера охватывает шесть рядов.
@@ -32,9 +36,11 @@ Z кистью, V трафаретом, O с датой 2022, Z в квадра�
 | Атласная команда | 60 альтернативных префабов, 15 страниц/общих материалов; ссылки/UV PASS |
 | Импорт обновлённого архива в отдельный чистый проект | 60/60 префабов, 60 экземпляров галереи |
 | Сохранность исходного набора | Побайтно, включая .meta/GUID |
-| Архив | 255 файловых ассетов; payload совпадают с checkout |
+| Архив | 264 файловых ассета; payload совпадают с checkout |
+| Сборка с новым Painter и пулевыми следами | Unity 6000.6.3f1 compile/export PASS; поведение Scene View для новых следов отдельно не прогонялось |
+| Следы попаданий | 3 прозрачные текстуры/префаба; Painter ставит 1–16 случайных меток на мазок |
 
-Результаты в `Verification/GraffitiPack`: `military_checks.json`, `sceneview_military_checks.json`, `military_preservation.json`, `unity_validation.json`, `texture_validation.json`, `atlas_checks.json`, `cold_import.json`, `package_integrity.json`. Протоколы в `work/GraffitiPack`: `build_military.log`, `verify_military.log`, `sceneview_military.log`, `cold_military.log` / `cold_military_verify.log`. Снимок текущих проверок включён в `Documentation/Validation.json`.
+Результаты в `Verification/GraffitiPack`: `military_checks.json`, `sceneview_military_checks.json`, `military_preservation.json`, `unity_validation.json`, `texture_validation.json`, `atlas_checks.json`, `cold_import.json`, `package_integrity.json` (обновлён после включения 3 вариантов пулевых следов). Протоколы в `work/GraffitiPack`: `build_military.log`, `verify_military.log`, `sceneview_military.log`, `cold_military.log` / `cold_military_verify.log`. Снимок текущих проверок включён в `Documentation/Validation.json`.
 
 Просмотрены лист `Catalog_6.jpg` с десятью новыми изображениями и кадры Unity. Сохранены отдельные `Render_51.png…Render_60.png` и `Gallery_60_Daylight.png`. Генерация выполнена отдельными встроенными imagegen-запросами для каждого PNG. Старая приёмка базовых 50 (74 технических PASS, Play, углы/нулевой свет, исправление стен с 11 новыми проверками) сохранена в `Report_Base50_RU.md` и соответствующих JSON/логах; повторный Play основной игры не проводился.
 

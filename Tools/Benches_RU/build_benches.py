@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+import os
 import random
 import sys
 from pathlib import Path
@@ -113,15 +114,15 @@ def make_material(name, texture_prefix=None, tint=(1, 1, 1), metal_scalar=0.0, r
 
 def build_materials():
     materials = {
-        "wood_green": make_material("M_WoodPaint_Green", "WoodPaint", (0.57, 0.64, 0.43), 0.02, 0.7),
-        "wood_blue": make_material("M_WoodPaint_Blue", "WoodPaint", (0.48, 0.58, 0.88), 0.02, 0.7),
-        "wood_brown": make_material("M_WoodPaint_Brown", "WoodPaint", (0.73, 0.57, 0.39), 0.02, 0.74),
+        "wood_green": make_material("M_WoodPaint_Green", "WoodGreen", (1,1,1), 0.0, 0.7),
+        "wood_blue": make_material("M_WoodPaint_Blue", "WoodBlue", (1,1,1), 0.0, 0.7),
+        "wood_brown": make_material("M_WoodPaint_Brown", "WoodBrown", (1,1,1), 0.0, 0.74),
         "wood_raw": make_material("M_WoodWeathered", "WoodRaw", (0.92, 0.91, 0.88), 0.0, 0.82),
         "wood_rot": make_material("M_WoodRotten", "WoodRaw", (0.53, 0.48, 0.37), 0.0, 0.92),
         "steel_green": make_material("M_SteelPaint_Green", "SteelPaint", (0.42, 0.56, 0.32), 0.28, 0.61),
         "steel_blue": make_material("M_SteelPaint_Blue", "SteelPaint", (0.45, 0.60, 0.92), 0.27, 0.61),
         "steel_gray": make_material("M_SteelPaint_Gray", "SteelPaint", (0.56, 0.58, 0.57), 0.30, 0.58),
-        "steel_bare": make_material("M_SteelBare", "SteelPaint", (0.75, 0.77, 0.76), 0.76, 0.43),
+        "steel_bare": make_material("M_SteelBare", "SteelBare", (1,1,1), 0.92, 0.43),
         "steel_rust": make_material("M_SteelRust", "SteelRust", (0.98, 0.95, 0.91), 0.28, 0.84),
         "cast": make_material("M_CastIron", "CastIron", (0.83, 0.84, 0.80), 0.74, 0.74),
         "concrete": make_material("M_Concrete_Porous", "Concrete", (0.98, 0.98, 0.95), 0.0, 0.91),
@@ -129,7 +130,7 @@ def build_materials():
         "dirt": make_material("M_Dirt_Dark", None, (0.115, 0.092, 0.065), 0.0, 0.96),
         "graffiti": make_material("M_Graffiti_FadedRed", None, (0.46, 0.12, 0.09), 0.0, 0.82),
         "paper": make_material("M_Sticker_OldPaper", None, (0.50, 0.43, 0.30), 0.0, 0.9),
-        "bolt": make_material("M_Bolt_Galvanized", "SteelPaint", (0.80, 0.82, 0.78), 0.82, 0.38),
+        "bolt": make_material("M_Bolt_Galvanized", "SteelBare", (1,1,1), 0.92, 0.38),
         "black": make_material("M_Crack_Shadow", None, (0.045, 0.032, 0.023), 0.0, 0.98),
     }
     return materials
@@ -209,14 +210,21 @@ def tube(name, points, radius, material, bevel_resolution=2, cyclic=False, resol
     curve.resolution_u = resolution_u
     curve.bevel_depth = radius
     curve.bevel_resolution = bevel_resolution
-    spline = curve.splines.new("POLY")
-    spline.points.add(len(points) - 1)
-    for index, point in enumerate(points):
-        spline.points[index].co = (*point, 1.0)
+    curve.use_fill_caps = True
+    smooth_path = any(word in name.lower() for word in ("curved", "arched", "rolled steel"))
+    spline = curve.splines.new("BEZIER" if smooth_path else "POLY")
+    if smooth_path:
+        spline.bezier_points.add(len(points)-1)
+        for point, coords in zip(spline.bezier_points,points):
+            point.co = coords; point.handle_left_type = "AUTO"; point.handle_right_type = "AUTO"
+    else:
+        spline.points.add(len(points) - 1)
+        for index, point in enumerate(points): spline.points[index].co = (*point, 1.0)
     spline.use_cyclic_u = cyclic
     obj = bpy.data.objects.new(name, curve)
     bpy.context.collection.objects.link(obj)
     assign_material(obj, material)
+    bpy.ops.object.select_all(action="DESELECT")
     bpy.context.view_layer.objects.active = obj
     obj.select_set(True)
     bpy.ops.object.convert(target="MESH")
@@ -240,67 +248,62 @@ def board(name, length, width, thick, loc, material, rng, rotation_x=0.0, wear=1
         # Keep one original end in place and expose the other as a snapped edge.
         end_sign = direction
         loc = (loc[0] + end_sign * (original_length - length) * 0.5, loc[1], loc[2])
-    # Dense, gently warped timber surfaces make broad highlights and edge wear real geometry.
-    if wear == 2:
-        nx, ny = (48, 4)
-    elif wear == 3 and "Backless" not in name:
-        nx, ny = (50, 5)
-    else:
-        nx, ny = (72, 6)
+    nx, ny = 64, 4
     wave_phase = rng.random() * math.tau
     verts = []
     for top in (True, False):
-        for ix in range(nx+1):
-            x = (ix/nx - 0.5) * length
-            for iy in range(ny+1):
-                y = (iy/ny - 0.5) * width
-                wave = (math.sin(x*5.4 + y*22.0 + wave_phase) * 0.40 +
-                        math.sin(x*1.7 - y*38.0 + wave_phase*0.7) * 0.34 +
-                        math.sin(x*13.0 + y*4.0 + wave_phase*1.3) * 0.26) * jitter
-                z = thick*0.5 + wave if top else -thick*0.5
-                verts.append((x,y,z))
-    layer_count=(nx+1)*(ny+1)
-    faces=[]
-    top_start=0
-    bottom_start=layer_count
+        for ix in range(nx + 1):
+            x = (ix / nx - 0.5) * length
+            for iy in range(ny + 1):
+                y = (iy / ny - 0.5) * width
+                wave = math.sin(x * 4.0 + wave_phase) * jitter * 0.45
+                crown = math.sin(iy / ny * math.pi) * jitter * 0.12
+                z = (thick * 0.5 if top else -thick * 0.5) + wave + crown
+                verts.append((x, y, z))
+    stride = ny + 1
+    count = (nx + 1) * stride
+    faces = []
     for ix in range(nx):
         for iy in range(ny):
-            a=top_start+ix*(ny+1)+iy
-            faces.append((a,a+ny+1,a+ny+2,a+1))
-            b=bottom_start+ix*(ny+1)+iy
-            faces.append((b,b+1,b+ny+2,b+ny+1))
-    # Sidewalls are a single quad per edge segment; the bevel modifier rounds only the exterior.
+            a = ix * stride + iy
+            b = a + count
+            faces.extend(((a, a + stride, a + stride + 1, a + 1),
+                          (b, b + 1, b + stride + 1, b + stride)))
     for ix in range(nx):
-        for iy in (0,ny):
-            t0=top_start+ix*(ny+1)+iy; t1=t0+ny+1
-            b0=bottom_start+ix*(ny+1)+iy; b1=b0+ny+1
-            faces.append((t0,b0,b1,t1))
+        for iy in (0, ny):
+            a = ix * stride + iy
+            b = a + stride
+            faces.append((a, a + count, b + count, b) if iy == 0 else (a, b, b + count, a + count))
     for iy in range(ny):
-        for ix in (0,nx):
-            t0=top_start+ix*(ny+1)+iy; t1=t0+1
-            b0=bottom_start+ix*(ny+1)+iy; b1=b0+1
-            faces.append((t0,t1,b1,b0))
-    mesh=bpy.data.meshes.new(name+"DenseTimberMesh")
-    mesh.from_pydata(verts,[],faces)
-    mesh.update()
-    obj=bpy.data.objects.new(name,mesh)
+        for ix in (0, nx):
+            a = ix * stride + iy
+            b = a + 1
+            faces.append((a, b, b + count, a + count) if ix == 0 else (a, a + count, b + count, b))
+    mesh = bpy.data.meshes.new(name + "TimberMeshV2")
+    mesh.from_pydata(verts, [], faces)
+    bm = bmesh.new(); bm.from_mesh(mesh)
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
+    bm.to_mesh(mesh); bm.free(); mesh.update()
+    obj = bpy.data.objects.new(name, mesh)
     bpy.context.collection.objects.link(obj)
-    obj.location=loc
-    obj.rotation_euler=(rotation_x,0,0)
-    assign_material(obj,material)
-    for poly in obj.data.polygons:
-        poly.use_smooth = poly.index < nx*ny*2
-    bevel=obj.modifiers.new("Rounded timber arris", "BEVEL")
-    bevel.width=min(0.006,thick*0.17)
-    bevel.segments=2
-    bevel.limit_method="ANGLE"
-    apply_mod(obj,bevel)
-    for vertex in obj.data.vertices:
-        if abs(vertex.co.z) > thick*0.43:
-            vertex.co.x += rng.uniform(-jitter*0.08,jitter*0.08)
+    obj.location = loc
+    obj.rotation_euler = (rotation_x, 0, 0)
+    obj["TimberUV"] = True
+    assign_material(obj, material)
+    bevel = obj.modifiers.new("Rounded timber edges V2", "BEVEL")
+    bevel.width = min(0.0025, thick * 0.08)
+    bevel.segments = 3
+    bevel.limit_method = "ANGLE"
+    bevel.use_clamp_overlap = True
+    apply_mod(obj, bevel)
+    for poly in obj.data.polygons: poly.use_smooth = True
+    obj.data.set_sharp_from_angle(angle=math.radians(50))
+    weighted = obj.modifiers.new("Area weighted timber normals", "WEIGHTED_NORMAL")
+    weighted.keep_sharp = True
+    apply_mod(obj, weighted)
     if broken:
         # Two tapered wood splinters protrude from the snapped edge.
-        sign = 1 if loc[0] > 0 else -1
+        sign = -1 if loc[0] > 0 else 1
         edge_x = loc[0] + sign * length * 0.5
         top_z = loc[2] + thick * 0.44
         for i in range(2):
@@ -345,46 +348,34 @@ def add_bolt(name, point, axis, mat, missing=False, large=False):
         line_weld(name + "Slot", tip - tangent * r * 0.53, tip + tangent * r * 0.53, mats["black"], 0.00055)
 
 
-def board_hardware(length, centers, z, y, wear, rng, material):
+def board_hardware(length, centers, z, y, wear, rng, material, x_bounds=None):
     for ci, cy in enumerate(centers):
         for x in (-length * 0.34, length * 0.34):
+            if x_bounds and not (x_bounds[0]+0.01 <= x <= x_bounds[1]-0.01): continue
             missing = wear == 2 and rng.random() < 0.08 or wear == 3 and rng.random() < 0.22
             add_bolt(f"SeatFastener_{ci}_{x:.2f}", (x, cy, z), (0, 0, 1), material, missing)
 
 
-def back_hardware(length, z, y, wear, rng, material):
+def back_hardware(length, z, y, wear, rng, material, x_bounds=None):
     for x in (-length * 0.34, length * 0.34):
+        if x_bounds and not (x_bounds[0]+0.01 <= x <= x_bounds[1]-0.01): continue
         missing = wear == 2 and rng.random() < 0.11 or wear == 3 and rng.random() < 0.32
         add_bolt(f"BackFastener_{x:.2f}_{z:.2f}", (x, y, z), (0, -1, 0), material, missing)
 
 
 def add_grime_and_moss(wear, rng, length, seat_z, mats, amount=1):
-    if wear < 2:
-        return
-    for i in range(amount * (2 if wear == 3 else 1)):
-        x = rng.uniform(-length * 0.38, length * 0.38)
-        y = rng.uniform(-0.18, 0.18)
-        z = seat_z + 0.028 + rng.uniform(0.0, 0.003)
-        # Small, irregular dried dirt pads sit on seams; they stay out of primary support surfaces.
-        bpy.ops.mesh.primitive_uv_sphere_add(segments=8, ring_count=4, radius=1.0, location=(x, y, z))
-        obj = bpy.context.object
-        obj.name = "Localized grime deposit"
-        obj.scale = (rng.uniform(0.025, 0.052), rng.uniform(0.009, 0.020), rng.uniform(0.0015, 0.0030))
-        bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
-        assign_material(obj, mats["dirt"])
-        for p in obj.data.polygons:
-            p.use_smooth = True
-    if wear == 3:
-        for i in range(4):
-            x = rng.choice([-1, 1]) * rng.uniform(length * 0.28, length * 0.40)
-            y = rng.choice([-1, 1]) * rng.uniform(0.08, 0.21)
-            z = rng.uniform(0.20, seat_z + 0.03)
-            h = rng.uniform(0.018, 0.050)
-            bpy.ops.mesh.primitive_cone_add(vertices=5, radius1=rng.uniform(0.007, 0.015), radius2=0.001,
-                                            depth=h, location=(x, y, z + h * 0.5))
-            obj = bpy.context.object
-            obj.name = "Moss tuft at joint"
-            assign_material(obj, mats["moss"])
+    if wear < 2: return
+    # Deposits stay in the two structural seat joints, below the exposed sitting surface.
+    for side in (-1,1):
+        for index in range(3 if wear == 2 else 7):
+            x=side*length*0.34+rng.uniform(-0.012,0.012)
+            y=rng.choice((-0.15,0.15))+rng.uniform(-0.006,0.006)
+            z=seat_z-0.023+rng.uniform(-0.004,0.004)
+            bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=1,radius=1,location=(x,y,z))
+            obj=bpy.context.object; obj.name="Organic deposit within support joint"
+            obj.scale=(rng.uniform(0.006,0.012),rng.uniform(0.004,0.008),rng.uniform(0.002,0.005))
+            bpy.ops.object.transform_apply(location=False,rotation=False,scale=True)
+            assign_material(obj,mats["moss"] if wear==3 and index%2 else mats["dirt"])
 
 
 def add_text(name, text, loc, size, material, rotation=(math.pi / 2, 0, 0), font_path=r"C:\Windows\Fonts\arial.ttf"):
@@ -395,8 +386,10 @@ def add_text(name, text, loc, size, material, rotation=(math.pi / 2, 0, 0), font
         pass
     curve.body = text
     curve.size = size
-    curve.extrude = 0.0008
-    curve.bevel_depth = 0.0003
+    curve.resolution_u = 3
+    curve.extrude = 0.00015
+    curve.bevel_depth = 0.00005
+    curve.bevel_resolution = 0
     obj = bpy.data.objects.new(name, curve)
     bpy.context.collection.objects.link(obj)
     obj.location = loc
@@ -424,11 +417,11 @@ def add_wooden_slatted_body(kind, wear, rng, mats, length, seat_count, back_coun
         absent = wear == 3 and broken_index == i
         if absent:
             continue
-        mat = mats[painted] if wear == 1 else (mats["wood_raw"] if wear == 2 else mats["wood_rot"] if rng.random() < 0.42 else mats["wood_raw"])
+        mat = mats[painted] if wear == 1 else (mats[painted] if wear == 2 and rng.random()<0.38 else mats["wood_raw"] if wear == 2 else mats["wood_rot"] if rng.random()<0.42 else mats["wood_raw"])
         broken = wear == 3 and i == (broken_index + 1) % seat_count and rng.random() < 0.78
-        board(f"Seat board {i+1}", length, seat_width, seat_thick,
+        timber = board(f"Seat board {i+1}", length, seat_width, seat_thick,
               (rng.uniform(-0.012, 0.012), cy, seat_z), mat, rng, wear=wear, broken=broken, crack_material=mats["black"])
-        board_hardware(length, (cy,), seat_z + seat_thick * 0.50, cy, wear, rng, mats["bolt"])
+        board_hardware(length, (cy,), seat_z + seat_thick * 0.50, cy, wear, rng, mats["bolt"], (timber.location.x-timber.dimensions.x*0.5,timber.location.x+timber.dimensions.x*0.5))
     if back_count > 0:
         z_base = 0.59
         back_h = 0.072 if back_count <= 3 else 0.065
@@ -437,36 +430,24 @@ def add_wooden_slatted_body(kind, wear, rng, mats, length, seat_count, back_coun
             absent = wear == 3 and j == (broken_index or 0) % back_count and rng.random() < 0.62
             if absent:
                 continue
-            mat = mats[painted] if wear == 1 else mats["wood_raw"] if wear == 2 or rng.random() < 0.62 else mats["wood_rot"]
+            mat = mats[painted] if wear == 1 else mats[painted] if wear == 2 and rng.random()<0.35 else mats["wood_raw"] if wear == 2 or rng.random()<0.62 else mats["wood_rot"]
             broken = wear == 3 and j == (broken_index or 0) % back_count and not absent
-            board(f"Back slat {j+1}", length, 0.032, back_h,
+            timber = board(f"Back slat {j+1}", length, 0.032, back_h,
                   (0, back_y, z), mat, rng, rotation_x=math.radians(-11), wear=wear, broken=broken, crack_material=mats["black"])
-            back_hardware(length, z, back_y - 0.020, wear, rng, mats["bolt"])
+            back_hardware(length, z, back_y - 0.020, wear, rng, mats["bolt"], (timber.location.x-timber.dimensions.x*0.5,timber.location.x+timber.dimensions.x*0.5))
     return seat_centers
 
 
 def cast_iron_side(x, wear, mats, rng, side_sign):
     steel = mats["cast"] if wear == 1 else mats["steel_rust"] if wear == 3 and rng.random() < 0.55 else mats["cast"]
-    # Broad cast side plate with a period-style curved armrest and scrollwork.
-    outer = [
-        (x, -0.285, 0.006), (x, -0.240, 0.430), (x, -0.225, 0.535),
-        (x, 0.150, 0.535), (x, 0.215, 0.790), (x, 0.280, 0.790),
-        (x, 0.250, 0.455), (x, 0.205, 0.395), (x, 0.245, 0.055)
-    ]
-    thickness = 0.017
-    verts = [(p[0] - thickness * 0.5, p[1], p[2]) for p in outer] + [(p[0] + thickness * 0.5, p[1], p[2]) for p in outer]
-    n = len(outer)
-    faces = [tuple(range(n)), tuple(range(n, 2*n))]
-    for i in range(n):
-        faces.append((i, (i+1) % n, (i+1) % n + n, i+n))
-    mesh = bpy.data.meshes.new("Cast side profile")
-    mesh.from_pydata(verts, [], faces)
-    side = bpy.data.objects.new("Cast iron side cheek", mesh)
-    bpy.context.collection.objects.link(side)
-    assign_material(side, steel)
-    mod = side.modifiers.new("Soft foundry edge", "BEVEL")
-    mod.width, mod.segments = 0.006, 2
-    apply_mod(side, mod)
+    # Open cast structure: all negative space remains genuinely open in every view.
+    bend = 0.025 if wear == 3 and side_sign > 0 else 0.0
+    tube("Cast curved front leg", [(x,-0.26,0.025),(x,-0.23,0.24),(x,-0.20,0.44),(x,-0.23,0.61)], 0.024, steel, 4)
+    tube("Cast curved rear upright", [(x+bend,0.25,0.025),(x,0.18,0.27),(x,0.18,0.46),(x,0.26,0.80)], 0.024, steel, 4)
+    tube("Cast arched armrest", [(x,-0.23,0.61),(x,-0.18,0.65),(x,0.00,0.66),(x,0.20,0.65)], 0.018, steel, 4)
+    beam("Cast seat bearer", (x,-0.23,0.414), (x,0.23,0.414), 0.035, steel, depth=0.027, bevel=0.006)
+    for y in (-0.26,0.25):
+        box("Cast flared foot", (0.065,0.10,0.018), (x,y,0.009), steel, 0.006, 3)
     # Raised cast scrolls and leaf medallion are genuine rounded geometry.
     plane_x = x + side_sign * 0.013
     for direction in (-1, 1):
@@ -524,10 +505,11 @@ def create_bench_02(wear, rng, mats):
                   (x + bend, 0.220, 0.815), (x + bend, 0.275, 0.842)]
         for i in range(len(points)-1):
             beam("Welded square tube frame", points[i], points[i+1], 0.034, paint, depth=0.034, bevel=0.004)
-        # Foot plates and M10 anchors.
-        box("Foot plate", (0.12, 0.25, 0.012), (x, -0.02, 0.006), paint, 0.004, 2)
-        for y in (-0.095, 0.055):
-            add_bolt("Ground anchor", (x, y, 0.015), (0, 0, 1), mats["bolt"], wear == 3 and rng.random() < 0.3, True)
+        beam("Rear welded ground leg",(x,0.205,0.420),(x+bend,0.235,0.010),0.034,paint,depth=0.034,bevel=0.004)
+        for foot_x,foot_y in ((x,-0.245),(x+bend,0.235)):
+            box("Welded foot plate",(0.12,0.13,0.012),(foot_x,foot_y,0.006),paint,0.004,2)
+            for offset in (-0.035,0.035):
+                add_bolt("Ground anchor",(foot_x+offset,foot_y,0.012),(0,0,1),mats["bolt"],wear==3 and rng.random()<0.3,True)
         for y, z in [(-0.235, 0.40), (0.205, 0.40), (0.22, 0.58), (0.25, 0.80)]:
             # Weld beads at visible tube junctions.
             tube("Visible fillet weld", [(x-0.025, y, z), (x+0.025, y, z)], 0.0048, mats["steel_rust"] if wear > 1 else paint, 1)
@@ -547,23 +529,29 @@ def create_bench_02(wear, rng, mats):
 
 
 def irregular_concrete_support(x, wear, mats, rng, side):
-    width, depth, height = 0.32, 0.43, 0.435
+    width, depth, height = 0.32, 0.43, 0.415
     obj = box("Poured concrete support", (width, depth, height), (x, 0.0, height * 0.5), mats["concrete"], 0.018, 2)
-    # Irregular chipped corners and shallow pitting are mesh geometry, concentrated above the ground face.
+    # Slightly tapered precast support with material removed at damaged corners.
     for v in obj.data.vertices:
+        factor = 1.07 - (v.co.z / height + 0.5) * 0.16
+        v.co.x *= factor
+        v.co.y *= factor
         if v.co.z > -height * 0.40:
             v.co.x += rng.uniform(-0.006, 0.006)
             v.co.y += rng.uniform(-0.006, 0.006)
     if wear >= 2:
-        for i in range(5 if wear == 2 else 9):
-            yy = rng.choice([-1,1]) * rng.uniform(depth*0.28, depth*0.49)
-            zz = rng.uniform(0.08, height*0.87)
-            bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=1, radius=1, location=(x+side*width*0.49, yy, zz))
-            chip = bpy.context.object
-            chip.name = "Concrete corner chip recess"
-            chip.scale = (0.012 if wear == 2 else 0.020, 0.018, 0.014)
+        for i in range(3 if wear == 2 else 6):
+            yy = rng.choice([-1,1]) * depth * 0.49
+            zz = rng.uniform(0.09, height*0.95)
+            bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=2, radius=1, location=(x+side*width*0.48, yy, zz))
+            cutter = bpy.context.object
+            radius = rng.uniform(0.012,0.025) if wear == 2 else rng.uniform(0.025,0.055)
+            cutter.scale = (radius,radius*1.4,radius*1.6)
             bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
-            assign_material(chip, mats["dirt"])
+            modifier = obj.modifiers.new("Actual spalled corner", "BOOLEAN")
+            modifier.operation = "DIFFERENCE"; modifier.solver = "EXACT"; modifier.object = cutter
+            apply_mod(obj, modifier)
+            bpy.data.objects.remove(cutter, do_unlink=True)
     return obj
 
 
@@ -575,14 +563,10 @@ def create_bench_03(wear, rng, mats):
     for x, side in [(-0.60,-1),(0.60,1)]:
         irregular_concrete_support(x, wear, mats, rng, side)
         # Embedded galvanized angles and visible fixing hardware.
-        box("Embedded seat cleat", (0.26, 0.40, 0.045), (x, 0.0, 0.455), mats["steel_rust"] if wear == 3 else mats["steel_bare"], 0.004, 2)
-        for y in (-0.15,0.15):
-            add_bolt("Concrete insert anchor", (x, y, 0.482), (0,0,1), mats["bolt"], wear == 3 and rng.random() < 0.22, True)
-        if wear >= 2:
-            # Old pale limewash remains as a thin irregular patch on one side.
-            for i in range(2):
-                box("Flaked limewash", (0.003, rng.uniform(0.06,0.12), rng.uniform(0.10,0.20)),
-                    (x+side*0.164, rng.uniform(-0.10,0.10), rng.uniform(0.18,0.34)), mats["paper"], 0.003, 1)
+        bracket_mat=mats["steel_rust"] if wear==3 else mats["steel_bare"]
+        box("Embedded seat cleat",(0.26,0.40,0.014),(x,0.0,0.422),bracket_mat,0.003,2)
+        beam("Embedded back bracket foot",(x,0.15,0.35),(x,0.26,0.52),0.035,bracket_mat,depth=0.028,bevel=0.003)
+        beam("Concrete bench back upright",(x,0.26,0.52),(x,0.26,0.795),0.035,bracket_mat,depth=0.028,bevel=0.003)
     if wear == 3:
         beam("Exposed reinforcement", (-0.60,-0.11,0.19), (-0.60,0.08,0.20), 0.008, mats["steel_rust"], bevel=0.001)
     add_grime_and_moss(wear, rng, length, 0.448, mats, 3)
@@ -604,25 +588,23 @@ def panel_point(u, v, surface, deform=0.0):
     return Vector((u, y, z)), n
 
 
-def perforated_panel(name, length, surface, v0, v1, wear, rng, material):
-    cols = 20
-    rows = 5 if surface == "seat" else 4
+def perforated_panel(name, length, surface, v0, v1, wear, rng, material, far=False):
+    cols = 16 if far else 28
+    rows = (4 if surface == "seat" else 3) if far else (7 if surface == "seat" else 5)
     du = length / cols
     dv = (v1-v0) / rows
-    hole_segments = 14
+    hole_segments = 8 if far else 16
     vertices, faces = [], []
-    deformation = 0.0 if wear < 3 else 0.012
+    deformation = 0.0 if wear == 1 else 0.002 if wear == 2 else 0.012
     omitted = set()
-    if wear == 2:
-        omitted.add((rng.randrange(cols), rng.randrange(rows)))
-    elif wear == 3:
+    if wear == 3:
         for _ in range(12):
             c = rng.randrange(cols)
             r = rng.randrange(rows)
             if (c/cols > 0.73 or c/cols < 0.12) and rng.random() < 0.8:
                 omitted.add((c,r))
     thickness = 0.003
-    hole_r = 0.014 if surface == "seat" else 0.013
+    hole_r = 0.010 if surface == "seat" else 0.009
     for c in range(cols):
         for r in range(rows):
             if (c,r) in omitted:
@@ -639,7 +621,7 @@ def perforated_panel(name, length, surface, v0, v1, wear, rng, material):
                 ang = (i / hole_segments) * math.tau
                 co, si = math.cos(ang), math.sin(ang)
                 scale = 0.5 / max(abs(co), abs(si))
-                outer_coords.append((cu + co*du*scale*0.985, cv + si*dv*scale*0.985))
+                outer_coords.append((cu + co*du*scale, cv + si*dv*scale))
                 inner_coords.append((cu + co*hole_r, cv + si*hole_r))
             front_outer, front_inner, back_outer, back_inner = [], [], [], []
             for u,v in outer_coords:
@@ -669,6 +651,10 @@ def perforated_panel(name, length, surface, v0, v1, wear, rng, material):
                     faces.append((front_outer[i], back_outer[i], back_outer[j], front_outer[j]))
     mesh = bpy.data.meshes.new(name + " perforated sheet")
     mesh.from_pydata(vertices, [], faces)
+    bm = bmesh.new(); bm.from_mesh(mesh)
+    bmesh.ops.remove_doubles(bm, verts=bm.verts[:], dist=0.00001)
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
+    bm.to_mesh(mesh); bm.free()
     mesh.update()
     obj = bpy.data.objects.new(name, mesh)
     bpy.context.collection.objects.link(obj)
@@ -685,23 +671,28 @@ def create_bench_04(wear, rng, mats):
     for x in (-0.77,0.77):
         k = 0.035 if wear == 3 and x > 0 else 0.0
         # Bent continuous profile gives the seat and back a real formed-sheet support.
-        pts = [(x,-0.33,0.055),(x,-0.32,0.29),(x,-0.25,0.405),(x,0.12,0.425),
+        pts = [(x,-0.33,0.018),(x,-0.32,0.29),(x,-0.25,0.405),(x,0.12,0.425),
                (x,0.18,0.48),(x+k,0.27,0.83),(x+k,0.32,0.87)]
         tube("Rolled steel side frame", pts, 0.018, frame, 3)
+        tube("Rear curved ground leg",[(x,0.12,0.425),(x,0.26,0.30),(x,0.32,0.018)],0.018,frame,3)
         # Under-panel saddles and formed seams.
         beam("Perforated seat cross support", (x,-0.12,0.40), (x,0.06,0.40), 0.022, frame, depth=0.022, bevel=0.003)
         for y,z in [(-0.26,0.43),(0.12,0.46)]:
             add_bolt("Panel mounting bolt", (x,y,z), (1,0,0), mats["bolt"], wear == 3 and rng.random()<0.38, True)
-        cylinder("Ground anchor boss",0.022,0.020,(x,-0.24,0.010),frame,(0,0,1),12,0.002)
+        for foot_y in (-0.33,0.32):
+            box("Rolled frame foot plate",(0.10,0.09,0.012),(x,foot_y,0.006),frame,0.003,2)
+            add_bolt("Rolled frame anchor",(x+0.03,foot_y,0.012),(0,0,1),mats["bolt"],False,True)
     # Shaped end returns and a shallow, folded hem along exposed metal edges.
     for sign in (-1,1):
         tube("Seat rolled hem", [(sign*0.88,-0.28,0.45),(sign*0.88,-0.08,0.455),(sign*0.88,0.14,0.47)],0.006,frame,2)
     if wear >= 2:
         for i in range(7 if wear == 2 else 16):
-            x = rng.uniform(-0.86,0.86)
-            z = rng.uniform(0.18,0.66)
-            y = 0.22 if z > 0.50 else -0.18
-            cylinder("Localized corrosion pit",rng.uniform(0.003,0.008),0.0015,(x,y,z),mats["steel_rust"],(0,-1,0),8,0)
+            surface = "seat" if i%2 == 0 else "back"
+            low,high,rows = (-0.285,0.145,7) if surface == "seat" else (0.535,0.855,5)
+            x = -length*0.5+(rng.randrange(28)+0.15)*length/28
+            v = low+(rng.randrange(rows)+0.15)*(high-low)/rows
+            point,normal = panel_point(x,v,surface,0.002 if wear==2 else 0.012)
+            cylinder("Localized corrosion on sheet",rng.uniform(0.002,0.004),0.0006,point+normal*0.0018,mats["steel_rust"],normal,8,0)
     if wear == 3:
         # A single torn steel strip hangs from the damaged back edge.
         beam("Torn folded back fragment",(0.72,0.29,0.69),(0.82,0.31,0.57),0.027,mats["steel_rust"],depth=0.004,bevel=0.001)
@@ -717,9 +708,9 @@ def create_bench_05(wear, rng, mats):
         if absent:
             continue
         material = mats["wood_raw"] if wear < 3 else mats["wood_rot"] if rng.random()<0.60 else mats["wood_raw"]
-        board(f"Backless bench seat board {i+1}",length,0.088,0.044,(0,y,0.441),material,rng,
+        timber = board(f"Backless bench seat board {i+1}",length,0.088,0.044,(0,y,0.441),material,rng,
               wear=wear,broken=(wear==3 and i==(broken+1)%4 and rng.random()<0.8),crack_material=mats["black"])
-        board_hardware(length,(y,),0.465,y,wear,rng,mats["bolt"])
+        board_hardware(length,(y,),0.465,y,wear,rng,mats["bolt"], (timber.location.x-timber.dimensions.x*0.5,timber.location.x+timber.dimensions.x*0.5))
     # Low welded angle brackets, fixed to two squat feet; one has a visible workshop repair.
     support = mats["steel_green"] if wear == 1 else mats["steel_rust"] if wear == 3 else mats["steel_bare"]
     for x in (-0.56,0.56):
@@ -728,9 +719,10 @@ def create_bench_05(wear, rng, mats):
         for a,b in zip(pts,pts[1:]):
             beam("Low angle-leg support",a,b,0.032,support,depth=0.032,bevel=0.004)
         beam("Cross seat batten",(x,-0.19,0.401),(x,0.19,0.401),0.030,support,depth=0.030,bevel=0.003)
-        box("Small anchoring pad",(0.13,0.10,0.012),(x,0,0.006),support,0.003,1)
-        for y in (-0.03,0.03):
-            add_bolt("Rough repair foot bolt",(x,y,0.012),(0,0,1),mats["bolt"],wear==3 and rng.random()<0.30)
+        for foot_x,foot_y in ((x,-0.19),(x+bend,0.19)):
+            box("Small anchoring pad",(0.13,0.09,0.012),(foot_x,foot_y,0.006),support,0.003,1)
+            for offset in (-0.035,0.035):
+                add_bolt("Rough repair foot bolt",(foot_x+offset,foot_y,0.012),(0,0,1),mats["bolt"],wear==3 and rng.random()<0.30)
     if wear == 3:
         # Hand-cut metal strap bridges an old split board, offset so the repair reads from the front.
         box("Crude repair strap",(0.042,0.003,0.16),(0.34,-0.20,0.42),mats["steel_rust"],0.003,1,rotation=(math.radians(-8),0,math.radians(5)))
@@ -755,12 +747,7 @@ def join_meshes(objects, name):
     bpy.ops.object.join()
     active.name = name
     active.data.name = name + "Mesh"
-    # Recalculate consistent exterior winding after the parts are joined.
-    bm = bmesh.new()
-    bm.from_mesh(active.data)
-    bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
-    bm.to_mesh(active.data)
-    bm.free()
+    # Preserve each component's authored split/weighted normals through the join.
     bpy.context.scene.cursor.location = (0,0,0)
     bpy.context.view_layer.objects.active = active
     bpy.ops.object.origin_set(type="ORIGIN_CURSOR", center="MEDIAN")
@@ -771,9 +758,24 @@ def unwrap_component(obj):
     bpy.ops.object.select_all(action="DESELECT")
     obj.select_set(True)
     bpy.context.view_layer.objects.active = obj
-    for layer in list(obj.data.uv_layers):
-        obj.data.uv_layers.remove(layer)
-    obj.data.uv_layers.new(name="UVMap")
+    for layer in list(obj.data.uv_layers): obj.data.uv_layers.remove(layer)
+    base = obj.data.uv_layers.new(name="UVMap")
+    offset = random.Random(SEED + sum(ord(c) for c in obj.name)).uniform(0.05, 0.85)
+    timber = bool(obj.get("TimberUV", False))
+    for poly in obj.data.polygons:
+        normal = poly.normal
+        axis = max(range(3), key=lambda i: abs(normal[i]))
+        for loop_index in poly.loop_indices:
+            point = obj.data.vertices[obj.data.loops[loop_index].vertex_index].co
+            if timber:
+                # Grain runs along the length on all four long faces; two metres per texture repeat.
+                v = point.y if axis == 2 else point.z
+                base.data[loop_index].uv = (point.x / 2.0 + offset, v / 0.45 + offset)
+            else:
+                axes = ((1,2),(0,2),(0,1))[axis]
+                base.data[loop_index].uv = (point[axes[0]] * 2.0 + offset, point[axes[1]] * 2.0 + offset)
+    obj.data.uv_layers.new(name="LightmapUV")
+    obj.data.uv_layers.active_index = 1
     bpy.ops.object.mode_set(mode="EDIT")
     bpy.ops.mesh.select_all(action="SELECT")
     # A lower angle threshold splits tight metal folds and bevel transitions before atlas packing.
@@ -781,25 +783,21 @@ def unwrap_component(obj):
     bpy.ops.uv.smart_project(angle_limit=math.radians(20), island_margin=0.010,
                              area_weight=0.1, rotate_method="AXIS_ALIGNED")
     bpy.ops.object.mode_set(mode="OBJECT")
-    obj.data.uv_layers.active.name = "UVMap"
+    obj.data.uv_layers.active_index = 0
+    obj.data.uv_layers[0].active_render = True
 
 
 def pack_uv_and_create_lightmap(obj):
     bpy.ops.object.select_all(action="DESELECT")
     obj.select_set(True)
     bpy.context.view_layer.objects.active = obj
+    obj.data.uv_layers.active_index = obj.data.uv_layers.find("LightmapUV")
     bpy.ops.object.mode_set(mode="EDIT")
     bpy.ops.mesh.select_all(action="SELECT")
-    bpy.ops.uv.pack_islands(rotate=True, margin=0.025)
+    bpy.ops.uv.pack_islands(rotate=True, margin=0.004)
     bpy.ops.object.mode_set(mode="OBJECT")
-    for layer in list(obj.data.uv_layers):
-        if layer.name != "UVMap":
-            obj.data.uv_layers.remove(layer)
-    obj.data.uv_layers.active = obj.data.uv_layers.get("UVMap")
-    lightmap = obj.data.uv_layers.new(name="LightmapUV")
-    source = obj.data.uv_layers.get("UVMap")
-    for i in range(len(source.data)):
-        lightmap.data[i].uv = source.data[i].uv
+    obj.data.uv_layers.active_index = obj.data.uv_layers.find("UVMap")
+    obj.data.uv_layers.active.active_render = True
 
 
 def mesh_triangles(obj):
@@ -810,12 +808,27 @@ def create_lods(parts, base_name, collection):
     # Bake every component transform into the mesh before joining; this keeps the root pivot at floor center.
     bpy.ops.object.select_all(action="DESELECT")
     for part in parts:
+        if not part.get("TimberUV", False):
+            bm = bmesh.new(); bm.from_mesh(part.data)
+            bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
+            bm.to_mesh(part.data); bm.free()
         bpy.context.view_layer.objects.active=part
         part.select_set(True)
         bpy.ops.object.transform_apply(location=True,rotation=True,scale=True)
         part.select_set(False)
     for part in parts:
         unwrap_component(part)
+    far_parts = []
+    if base_name.startswith("Bench_RU_04_"):
+        for part in parts:
+            if "Perforated curved seat" in part.name or "Perforated angled back" in part.name: continue
+            duplicate = part.copy(); duplicate.data = part.data.copy()
+            collection.objects.link(duplicate); far_parts.append(duplicate)
+        wear = int(base_name[-2:])
+        material = next(p.data.materials[0] for p in parts if "Perforated curved seat" in p.name)
+        for surface, low, high in (("seat",-0.285,0.145),("back",0.535,0.855)):
+            panel = perforated_panel("Far perforation " + surface,1.82,surface,low,high,wear,random.Random(SEED+wear),material,far=True)
+            move_to_collection(panel,collection); unwrap_component(panel); far_parts.append(panel)
     bpy.context.view_layer.update()
     lod0 = join_meshes(parts, "LOD0")
     move_to_collection(lod0, collection)
@@ -826,9 +839,14 @@ def create_lods(parts, base_name, collection):
     pack_uv_and_create_lightmap(lod0)
     lod_objects = [lod0]
     for name, ratio in (("LOD1",0.46),("LOD2",0.16)):
-        mesh = lod0.data.copy()
-        obj = bpy.data.objects.new(name, mesh)
-        collection.objects.link(obj)
+        if name == "LOD2" and far_parts:
+            obj = join_meshes(far_parts,name)
+            pack_uv_and_create_lightmap(obj)
+            ratio = 0.45
+        else:
+            mesh = lod0.data.copy()
+            obj = bpy.data.objects.new(name, mesh)
+            collection.objects.link(obj)
         obj.location=(0,0,0)
         dec = obj.modifiers.new("Silhouette-preserving screen-size reduction", "DECIMATE")
         dec.decimate_type="COLLAPSE"
@@ -837,6 +855,14 @@ def create_lods(parts, base_name, collection):
         bpy.context.view_layer.objects.active=obj
         obj.select_set(True)
         bpy.ops.object.modifier_apply(modifier=dec.name)
+        if name == "LOD2" and base_name in ("Bench_RU_01_Wear01","Bench_RU_05_Wear03"):
+            obj.data.uv_layers.active_index=obj.data.uv_layers.find("LightmapUV")
+            bpy.ops.object.mode_set(mode="EDIT"); bpy.ops.mesh.select_all(action="SELECT")
+            bpy.ops.uv.smart_project(angle_limit=math.radians(10),island_margin=0.004,area_weight=0.1,rotate_method="AXIS_ALIGNED")
+            bpy.ops.uv.pack_islands(rotate=True,margin=0.004)
+            bpy.ops.object.mode_set(mode="OBJECT")
+            obj.data.uv_layers.active_index=obj.data.uv_layers.find("UVMap")
+            obj.data.uv_layers.active.active_render=True
         lod_objects.append(obj)
     for lod in lod_objects:
         lod.name = lod.name.replace(".001", "")
@@ -911,8 +937,10 @@ def main():
             except Exception:
                 pass
     bpy.context.preferences.filepaths.save_version = 0
+    bpy.data.orphans_purge(do_recursive=True)
     bpy.ops.wm.save_as_mainfile(filepath=str(SOURCE_DIR/"Benches_RU_Master.blend"))
     print("ALL_BUILDS_DONE",results,flush=True)
+    os._exit(0)
 
 
 if __name__ == "__main__":

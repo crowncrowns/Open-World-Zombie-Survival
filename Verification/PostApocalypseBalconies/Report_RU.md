@@ -1,5 +1,7 @@
 # Отчёт проверки Post-Apocalyptic Modular Balcony Kit
 
+Актуальное исправление опор от 25.10.2026: [FloatingPropsFix_RU.md](FloatingPropsFix_RU.md). Текущие JSON-отчёты и галерея обновлены после исправления.
+
 Дата: 24.10.2026  
 Unity: 6000.6.3f1  
 Render pipeline: URP 17.6.0

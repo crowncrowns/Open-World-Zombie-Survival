@@ -8,7 +8,7 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 
 
-SIZE = 2048
+SIZE = 4096
 
 
 def noise_field(size: int, seed: int, octaves=(4, 10, 28, 72, 190, 500)) -> np.ndarray:
@@ -50,14 +50,17 @@ def wood_grain(size: int, seed: int) -> tuple[np.ndarray, np.ndarray]:
     rng = np.random.default_rng(seed)
     y, x = np.mgrid[0:size, 0:size].astype(np.float32)
     nx, ny = x / size, y / size
-    warp = 2.4 * np.sin(ny * 15.0 + np.sin(ny * 37.0) * 0.45) + noise_field(size, seed + 44, (5, 15, 52, 210)) * 1.6
-    phase = nx * (2.0 * math.pi * 128.0) + warp
-    fine = np.sin(phase) * 0.5 + np.sin(phase * 2.2 + noise_field(size, seed + 61, (10, 42, 140)) * 0.45) * 0.18
-    broad = noise_field(size, seed + 3, (5, 13, 38, 125, 420)) * 0.44
+    turbulence = noise_field(size, seed + 44, (5, 15, 52, 210))
+    warp = 4.0 * np.sin(nx * 9.0 + np.sin(nx * 21.0) * 0.5) + turbulence * 22.0
+    phase = ny * (2.0 * math.pi * 105.0) + warp
+    streak_image = Image.fromarray(rng.integers(0,256,(size,48),dtype=np.uint8)).resize((size,size),Image.Resampling.BICUBIC)
+    streaks = np.asarray(streak_image,dtype=np.float32)/127.5-1.0
+    fine = np.sin(phase) * 0.22 + streaks * 0.60
+    broad = noise_field(size, seed + 3, (5, 13, 38, 125, 620)) * 0.58
     knots = np.zeros((size, size), dtype=np.float32)
     for _ in range(9):
         cx, cy = rng.uniform(0.02, 0.98, 2)
-        rx, ry = rng.uniform(0.008, 0.030), rng.uniform(0.025, 0.095)
+        rx, ry = rng.uniform(0.05, 0.14), rng.uniform(0.008, 0.025)
         dx = (nx - cx) / rx
         dy = (ny - cy) / ry
         radius = np.sqrt(dx * dx + dy * dy)
@@ -78,19 +81,22 @@ def build_surface(kind: str, seed: int):
 
     if kind.startswith("wood"):
         grain, grain_mask = wood_grain(n, seed + 31)
-        if kind == "wood_painted":
+        if kind != "wood_raw":
             chips_noise = noise_field(n, seed + 111, (9, 23, 70, 210))
-            chip = np.clip((chips_noise + 0.28) * 2.0, 0.0, 1.0)
-            wood = np.stack((0.78 + grain * 0.14, 0.79 + grain * 0.13, 0.75 + grain * 0.15), axis=2)
-            steel_under = np.stack((0.43 + noise * 0.16, 0.42 + noise * 0.14, 0.36 + noise * 0.12), axis=2)
-            color = wood * (1.0 - chip[..., None] * 0.36) + steel_under * (chip[..., None] * 0.36)
-            height = grain * 0.17 + fine_noise * 0.07 + scratches * 0.12 + chip * 0.09
+            chip_signal = chips_noise + fine_noise * 0.15 + scratches * 0.10
+            chip = np.clip((chip_signal - 0.14) * 38.0, 0.0, 1.0)
+            palette = {"wood_green": (0.25,0.32,0.17), "wood_blue": (0.22,0.34,0.43), "wood_brown": (0.34,0.22,0.12)}
+            paint = np.array(palette[kind], dtype=np.float32)[None,None,:] * (1.0 + grain[...,None]*0.15 + noise[...,None]*0.12)
+            raw = np.stack((0.43 + grain * 0.12, 0.34 + grain * 0.10, 0.23 + grain * 0.08), axis=2)
+            color = paint * (1.0-chip[...,None]) + raw * chip[...,None]
+            height = grain * (0.025 + chip*0.07) + fine_noise * 0.012 - scratches * 0.04 - chip * 0.06
             roughness = np.clip(0.72 + grain * 0.12 + noise * 0.10 - scratches * 0.10, 0.42, 0.96)
-            metallic = chip * 0.16
+            metallic = np.zeros_like(noise)
         else:
-            color = np.stack((0.48 + grain * 0.21, 0.38 + grain * 0.19, 0.27 + grain * 0.15), axis=2)
+            color = np.stack((0.45 + grain * 0.25, 0.37 + grain * 0.22, 0.28 + grain * 0.18), axis=2)
             color *= (0.88 + noise[..., None] * 0.12)
-            height = grain * 0.26 + fine_noise * 0.09 + scratches * 0.08
+            color *= 1.0-scratches[...,None]*0.30
+            height = grain * 0.12 + fine_noise * 0.035 - scratches * 0.05
             roughness = np.clip(0.78 + grain * 0.12 + noise * 0.09, 0.50, 0.98)
             metallic = np.zeros_like(noise)
     elif kind == "steel_painted":
@@ -102,7 +108,13 @@ def build_surface(kind: str, seed: int):
         color = paint * (1.0 - chips[..., None] * 0.58) + rust * (chips[..., None] * 0.58)
         height = fine_noise * 0.10 + scratches * 0.11 + chips * 0.15 + noise * 0.06
         roughness = np.clip(0.48 + chips * 0.27 + scratches * 0.12 + noise * 0.10, 0.26, 0.95)
-        metallic = np.clip(0.30 + chips * 0.46, 0.0, 0.82)
+        metallic = np.clip(scratches * 0.85, 0.0, 0.85)
+    elif kind == "bare_steel":
+        base = 0.54 + noise * 0.045 + fine_noise * 0.014
+        color = np.stack((base * 0.96, base * 0.99, base), axis=2)
+        height = fine_noise * 0.025 + scratches * 0.02
+        roughness = np.clip(0.42 + noise * 0.12 + scratches * 0.1,0.28,0.7)
+        metallic = np.ones_like(noise) * 0.92
     elif kind == "rusted_steel":
         oxide = noise_field(n, seed + 301, (8, 24, 83, 310))
         color = np.stack((0.40 + noise * 0.13 + oxide * 0.08,
@@ -111,7 +123,7 @@ def build_surface(kind: str, seed: int):
         color += scratches[..., None] * np.array([0.10, 0.095, 0.08], dtype=np.float32)
         height = oxide * 0.24 + fine_noise * 0.11 + scratches * 0.14
         roughness = np.clip(0.82 + noise * 0.10 - scratches * 0.15, 0.45, 1.0)
-        metallic = np.clip(0.18 + oxide * 0.14 + scratches * 0.24, 0.0, 0.58)
+        metallic = np.clip(scratches * 0.75, 0.0, 0.75)
     elif kind == "cast_iron":
         oxide = noise_field(n, seed + 401, (6, 21, 66, 250))
         pits = scratch_field(n, seed + 499, 4200)
@@ -172,18 +184,23 @@ def save_gray(path: Path, values: np.ndarray):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", required=True)
+    parser.add_argument("--only", default=None)
     args = parser.parse_args()
     out = Path(args.output)
     out.mkdir(parents=True, exist_ok=True)
     surfaces = [
-        ("WoodPaint", "wood_painted", 1101, 2),
-        ("WoodRaw", "wood_raw", 2202, 2),
+        ("WoodGreen", "wood_green", 1101, 1),
+        ("WoodBlue", "wood_blue", 1102, 1),
+        ("WoodBrown", "wood_brown", 1103, 1),
+        ("WoodRaw", "wood_raw", 2202, 1),
         ("SteelPaint", "steel_painted", 3303, 1),
         ("SteelRust", "rusted_steel", 4404, 1),
         ("CastIron", "cast_iron", 5505, 1),
         ("Concrete", "concrete", 6606, 1),
+        ("SteelBare", "bare_steel", 7707, 1),
     ]
     for name, kind, seed, upscale in surfaces:
+        if args.only and name not in args.only.split(","): continue
         color, normal, metal, ao, rough = build_surface(kind, seed)
         save_rgb(out / f"Tex_{name}_BaseColor.png", color, upscale, seed)
         save_rgb(out / f"Tex_{name}_Normal.png", normal)

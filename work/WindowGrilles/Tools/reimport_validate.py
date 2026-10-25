@@ -52,7 +52,7 @@ for typ,name in enumerate(NAMES,1):
         size=bounds_max-bounds_min
         if not finite: errors.append(f"{fbx.name}: non-finite vertex")
         if uv_count==0: errors.append(f"{fbx.name}: missing UV")
-        if max(size.x,size.y)>1.02 or not(.90<=size.z<=.98):
+        if size.x>1.11 or size.y>.16 or not(.90<=size.z<=.98):
             errors.append(f"{fbx.name}: source-space bounds unexpected {tuple(round(x,4) for x in size)}")
         # Blender clean-import check retains the actual LOD hierarchy and all four levels.
         if any(c==0 for c in mesh_count_by_lod): errors.append(f"{fbx.name}: missing LOD mesh groups {mesh_count_by_lod}")
@@ -61,11 +61,10 @@ for typ,name in enumerate(NAMES,1):
         if typ==5:
             names={o.name for o in empties}
             for i in range(4):
-                if f"LeftLeafPivot" not in names and not any(n.startswith("LeftLeafPivot") for n in names):
-                    errors.append(f"{fbx.name}: missing left leaf pivot")
-                if f"RightLeafPivot" not in names and not any(n.startswith("RightLeafPivot") for n in names):
-                    errors.append(f"{fbx.name}: missing right leaf pivot")
-                break
+                for side in ("Left","Right"):
+                    p=next((o for o in empties if o.name==f"{side}LeafPivot_LOD{i}"),None)
+                    if p is None or p.parent is None or p.parent.name!=f"LOD{i}":
+                        errors.append(f"{fbx.name}: missing {side} leaf pivot at LOD{i}")
         records.append({"id":fbx.stem,"meshCount":len(meshes),"emptyCount":len(empties),"uvLoopCount":uv_count,
                         "boundsMin":list(bounds_min),"boundsMax":list(bounds_max),"boundsSize":list(size),
                         "lodTriangles":lod_tris,"meshesPerLod":mesh_count_by_lod,"finiteVertices":finite})
