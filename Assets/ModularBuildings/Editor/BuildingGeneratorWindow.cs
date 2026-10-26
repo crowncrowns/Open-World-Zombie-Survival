@@ -15,9 +15,9 @@ namespace ZombieSurvival.ModularBuildings.Editor
         void OnDisable(){if(preview.IsValid())EditorSceneManager.ClosePreviewScene(preview);if(previewTexture)DestroyImmediate(previewTexture);}
         void OnGUI(){
             scroll=EditorGUILayout.BeginScrollView(scroll);
-            EditorGUILayout.HelpBox("Демо V5: секция 15×12 м, по два модуля 3 м слева и справа от подъезда. Общую отделку можно выбрать ниже. Нажмите «Создать/выбрать демо-профиль» для V5. Старые дома не перезаписываются.",MessageType.Info);
+            EditorGUILayout.HelpBox("Профиль V6: до 16 этажей / 6 подъездов. Лестницы только до 4 этажа, квартиры до 3, балконы до 5 этажей. Для новых правил нажмите «Создать/выбрать профиль V6». Старые дома не перестраиваются.",MessageType.Info);
             profile=(BuildingSeriesProfile)EditorGUILayout.ObjectField("Профиль",profile,typeof(BuildingSeriesProfile),false);
-            if(GUILayout.Button("Создать/выбрать демо-профиль"))profile=BuildingGenerator.CreateProfile();
+            if(GUILayout.Button("Создать/выбрать профиль V6"))profile=BuildingGenerator.CreateProfile();
             year=EditorGUILayout.IntField("Год",year);floors=EditorGUILayout.IntField("Этажи",floors);entrances=EditorGUILayout.IntField("Подъезды",entrances);id=EditorGUILayout.TextField("Постоянный ID",id);
             exteriorMaterial=(Material)EditorGUILayout.ObjectField(new GUIContent("Материал наружных стен","Пусто — материал профиля. Применяется к стенам всех фасадов, торцам, цоколю и углам."),exteriorMaterial,typeof(Material),false);
             baseTrimMaterial=(Material)EditorGUILayout.ObjectField(new GUIContent("Материал цоколя","Пусто — материал профиля или красно-коричневый WeatheredPlinth. Общая отделка стен цоколь не перекрашивает."),baseTrimMaterial,typeof(Material),false);

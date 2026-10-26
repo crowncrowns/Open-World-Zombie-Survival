@@ -15,6 +15,8 @@ namespace ZombieSurvival.ModularBuildings.Editor
         const string Library="Assets/Maps/Buildings/";
         static GameObject Load(string path) => AssetDatabase.LoadAssetAtPath<GameObject>(path);
         public static BuildingSeriesProfile CreateProfile()
+            => BuildingCityDetails.CreateProfile();
+        public static BuildingSeriesProfile CreateV5Profile()
         {
             var path=Folder+"/DemoProfileV5.asset";
             var existing=AssetDatabase.LoadAssetAtPath<BuildingSeriesProfile>(path);
@@ -44,8 +46,12 @@ namespace ZombieSurvival.ModularBuildings.Editor
         public static void Preflight(BuildingSeriesProfile p,int year,int floors,int entrances)
         {
             if(!p || p.section==null) throw new InvalidOperationException("Нужен профиль и шаблон секции.");
-            if(year<1800 || year>2200 || floors<1 || floors>9 || entrances<1 || entrances>8)
-                throw new InvalidOperationException("MVP: год 1800–2200, этажи 1–9, подъезды 1–8.");
+            int maxFloors=p.extendedCityRules?16:9,maxEntrances=p.extendedCityRules?6:8;
+            if(year<1800 || year>2200 || floors<1 || floors>maxFloors || entrances<1 || entrances>maxEntrances)
+                throw new InvalidOperationException($"Год 1800–2200, этажи 1–{maxFloors}, подъезды 1–{maxEntrances}. Для новых правил выберите профиль V6.");
+            if(p.extendedCityRules&&p.section.sectionWidth!=15)throw new InvalidOperationException("Правила V6 требуют секцию 15×12 м для нормальных размеров квартир.");
+            if(p.extendedCityRules&&(float.IsNaN(p.lowRiseRoofPitch)||float.IsInfinity(p.lowRiseRoofPitch)||p.lowRiseRoofPitch<8||p.lowRiseRoofPitch>30))throw new InvalidOperationException("Уклон скатной кровли V6: конечное число 8–30 градусов.");
+            if(p.extendedCityRules&&p.stairBlockerPrefab&&!PrefabUtility.IsPartOfPrefabAsset(p.stairBlockerPrefab))throw new InvalidOperationException("Модель завала должна быть prefab asset из Project.");
             var s=p.section;
             bool known=(s.templateId=="U-9x12-3-apartments-flat"&&s.sectionWidth==9)||(s.templateId=="U-15x12-3-apartments-flat"&&s.sectionWidth==15);
             if(!known || s.sectionDepth!=12 || s.floorHeight!=3 || s.firstFlight!=new Vector3(-.9f,.75f,5.85f) || s.secondFlight!=new Vector3(.9f,2.25f,5.85f))
@@ -207,7 +213,7 @@ namespace ZombieSurvival.ModularBuildings.Editor
             try {
                 var b=root.AddComponent<GeneratedBuilding>();b.buildingId=id;b.profile=p;b.year=year;b.floors=floors;b.entrances=entrances;
                 float width=p.section.sectionWidth,half=width/2;int bays=Mathf.RoundToInt(width/3),middle=bays/2;
-                b.revision=width==15?"demo-v5-wide":"demo-v4";b.endWindowRuleVersion=1;
+                b.revision=p.extendedCityRules?"city-v6":width==15?"demo-v5-wide":"demo-v4";b.endWindowRuleVersion=1;
                 for(int e=0;e<entrances;e++){
                     var section=Group("Entrance_"+(e+1),root.transform,new Vector3(e*width,0,0));
                     for(int f=0;f<floors;f++){
@@ -220,7 +226,8 @@ namespace ZombieSurvival.ModularBuildings.Editor
                             else {Surface(front,p.facadeMaterial);Part(p.entranceDoor,front.transform,"EntranceDoor",Vector3.zero);}
                             var rear=Part(p.windowWall,level,"Rear_"+bay,new Vector3(x,0,10.5f));ClosedWindowCollision(rear.transform);ApplyGlass(rear.transform,p.glassMaterial);
                         }
-                        EntranceLining(p,level,f==0);
+                        bool interior=!p.extendedCityRules||f<4;
+                        if(interior)EntranceLining(p,level,f==0);
                         if(e==0)EndWall(p,level,"LeftEnd",-half,-90);
                         if(e==entrances-1)EndWall(p,level,"RightEnd",half,90);
                         // Section boundaries have neither a party wall nor a floor gap. Only stair enclosures remain.
@@ -230,13 +237,14 @@ namespace ZombieSurvival.ModularBuildings.Editor
                         Slab(p,level,"RightOpenFloor",(right+1.55f)/2,6.6f,right-1.55f,4.2f,0);
                         Slab(p,level,"RearOpenFloor",(left+right)/2,9.525f,right-left,1.55f,0);
                         if(f==0)Slab(p,level,"GroundBelowShaft",0,6.6f,3,4.2f,0);
+                        if(interior){
                         Apartment(p,level,id,e,f,"L",-1.55f,0,0);
                         Apartment(p,level,id,e,f,"R",1.55f,0,1);
                         Apartment(p,level,id,e,f,"L2",-1.55f,3,2);
                         Surface(Part(p.solidWall,level,"LobbyRight",new Vector3(1.55f,0,3),90,new Vector3(1,1,.25f)),p.stairWallMaterial);
                         foreach(int side in new[]{-1,1})Surface(Part(p.solidWall,level,"ShaftSide_"+side,new Vector3(side*1.55f,0,6.6f),90,new Vector3(4.2f/3,1,.25f)),p.stairWallMaterial);
                         Surface(Part(p.solidWall,level,"ShaftRear",new Vector3(0,0,8.75f),0,new Vector3(1,1,.25f)),p.stairWallMaterial);
-                        if(f<floors-1){
+                        if(f<floors-1&&(!p.extendedCityRules||f<3)){
                             var module=Part(p.stair,level,"StairwellModule",new Vector3(0,0,4.2f));
                             module.transform.Find("Stairs_Landing_02").gameObject.SetActive(false);
                             var landing=module.transform.Find("Stairs_Landing_01");landing.localPosition=new Vector3(0,1.4f,3.775f);landing.localScale=new Vector3(3.1f,.2f,1.55f);
@@ -245,6 +253,8 @@ namespace ZombieSurvival.ModularBuildings.Editor
                             Rail(level,"TopFloorGuard",new Vector3(-1.35f,1,4.5f),new Vector3(-.15f,1,4.5f));
                             for(int post=0;post<=6;post++)Rail(level,"TopFloorGuardPost",new Vector3(-1.35f+post*.2f,0,4.5f),new Vector3(-1.35f+post*.2f,1,4.5f));
                         }
+                        }
+                        else Slab(p,level,"UpperFloorClosedShaft",0,6.6f,3.1f,4.2f,0);
                     }
                 }
                 var foundation=Group("TerrainFoundation",root.transform,Vector3.zero);float center=(entrances-1)*width/2;
@@ -254,7 +264,7 @@ namespace ZombieSurvival.ModularBuildings.Editor
                 Part(p.solidWall,foundation,"FoundationRight",new Vector3((entrances-1)*width+half,-p.foundationDepth,4.5f),90,new Vector3(11.6f/3,p.foundationDepth/3,1));
                 Roof(p,root.transform,floors,entrances);
                 CornerClosures(p,root.transform,floors,entrances);FacadeMaterials(p,root.transform);
-                for(int pass=0;pass<3;pass++){
+                for(int pass=0;pass<(p.extendedCityRules?0:3);pass++){
                     SeamUnion.Resolve(root);
                     var overlaps=CoplanarAudit.Scan(root);
                     if(overlaps.overlapPairs==0&&overlaps.unreadable.Count==0)break;
@@ -262,6 +272,7 @@ namespace ZombieSurvival.ModularBuildings.Editor
                 if(exteriorMaterial||includeEntranceDoors)BuildingExteriorMaterials.Apply(b,exteriorMaterial?exteriorMaterial:p.facadeMaterial,includeEntranceDoors,false);
                 BuildingBaseTrim.Add(b,baseTrimMaterial);
                 BuildingEntranceStairs.Refit(b,null,false,false);
+                if(p.extendedCityRules){BuildingCityDetails.Add(b);BuildingApartments.Add(b,p.citySeed);}
                 Physics.SyncTransforms();return b;
             }catch{Object.DestroyImmediate(root);throw;}
         }
@@ -271,7 +282,7 @@ namespace ZombieSurvival.ModularBuildings.Editor
             try{Preflight(b.profile,b.year,b.floors,b.entrances);}catch(Exception ex){errors.Add(ex.Message);return errors;}
             if(Vector3.Distance(b.transform.lossyScale,Vector3.one)>.001f||Vector3.Angle(b.transform.up,Vector3.up)>.01f){errors.Add("MVP: корень здания должен иметь scale=1 и вертикальную ось Y.");return errors;}
             var slots=b.GetComponentsInChildren<ApartmentSlot>(true);
-            if(slots.Length!=b.floors*b.entrances*3)errors.Add("Число ApartmentSlot не соответствует профилю.");
+            if(slots.Length!=(b.profile.extendedCityRules?Mathf.Min(b.floors,4):b.floors)*b.entrances*3)errors.Add("Число ApartmentSlot не соответствует профилю.");
             if(slots.Select(s=>s.slotId).Distinct().Count()!=slots.Length)errors.Add("Повторные ID слотов.");
             if(b.gameObject.scene.IsValid()&&b.gameObject.scene.isLoaded){
                 var all=b.gameObject.scene.GetRootGameObjects().SelectMany(g=>g.GetComponentsInChildren<GeneratedBuilding>(true)).ToArray();
@@ -280,7 +291,7 @@ namespace ZombieSurvival.ModularBuildings.Editor
             foreach(var s in slots){
                 if(string.IsNullOrEmpty(s.slotId)||!s.slotId.StartsWith(b.buildingId+"/",StringComparison.Ordinal))errors.Add("Повреждён ID слота: "+s.name);
                 if(!s.manualContent || !s.doorHinge || !s.doorLeaf)errors.Add(s.slotId+": нет точек привязки/двери.");
-                else if(pristine&&(Quaternion.Angle(s.doorHinge.localRotation,Quaternion.identity)>.01f||Quaternion.Angle(s.doorLeaf.localRotation,Quaternion.identity)>.01f))errors.Add(s.slotId+": дверь исходно открыта.");
+                else if(pristine&&!b.profile.extendedCityRules&&(Quaternion.Angle(s.doorHinge.localRotation,Quaternion.identity)>.01f||Quaternion.Angle(s.doorLeaf.localRotation,Quaternion.identity)>.01f))errors.Add(s.slotId+": дверь исходно открыта.");
             }
             foreach(var t in b.GetComponentsInChildren<Transform>(true)){
                 if(PrefabUtility.IsPrefabAssetMissing(t.gameObject))errors.Add("Missing nested prefab: "+t.name);
@@ -289,13 +300,23 @@ namespace ZombieSurvival.ModularBuildings.Editor
             }
             foreach(var r in b.GetComponentsInChildren<MeshRenderer>(true))
                 if(r.sharedMaterials.Any(m=>!m)||!r.GetComponent<MeshFilter>()||!r.GetComponent<MeshFilter>().sharedMesh)errors.Add("Нет mesh/material: "+r.name);
+            if(b.profile.extendedCityRules)
+            {
+                // A house may have just been moved/rotated by its authoring wrapper.
+                // Refresh physics poses before Collider.Raycast/ClosestPoint, as in the legacy branch.
+                Physics.SyncTransforms();
+                errors.AddRange(BuildingCityDetails.Validate(b));
+                errors.AddRange(BuildingApartments.Validate(b));
+                errors.AddRange(BuildingApartments.ValidateInheritedPaths(b));
+                return errors;
+            }
             // Capsule route samples follow both ramps and the intermediate turn, not arbitrary stair placement.
             Physics.SyncTransforms();
             foreach(var t in b.GetComponentsInChildren<Transform>().Where(t=>t.name.StartsWith("Front_",StringComparison.Ordinal)||t.name.StartsWith("Rear_",StringComparison.Ordinal))){
                 if(t.name=="Front_"+(Mathf.RoundToInt(b.profile.section.sectionWidth/3)/2)&&t.parent.name=="Floor_1")continue;
                 if(!Physics.RaycastAll(t.TransformPoint(new Vector3(0,1.5f,-.6f)),t.forward,1.2f).Any(h=>h.collider.transform.IsChildOf(t)))errors.Add("Нет коллизии закрытого окна: "+t.name);
             }
-            for(int e=0;e<b.entrances;e++)for(int f=0;f<b.floors-1;f++)for(int flight=0;flight<2;flight++)for(int n=0;n<=27;n++){
+            for(int e=0;e<b.entrances;e++)for(int f=0;f<(b.profile.extendedCityRules?Mathf.Min(b.floors-1,3):b.floors-1);f++)for(int flight=0;flight<2;flight++)for(int n=0;n<=27;n++){
                 float u=n/27f;float z=flight==0?4.5f+2.7f*u:7.2f-2.7f*u;
                 var p=b.transform.TransformPoint(new Vector3(e*b.profile.section.sectionWidth+(flight==0?-.9f:.9f),f*3+flight*1.5f+u*1.5f,z));
                 var support=Physics.RaycastAll(p+Vector3.up*.6f,Vector3.down,1,~0,QueryTriggerInteraction.Ignore).Where(h=>h.collider.transform.IsChildOf(b.transform)).OrderBy(h=>h.distance).ToArray();

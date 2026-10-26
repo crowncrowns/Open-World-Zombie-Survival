@@ -33,6 +33,9 @@ namespace ZombieSurvival.Interaction
         [SerializeField] private string openPrompt = "Открыть дверь";
         [Tooltip("Текст действия закрытия двери.")]
         [SerializeField] private string closePrompt = "Закрыть дверь";
+        [SerializeField, HideInInspector] private bool hasAuthoredInitialOpen;
+        [SerializeField, HideInInspector] private Quaternion authoredClosedRotation=Quaternion.identity;
+        [SerializeField, HideInInspector] private float authoredInitialSign=1;
         private Quaternion closedRotation;
         private float angle, targetAngle, openSign = 1f;
         private bool open;
@@ -47,7 +50,22 @@ namespace ZombieSurvival.Interaction
         {
             if (initialized) return;
             if (hinge == null) hinge = transform;
-            closedRotation = hinge.localRotation; initialized = true;
+            closedRotation = hasAuthoredInitialOpen ? authoredClosedRotation : hinge.localRotation;
+            if(hasAuthoredInitialOpen)
+            {
+                open=true;openSign=authoredInitialSign<0?-1:1;
+                angle=targetAngle=Mathf.Abs(openAngle)*openSign;
+                hinge.localRotation=closedRotation*Quaternion.Euler(0,angle,0);
+            }
+            initialized = true;
+        }
+        /// <summary>Author an initially open generated door, retaining its closed reference across reload.</summary>
+        public void SetInitialOpenPose(float degrees,float sign)
+        {
+            EnsureInitialized();openAngle=Mathf.Clamp(degrees,10,160);
+            authoredClosedRotation=closedRotation;authoredInitialSign=sign<0?-1:1;hasAuthoredInitialOpen=true;
+            open=true;openSign=authoredInitialSign;angle=targetAngle=openAngle*openSign;
+            hinge.localRotation=closedRotation*Quaternion.Euler(0,angle,0);IsBlocked=false;
         }
         internal DoorWorldState CaptureWorldState()
         {

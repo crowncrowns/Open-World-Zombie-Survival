@@ -36,6 +36,15 @@ namespace ZombieSurvival.ModularBuildings
         public float baseTrimProjection=.02f;
         public Shader approvedWorldFacadeShader;
         public bool requireWorldSpaceFacade=true;
+        [Header("Правила нового городского дома")]
+        [Tooltip("Новые дома: до 16 этажей / 6 подъездов, доступ до 4 этажа, квартиры, балконы и водостоки. Старые профили не меняются.")]
+        public bool extendedCityRules;
+        [Tooltip("Seed планировки квартир и вариантов фасада. ID дома также участвует в seed.")]
+        public int citySeed=25;
+        [Tooltip("Модель завала вместо примитивов. Назначается новым блокировкам лестницы, проход остаётся закрыт отдельной коллизией.")]
+        public GameObject stairBlockerPrefab;
+        [Range(8,30),Tooltip("Уклон кровли домов 1–4 этажа, градусов. Для 5+ используется почти плоская кровля.")]
+        public float lowRiseRoofPitch=18;
     }
     [System.Serializable]
     public sealed class SectionTemplate
