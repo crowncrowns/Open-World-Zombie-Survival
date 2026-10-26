@@ -15,7 +15,7 @@ namespace ZombieSurvival.ModularBuildings.Editor
         void OnDisable(){if(preview.IsValid())EditorSceneManager.ClosePreviewScene(preview);if(previewTexture)DestroyImmediate(previewTexture);}
         void OnGUI(){
             scroll=EditorGUILayout.BeginScrollView(scroll);
-            EditorGUILayout.HelpBox("Профиль V6: до 16 этажей / 6 подъездов. Лестницы только до 4 этажа, квартиры до 3, балконы до 5 этажей. Для новых правил нажмите «Создать/выбрать профиль V6». Старые дома не перестраиваются.",MessageType.Info);
+            EditorGUILayout.HelpBox("Профиль V6: 1–16 этажей / 1–6 подъездов. Одноподъездный корпус — 21 м, остальные секции — по 15 м; готовая квартира не уменьшается. Лестницы до 4 этажа, квартиры до 3. Старые дома не перестраиваются.",MessageType.Info);
             profile=(BuildingSeriesProfile)EditorGUILayout.ObjectField("Профиль",profile,typeof(BuildingSeriesProfile),false);
             if(GUILayout.Button("Создать/выбрать профиль V6"))profile=BuildingGenerator.CreateProfile();
             year=EditorGUILayout.IntField("Год",year);floors=EditorGUILayout.IntField("Этажи",floors);entrances=EditorGUILayout.IntField("Подъезды",entrances);id=EditorGUILayout.TextField("Постоянный ID",id);

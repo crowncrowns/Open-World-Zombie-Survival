@@ -12,6 +12,9 @@ namespace ZombieSurvival.ModularBuildings.Editor
     {
         public static Material EffectiveMaterial(GeneratedBuilding b) => b.exteriorMaterialOverride ? b.exteriorMaterialOverride : b.profile.facadeMaterial;
         public static bool IsDoorSurface(MeshRenderer r) => r.name == "Door_Leaf" || r.name.StartsWith("Door_Frame_", StringComparison.Ordinal);
+        // Balcony modules use three independent wall pieces; frames/glass/handles keep their materials.
+        public static bool IsBalconyWall(MeshRenderer r) => r.name == "Wall_Left" || r.name == "Wall_Right" || r.name == "Wall_Header";
+        public static bool IsTripleWall(MeshRenderer r) => r.name == "Wall_Left" || r.name == "Wall_Right" || r.name == "Wall_Below" || r.name == "Wall_Above";
 
         public static IEnumerable<Transform> Floors(GeneratedBuilding b) => b.transform.Cast<Transform>()
             .Where(t => t.name.StartsWith("Entrance_", StringComparison.Ordinal))
@@ -26,7 +29,7 @@ namespace ZombieSurvival.ModularBuildings.Editor
             foreach (var floor in Floors(b)) foreach (Transform module in floor) {
                 if (!IsOuterModule(module)) continue;
                 foreach (var r in module.GetComponentsInChildren<MeshRenderer>(true))
-                    if (r.name == "Wall_Window" || r.name == "Wall_Solid_Mesh" || r.name.StartsWith("Wall_Door_", StringComparison.Ordinal)) renderers.Add(r);
+                    if (r.name == "Wall_Window" || r.name == "Wall_Solid_Mesh" || r.name.StartsWith("Wall_Door_", StringComparison.Ordinal) || IsBalconyWall(r) || IsTripleWall(r)) renderers.Add(r);
             }
             foreach (var name in new[] { "FacadeCornerClosures", "TerrainFoundation" }) {
                 var group = b.transform.Find(name);

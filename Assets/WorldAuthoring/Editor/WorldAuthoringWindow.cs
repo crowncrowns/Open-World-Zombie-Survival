@@ -34,7 +34,7 @@ namespace ZombieSurvival.WorldAuthoring.Editor
             var entry=plan.lots!=null&&selected>=0&&selected<plan.lots.Count
                 ?plan.catalog.entries?.FirstOrDefault(e=>e!=null&&e.key==plan.lots[selected]?.entryKey):null;
             return EditorJsonUtility.ToJson(plan)+EditorJsonUtility.ToJson(plan.catalog)
-                +(entry?.profile?EditorJsonUtility.ToJson(entry.profile):"")
+                +(entry?.profile?EditorJsonUtility.ToJson(entry.profile)+AssetDatabase.GetAssetDependencyHash(AssetDatabase.GetAssetPath(entry.profile)):"")
                 +(entry?.prefab?AssetDatabase.GetAssetDependencyHash(AssetDatabase.GetAssetPath(entry.prefab)).ToString():"");
         }
         void Update()
@@ -104,7 +104,7 @@ namespace ZombieSurvival.WorldAuthoring.Editor
             Field("id","Постоянный ID участка");Field("title","Название / адрес");Field("enabled","Включён");Field("entryKey","Ключ типа в каталоге");
             Field("position","Центр участка, мировые X/Y/Z");Field("yaw","Поворот вокруг Y, °");Field("size","Размер участка X/Z, м");
             Field("year","Год постройки (метаданные)");Field("floors","Этажи (для профиля)");Field("entrances","Подъезды (для профиля)");
-            fields.Add(new HelpBox("Новый профиль V6: 1–16 этажей и 1–6 подъездов. Старые V4/V5 сохраняют прежние ограничения 1–9 / 1–8. Для новых квартир, балконов, кровли и водостоков выберите тип V6.",HelpBoxMessageType.Info));
+            fields.Add(new HelpBox("Профиль V6: 1–16 этажей / 1–6 подъездов. Корпус с одним подъездом расширяется до 21 м; секции многоподъездного остаются по 15 м. Apart_Variant_1 размещается целиком, без уменьшения. V4/V5 сохраняют прежнюю геометрию.",HelpBoxMessageType.Info));
             fields.Bind(data);fields.RegisterCallback<SerializedPropertyChangeEvent>(_=>{ClosePreview();SceneView.RepaintAll();});
             var placement=new VisualElement();placement.AddToClassList("city-row");
             placement.Add(new Button(()=>Run(()=>{var view=SceneView.lastActiveSceneView;if(view)view.LookAt(lot.position,view.rotation,Mathf.Max(lot.size.x,lot.size.y));})){text="Показать участок"});

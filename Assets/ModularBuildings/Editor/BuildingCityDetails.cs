@@ -18,7 +18,7 @@ namespace ZombieSurvival.ModularBuildings.Editor
             var old=AssetDatabase.LoadAssetAtPath<BuildingSeriesProfile>(path);if(old)return old;
             var p=Object.Instantiate(BuildingGenerator.CreateV5Profile());p.name="CityProfileV6";p.profileId="city-v6-15x12";p.extendedCityRules=true;
             p.evidence="Городской профиль V6: 1–16 этажей, 1–6 подъездов. 1–4 скатная крыша; 5+ почти плоская. Интерьеры до 4 этажа, квартиры до 3.";
-            AssetDatabase.CreateAsset(p,path);return p;
+            p.apartmentLayout=ApartmentPrefabDefaults.GetOrCreate();AssetDatabase.CreateAsset(p,path);return p;
         }
         static Transform Group(Transform parent,string name,Vector3 position)
         {var go=new GameObject(name);go.transform.SetParent(parent,false);go.transform.localPosition=position;return go.transform;}
@@ -31,7 +31,7 @@ namespace ZombieSurvival.ModularBuildings.Editor
         {
             if(b.transform.Find("CityDetails_V6"))throw new InvalidOperationException("Правила V6 уже применены; не перестраивайте существующий дом.");
             var root=Group(b.transform,"CityDetails_V6",Vector3.zero);
-            StairLimit(b,root);Balconies(b,root);Roof(b,root);Drains(b,root);
+            StairLimit(b,root);Balconies(b,root);BuildingPitchedRoof.Add(b,root);Drains(b,root);
         }
         public static List<string> Validate(GeneratedBuilding b)
         {
@@ -45,8 +45,22 @@ namespace ZombieSurvival.ModularBuildings.Editor
             int balconyCount=b.GetComponentsInChildren<PostApocalypse.Balconies.BalconyKitModule>(true).Length;
             if(balconyCount!=(b.floors>5?0:Mathf.Max(1,b.floors-1)*b.entrances*4))errors.Add("Неверное число балконов по этажности.");
             if(transforms.Count(t=>t.name.StartsWith("VentilationStack_E"))!=b.entrances||transforms.Count(t=>t.name.StartsWith("VentilationDuct_E"))!=b.entrances)errors.Add("Нужны вентиляционные шахты и воздуховоды.");
-            var outlets=transforms.Where(t=>t.name=="Нижний слив — ОТ дома").ToArray();if(outlets.Length!=4)errors.Add("Нужны четыре трассы водостока.");
+            var outlets=transforms.Where(t=>t.name=="Нижний слив — ОТ дома").ToArray();if(outlets.Length!=(b.floors>5?0:4))errors.Add("Водостоки допустимы только при этажности до пяти включительно.");
+            if(b.floors>5&&root.Find("Водостоки — замкнутые соединения и крепления"))errors.Add("На доме выше пяти этажей не должно быть группы водостоков/желобов.");
             foreach(var end in outlets){var point=Snap(end.gameObject,"Out");var p=b.transform.InverseTransformPoint(point.transform.position);var direction=b.transform.InverseTransformDirection(point.transform.forward);if(p.z<4.5f?direction.z>-.99f:direction.z<.99f)errors.Add("Нижний слив направлен к стене.");}
+            errors.AddRange(BuildingPitchedRoof.Validate(b));
+            foreach(var level in BuildingExteriorMaterials.Floors(b))foreach(Transform module in level)
+                if(module.name.StartsWith("Front_")||module.name.StartsWith("Rear_"))foreach(var wall in module.GetComponentsInChildren<MeshRenderer>(true).Where(BuildingExteriorMaterials.IsBalconyWall))
+                    if(wall.sharedMaterials.Any(m=>m!=BuildingExteriorMaterials.EffectiveMaterial(b)))errors.Add("Материал балконного выхода отличается от фасада: "+module.name);
+            if(balconyCount>=3&&b.GetComponentsInChildren<PostApocalypse.Balconies.BalconyKitModule>(true).Select(m=>PrefabUtility.GetCorrespondingObjectFromSource(m.gameObject)).Distinct().Count()!=3)errors.Add("Нужны три разных варианта балконов.");
+            foreach(var level in BuildingExteriorMaterials.Floors(b))foreach(Transform module in level)
+            {
+                if(!module.name.StartsWith("Front_")&&!module.name.StartsWith("Rear_"))continue;
+                int bay=int.Parse(module.name.Substring(module.name.IndexOf('_')+1)),middle=Mathf.RoundToInt(BuildingFootprint.SectionWidth(b)/3)/2;
+                bool expected=b.floors>5&&b.entrances>=3&&Mathf.Abs(bay-middle)==2;
+                if(BuildingGenerator.IsTripleWindow(module)!=expected)errors.Add("Нарушено правило вторых тройных окон: "+level.parent.name+"/"+level.name+"/"+module.name);
+                if(expected&&module.Find("ClosedWindowCollision"))errors.Add("Тройное окно перекрыто дополнительным коллайдером.");
+            }
             return errors;
         }
         static void StairLimit(GeneratedBuilding b,Transform root)
@@ -56,7 +70,7 @@ namespace ZombieSurvival.ModularBuildings.Editor
             {
                 // Block only the missing outgoing LEFT flight. A full-shaft box at Y9
                 // would hit the head of a player still ascending the incoming RIGHT flight.
-                var t=Group(root,"Завал — проход с 4 на 5 этаж — подъезд "+(e+1),new Vector3(e*15-.8f,9,6.6f));
+                var t=Group(root,"Завал — проход с 4 на 5 этаж — подъезд "+(e+1),new Vector3(e*BuildingFootprint.SectionWidth(b)-.8f,9,6.6f));
                 var marker=t.gameObject.AddComponent<BuildingStairBlocker>();marker.replacementPrefab=b.profile.stairBlockerPrefab;
                 var c=t.gameObject.AddComponent<BoxCollider>();c.center=new Vector3(0,1.15f,0);c.size=new Vector3(1.4f,2.3f,4.2f);marker.passageBlocker=c;
                 var visual=Group(t,"Временный мусор — заменить префабом",Vector3.zero);marker.generatedVisual=visual.gameObject;
@@ -73,41 +87,25 @@ namespace ZombieSurvival.ModularBuildings.Editor
         static void Balconies(GeneratedBuilding b,Transform root)
         {
             if(b.floors>5)return;
+            float width=BuildingFootprint.SectionWidth(b);int middle=Mathf.RoundToInt(width/3)/2,last=Mathf.RoundToInt(width/3)-1;
             var balconyRoot=Group(root,"Балконы — минимум один промежуточный модуль от подъезда",Vector3.zero);
-            for(int e=0;e<b.entrances;e++)for(int f=b.floors==1?0:1;f<b.floors;f++)foreach(bool rear in new[]{false,true})foreach(int bay in new[]{0,4})
+            uint variantSeed=(uint)b.profile.citySeed;unchecked{foreach(char c in b.buildingId??"")variantSeed=(variantSeed^c)*16777619;}
+            var random=new System.Random((int)variantSeed);var bag=new List<int>();
+            int Variant(){if(bag.Count==0){bag.AddRange(new[]{0,1,2});for(int i=bag.Count-1;i>0;i--){int j=random.Next(i+1);int t=bag[i];bag[i]=bag[j];bag[j]=t;}}int value=bag[bag.Count-1];bag.RemoveAt(bag.Count-1);return value;}
+            for(int e=0;e<b.entrances;e++)for(int f=b.floors==1?0:1;f<b.floors;f++)foreach(bool rear in new[]{false,true})foreach(int bay in new[]{0,last})
             {
                 var level=b.transform.Find($"Entrance_{e+1}/Floor_{f+1}");string module=(rear?"Rear_":"Front_")+bay;var wall=level.Find(module);
                 if(!wall)throw new InvalidOperationException("Нет фасадного модуля для балкона "+module);
                 var position=wall.localPosition;var rotation=wall.localRotation;
                 Object.DestroyImmediate(wall.gameObject);
                 var exit=Part("Assets/Maps/Buildings/Walls/Prefabs/Outside/BalconyExit/Wall_BalconyExit_Interactive.prefab",level,position,rotation);exit.name=module;
-                foreach(var r in exit.GetComponentsInChildren<MeshRenderer>(true))
-                    if(r.name.IndexOf("wall",StringComparison.OrdinalIgnoreCase)>=0||r.name.IndexOf("plaster",StringComparison.OrdinalIgnoreCase)>=0)r.sharedMaterial=b.profile.facadeMaterial;
-                float x=e*15+(bay-2)*3;float z=rear?10.7f:-1.7f;
-                var balcony=Part(BalconyRoot+"Balcony_01_Soviet/Balcony_01_Soviet_A.prefab",balconyRoot,new Vector3(x,f*3-.15f,z),Quaternion.Euler(0,rear?0:180,0));
+                foreach(var r in exit.GetComponentsInChildren<MeshRenderer>(true).Where(BuildingExteriorMaterials.IsBalconyWall))
+                    r.sharedMaterials=Enumerable.Repeat(BuildingExteriorMaterials.EffectiveMaterial(b),r.sharedMaterials.Length).ToArray();
+                float x=e*width+(bay-middle)*3;float z=rear?10.7f:-1.7f;
+                char variant=(char)('A'+Variant());
+                var balcony=Part(BalconyRoot+"Balcony_01_Soviet/Balcony_01_Soviet_"+variant+".prefab",balconyRoot,new Vector3(x,f*3-.15f,z),Quaternion.Euler(0,rear?0:180,0));
                 balcony.name=$"Балкон E{e+1} F{f+1} {(rear?"Rear":"Front")} Bay{bay}";
             }
-        }
-        static void Roof(GeneratedBuilding b,Transform root)
-        {
-            if(b.floors>=5)return;
-            float left=-8,right=(b.entrances-1)*15+8,front=-2,back=11,centre=4.5f;
-            float h=b.floors*3+.18f,rise=Mathf.Tan(b.profile.lowRiseRoofPitch*Mathf.Deg2Rad)*6.5f;
-            var points=new[]{new Vector3(left,h,front),new Vector3(right,h,front),new Vector3(left,h+rise,centre),new Vector3(right,h+rise,centre),new Vector3(left,h,back),new Vector3(right,h,back)};
-            string folder=BuildingGenerator.Folder+"/CityRoofMeshes";if(!AssetDatabase.IsValidFolder(folder))AssetDatabase.CreateFolder(BuildingGenerator.Folder,"CityRoofMeshes");
-            string path=$"{folder}/Gable_{b.entrances}_{b.floors}_{b.profile.lowRiseRoofPitch.ToString("F3",System.Globalization.CultureInfo.InvariantCulture)}.asset";
-            var mesh=AssetDatabase.LoadAssetAtPath<Mesh>(path);
-            if(!mesh)
-            {
-                var vertices=new List<Vector3>();var uv=new List<Vector2>();var indices=new List<int>();
-                void Tri(int a,int c,int d){int n=vertices.Count;foreach(int k in new[]{a,c,d}){vertices.Add(points[k]);uv.Add(new Vector2(points[k].x/3,points[k].z/3));}indices.AddRange(new[]{n,n+1,n+2});}
-                Tri(0,2,1);Tri(1,2,3);Tri(2,4,3);Tri(3,4,5);Tri(0,4,2);Tri(1,3,5);
-                mesh=new Mesh{name="V6 pitched roof"};mesh.SetVertices(vertices);mesh.SetUVs(0,uv);mesh.SetTriangles(indices,0);mesh.RecalculateNormals();mesh.RecalculateTangents();mesh.RecalculateBounds();AssetDatabase.CreateAsset(mesh,path);
-            }
-            var go=Group(root,"Скатная кровля "+b.profile.lowRiseRoofPitch+" градусов",Vector3.zero).gameObject;go.AddComponent<MeshFilter>().sharedMesh=mesh;go.AddComponent<MeshRenderer>().sharedMaterial=b.profile.roofMaterial;go.AddComponent<MeshCollider>().sharedMesh=mesh;
-            var roof=b.transform.Find("Roof_Flat_2Percent");
-            foreach(Transform vent in roof)if(vent.name.StartsWith("Ventilation"))
-            {var p=vent.localPosition;p.y+=.18f+Mathf.Max(0,6.5f-Mathf.Abs(p.z-centre))*Mathf.Tan(b.profile.lowRiseRoofPitch*Mathf.Deg2Rad);vent.localPosition=p;}
         }
         static RoofSnapPoint Snap(GameObject go,string name)=>go.GetComponentsInChildren<RoofSnapPoint>(true).Single(s=>s.name==name);
         static GameObject PipePart(string name,Transform parent,Vector3 inputPosition,float yaw)
@@ -117,8 +115,10 @@ namespace ZombieSurvival.ModularBuildings.Editor
         }
         static void Drains(GeneratedBuilding b,Transform root)
         {
+            if(b.floors>5)return;
             var drains=Group(root,"Водостоки — замкнутые соединения и крепления",Vector3.zero);
-            float left=-8,length=b.entrances*15+1,h=b.floors*3+.18f;
+            float width=BuildingFootprint.SectionWidth(b);
+            float left=-width/2-.5f,length=b.entrances*width+1,h=b.floors*3+.18f;
             foreach(bool rear in new[]{false,true})
             {
                 float gutterZ=rear?11.15f:-2.15f;

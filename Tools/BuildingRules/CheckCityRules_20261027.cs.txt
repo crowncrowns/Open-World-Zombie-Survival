@@ -1,0 +1,87 @@
+// Unity CLI eval body. Edit mode only; builds isolated Preview Scenes.
+// Run from project root. Does not save or rebuild the working scene.
+var source=UnityEditor.AssetDatabase.LoadAssetAtPath<ZombieSurvival.ModularBuildings.BuildingSeriesProfile>("Assets/ModularBuildings/Generated/CityProfileV6.asset");
+var main=UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+if(UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)throw new System.Exception("Edit only");
+string stamp=main.isDirty+"|"+string.Join(";",main.GetRootGameObjects().Select(g=>g.GetEntityId()+":"+g.transform.position.ToString("R")+":"+g.transform.rotation.ToString("R")));
+const string dir="Verification/CityRules_20261027/";System.IO.Directory.CreateDirectory(dir);
+var lines=new System.Collections.Generic.List<string>();
+void Check(bool value,string name){if(!value)throw new System.Exception(name);lines.Add("PASS "+name);}
+void CheckDoors(ZombieSurvival.ModularBuildings.GeneratedBuilding b,bool initialize)
+{
+    foreach(UnityEngine.Transform section in b.transform)
+    {
+        if(!section.name.StartsWith("Entrance_"))continue;
+        bool expected=section.GetComponentsInChildren<ZombieSurvival.ModularBuildings.GeneratedApartment>(true).Any(a=>a.entranceDoor&&a.entranceDoor.enabled);
+        var owner=section.Find("Floor_1").GetComponentsInChildren<UnityEngine.Transform>(true).Single(t=>t.name=="EntranceDoor");
+        var door=owner.GetComponent<ZombieSurvival.Interaction.DoorInteractable>();
+        if(door&&initialize)typeof(ZombieSurvival.Interaction.DoorInteractable).GetMethod("EnsureInitialized",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance).Invoke(door,null);
+        Check(expected?door&&door.IsOpen:!door||!door.IsOpen,section.name+" selected="+expected+" initial entrance state");
+    }
+    Check(ZombieSurvival.ModularBuildings.Editor.BuildingApartments.ValidateEntranceAccess(b).Count==0,"entrance open105/outward/reference validation");
+}
+try
+{
+    foreach(var spec in new[]{new[]{5,3},new[]{6,2},new[]{6,3},new[]{16,6}})
+    {
+        int floors=spec[0],entrances=spec[1];string label=$"F{floors}_E{entrances}";
+        System.IO.File.AppendAllText(dir+"Progress.txt",System.DateTime.UtcNow.ToString("O")+" "+label+"\n");
+        var scene=UnityEditor.SceneManagement.EditorSceneManager.NewPreviewScene();
+        try
+        {
+            var b=ZombieSurvival.ModularBuildings.Editor.BuildingGenerator.Build(source,1980,floors,entrances,"city-rules-20261027-"+label,scene);
+            var errors=ZombieSurvival.ModularBuildings.Editor.BuildingGenerator.Validate(b);
+            Check(errors.Count==0,label+" production Validate=0: "+string.Join(";",errors));
+            var modules=b.GetComponentsInChildren<UnityEngine.Transform>(true).Where(t=>t.name.StartsWith("Front_")||t.name.StartsWith("Rear_")).ToArray();
+            var triple=modules.Where(ZombieSurvival.ModularBuildings.Editor.BuildingGenerator.IsTripleWindow).ToArray();
+            Check(triple.Length==(floors>5&&entrances>=3?floors*entrances*4:0),label+" triple window count="+triple.Length);
+            foreach(var t in triple)
+            {
+                int bay=int.Parse(t.name.Substring(t.name.IndexOf('_')+1));
+                Check(System.Math.Abs(bay-2)==2&&!t.Find("ClosedWindowCollision"),label+" second bay/native interactive collision");
+                Check(t.GetComponentsInChildren<ZombieSurvival.Interaction.DoorInteractable>(true).Length==2,label+" two opening window sashes");
+            }
+            var drainage=b.GetComponentsInChildren<UnityEngine.Transform>(true).Count(t=>t.name=="Нижний слив — ОТ дома");
+            Check(drainage==(floors>5?0:4),label+" downpipe routes="+drainage);
+            CheckDoors(b,true);
+            Check(ZombieSurvival.ModularBuildings.Editor.BuildingApartments.ValidateNoGeneratedWalls(b).Count==0,label+" source-only apartments retained");
+            if(floors==6&&entrances==3)
+            {
+                var rooms=b.GetComponentsInChildren<ZombieSurvival.ModularBuildings.GeneratedApartmentRoom>(true).ToDictionary(r=>r,r=>r.availableForLoot);
+                foreach(var pair in rooms)pair.Key.availableForLoot=false;
+                CheckDoors(b,true);Check(ZombieSurvival.ModularBuildings.Editor.BuildingApartments.ValidateEntranceAccess(b).Count==0,"entrance access independent of loot marker flags");
+                foreach(var pair in rooms)pair.Key.availableForLoot=pair.Value;
+                var walls=triple.SelectMany(t=>t.GetComponentsInChildren<UnityEngine.MeshRenderer>(true)).Where(ZombieSurvival.ModularBuildings.Editor.BuildingExteriorMaterials.IsTripleWall).ToArray();
+                var protect=triple.SelectMany(t=>t.GetComponentsInChildren<UnityEngine.MeshRenderer>(true)).Where(r=>!ZombieSurvival.ModularBuildings.Editor.BuildingExteriorMaterials.IsTripleWall(r)).ToDictionary(r=>r,r=>r.sharedMaterials);
+                ZombieSurvival.ModularBuildings.Editor.BuildingExteriorMaterials.Apply(b,source.stairWallMaterial,false,false);
+                Check(walls.Length==triple.Length*4&&walls.All(r=>r.sharedMaterials.All(m=>m==source.stairWallMaterial)),"triple wall material override");
+                Check(protect.All(p=>p.Key.sharedMaterials.SequenceEqual(p.Value)),"triple glass/frame/hardware materials retained");
+                ZombieSurvival.ModularBuildings.Editor.BuildingExteriorMaterials.Apply(b,source.facadeMaterial,false,false);
+                var capture=typeof(ZombieSurvival.ModularBuildings.Editor.ApartmentPrefabChecks).GetMethod("Capture",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Static);
+                capture.Invoke(null,new object[]{scene,b,dir+"F6_E3.png",false});
+                string path=UnityEditor.AssetDatabase.GenerateUniqueAssetPath("Assets/ModularBuildings/Generated/CityV6_Rules_20261027_6F_3E.prefab");
+                Check(UnityEditor.PrefabUtility.SaveAsPrefabAsset(b.gameObject,path)!=null,"review prefab saved: "+path);
+                var loaded=UnityEditor.PrefabUtility.LoadPrefabContents(path);
+                try
+                {
+                    var restored=loaded.GetComponent<ZombieSurvival.ModularBuildings.GeneratedBuilding>();CheckDoors(restored,true);
+                    Check(ZombieSurvival.ModularBuildings.Editor.BuildingCityDetails.Validate(restored).Count==0,"saved triple/drain rules retained");
+                }
+                finally{UnityEditor.PrefabUtility.UnloadPrefabContents(loaded);}
+                b.transform.SetPositionAndRotation(new UnityEngine.Vector3(5000,12,5000),UnityEngine.Quaternion.Euler(0,37,0));
+                Check(ZombieSurvival.ModularBuildings.Editor.BuildingGenerator.Validate(b).Count==0,"production Validate after world move/yaw37");
+                System.IO.File.WriteAllText(dir+"ReviewPrefab.txt",path);
+            }
+        }
+        finally{UnityEditor.SceneManagement.EditorSceneManager.ClosePreviewScene(scene);}
+    }
+}
+catch(System.Exception e){lines.Add("FAIL "+e);}
+finally
+{
+    if(main.IsValid()&&main.isLoaded)UnityEngine.SceneManagement.SceneManager.SetActiveScene(main);
+    if(stamp!=main.isDirty+"|"+string.Join(";",main.GetRootGameObjects().Select(g=>g.GetEntityId()+":"+g.transform.position.ToString("R")+":"+g.transform.rotation.ToString("R"))))lines.Add("FAIL original scene roots/poses/dirty changed");
+    else lines.Add("PASS original scene roots/poses/dirty retained");
+    System.IO.File.WriteAllLines(dir+"Checks.txt",lines);
+}
+return lines.Where(l=>l.StartsWith("FAIL")).DefaultIfEmpty("PASS all city rule checks").ToArray();

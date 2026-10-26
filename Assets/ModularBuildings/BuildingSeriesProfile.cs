@@ -41,6 +41,8 @@ namespace ZombieSurvival.ModularBuildings
         public bool extendedCityRules;
         [Tooltip("Seed планировки квартир и вариантов фасада. ID дома также участвует в seed.")]
         public int citySeed=25;
+        [Tooltip("Готовая квартира и её точки привязки. Создаётся целиком без уменьшения комнат; может занимать соседние секции.")]
+        public ApartmentPrefabLayout apartmentLayout;
         [Tooltip("Модель завала вместо примитивов. Назначается новым блокировкам лестницы, проход остаётся закрыт отдельной коллизией.")]
         public GameObject stairBlockerPrefab;
         [Range(8,30),Tooltip("Уклон кровли домов 1–4 этажа, градусов. Для 5+ используется почти плоская кровля.")]

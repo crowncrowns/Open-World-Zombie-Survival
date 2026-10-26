@@ -36,7 +36,7 @@ namespace ZombieSurvival.WorldAuthoring.Editor
             }
         }
         public static Vector2 PlannedFootprint(CityBuildingEntry entry,CityLot lot)=>entry.kind==CityBuildingKind.Profile
-            ?new Vector2(entry.profile.section.sectionWidth*lot.entrances,entry.profile.section.sectionDepth):entry.prefabFootprint;
+            ?new Vector2(BuildingFootprint.SectionWidth(entry.profile,lot.entrances)*lot.entrances,entry.profile.section.sectionDepth):entry.prefabFootprint;
         public static List<string> Validate(CityBlockPlan plan,Scene target)
         {
             var errors=new List<string>();
@@ -201,7 +201,7 @@ namespace ZombieSurvival.WorldAuthoring.Editor
                         var geometryErrors=BuildingGenerator.Validate(content.GetComponent<GeneratedBuilding>());
                         if(geometryErrors.Count>0){Object.DestroyImmediate(content);throw new InvalidOperationException(string.Join("\n",geometryErrors));}
                     }
-                    center=new Vector2((lot.entrances-1)*entry.profile.section.sectionWidth*.5f,4.5f);
+                    center=new Vector2((lot.entrances-1)*BuildingFootprint.SectionWidth(entry.profile,lot.entrances)*.5f,4.5f);
                 }
                 else
                 {

@@ -6,6 +6,7 @@ namespace ZombieSurvival.ModularBuildings
         public string buildingId;
         public BuildingSeriesProfile profile;
         public int year, floors, entrances;
+        [HideInInspector] public float generatedSectionWidth;
         public string revision = "demo-v4";
         [HideInInspector] public int endWindowRuleVersion;
         [HideInInspector] public int exteriorEnvelopeVersion;

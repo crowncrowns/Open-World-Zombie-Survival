@@ -1,0 +1,78 @@
+// Explicit Unity CLI eval body. No rebuild, no profile/asset mutation, no scene save.
+const string dir="Verification/Demo012Paint_20261027/";
+System.IO.Directory.CreateDirectory(dir);
+if(UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)throw new System.Exception("Edit only");
+var scene=UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+var matches=scene.GetRootGameObjects().SelectMany(r=>r.GetComponentsInChildren<ZombieSurvival.ModularBuildings.GeneratedBuilding>(true)).Where(b=>b.name=="Building_demo-building-012").ToArray();
+if(matches.Length!=1)throw new System.Exception("Expected exactly one Building_demo-building-012");
+var b=matches[0];if(b.floors!=12||b.entrances!=1||UnityEngine.Mathf.Abs(ZombieSurvival.ModularBuildings.BuildingFootprint.SectionWidth(b)-21)>.001f)throw new System.Exception("Unexpected target dimensions");
+UnityEngine.Material Load(string folder,string name){var m=UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.Material>("Assets/Maps/Buildings/Textures/"+folder+"/"+name+".mat");if(!m)throw new System.Exception("Missing material "+name);return m;}
+var yellow=Load("AgedOchreFacade_01","M_AgedOchreFacade_01_URP");
+var red=Load("AgedCoralFacade_01","M_AgedCoralFacade_01_URP");
+var plinth=Load("WeatheredPlinth_01","M_WeatheredPlinth_01_URP");
+var baseRoot=b.transform.Find("BaseTrim");if(!baseRoot)throw new System.Exception("Existing BaseTrim required: no geometry created by painting");
+var walls=ZombieSurvival.ModularBuildings.Editor.BuildingExteriorMaterials.Walls(b);
+var bases=baseRoot.GetComponentsInChildren<UnityEngine.MeshRenderer>(true);
+var intended=new System.Collections.Generic.Dictionary<UnityEngine.MeshRenderer,UnityEngine.Material>();
+// Broad 3–4-storey fields with staggered boundaries; never alternate individual windows.
+bool RedField(int floor,int bay,bool rear)
+{
+    if(rear)bay=6-bay;
+    if(floor<=2)return bay<=1;
+    if(floor<=5)return bay<=2;
+    if(floor<=8)return bay>=2&&bay<=4;
+    return bay>=3&&bay<=5;
+}
+foreach(var r in walls)
+{
+    UnityEngine.Material material=yellow;
+    var module=r.transform;
+    while(module.parent && module.parent!=b.transform && !module.name.StartsWith("Front_") && !module.name.StartsWith("Rear_") && module.name!="LeftEnd" && module.name!="RightEnd")module=module.parent;
+    if(module.name.StartsWith("Front_")||module.name.StartsWith("Rear_"))
+    {
+        int bay=int.Parse(module.name.Substring(module.name.IndexOf('_')+1));
+        int floor=UnityEngine.Mathf.RoundToInt(b.transform.InverseTransformPoint(module.position).y/3);
+        material=RedField(floor,bay,module.name.StartsWith("Rear_"))?red:yellow;
+    }
+    else if(module.name=="LeftEnd"||module.name=="RightEnd")
+    {
+        int floor=UnityEngine.Mathf.RoundToInt(b.transform.InverseTransformPoint(module.position).y/3);
+        var p=b.transform.InverseTransformPoint(r.transform.position);
+        bool frontHalf=p.z<4.5f;
+        bool patch=module.name=="LeftEnd"?floor<=5&&frontHalf:floor>=6&&!frontHalf;
+        material=patch?red:yellow;
+    }
+    intended[r]=material;
+}
+foreach(var r in bases)intended[r]=plinth;
+string Pose(UnityEngine.Transform t)=> (t.parent?t.parent.GetEntityId().ToString():"root")+"|"+t.localPosition.ToString("R")+"|"+t.localRotation.ToString("R")+"|"+t.localScale.ToString("R");
+string Materials(UnityEngine.MeshRenderer r)=>string.Join(",",r.sharedMaterials.Select(m=>m?m.GetEntityId().ToString():"null"));
+var poses=scene.GetRootGameObjects().SelectMany(g=>g.GetComponentsInChildren<UnityEngine.Transform>(true)).ToDictionary(t=>t,t=>Pose(t));
+var untouched=scene.GetRootGameObjects().SelectMany(g=>g.GetComponentsInChildren<UnityEngine.MeshRenderer>(true)).Where(r=>!intended.ContainsKey(r)).ToDictionary(r=>r,r=>Materials(r));
+var apartments=b.GetComponentsInChildren<ZombieSurvival.ModularBuildings.GeneratedApartment>(true).ToDictionary(a=>a,a=>UnityEditor.EditorJsonUtility.ToJson(a));
+string buildingBefore=UnityEditor.EditorJsonUtility.ToJson(b);
+var identity=b.buildingId;var profile=b.profile;
+UnityEditor.Undo.IncrementCurrentGroup();int group=UnityEditor.Undo.GetCurrentGroup();UnityEditor.Undo.SetCurrentGroupName("Жёлто-красный фасад demo012");
+try
+{
+    UnityEditor.Undo.RecordObjects(intended.Keys.Cast<UnityEngine.Object>().Concat(new UnityEngine.Object[]{b}).ToArray(),"Ступенчатые поля фасада");
+    foreach(var p in intended)
+    {
+        p.Key.sharedMaterials=Enumerable.Repeat(p.Value,p.Key.sharedMaterials.Length).ToArray();
+        UnityEditor.EditorUtility.SetDirty(p.Key);UnityEditor.PrefabUtility.RecordPrefabInstancePropertyModifications(p.Key);
+    }
+    b.exteriorMaterialOverride=yellow;b.baseTrimMaterialOverride=plinth;
+    UnityEditor.EditorUtility.SetDirty(b);UnityEditor.PrefabUtility.RecordPrefabInstancePropertyModifications(b);
+    foreach(var p in poses)if(!p.Key||Pose(p.Key)!=p.Value)throw new System.Exception("Transform changed");
+    foreach(var p in untouched)if(!p.Key||Materials(p.Key)!=p.Value)throw new System.Exception("Unaffected renderer changed");
+    foreach(var p in apartments)if(!p.Key||UnityEditor.EditorJsonUtility.ToJson(p.Key)!=p.Value)throw new System.Exception("Apartment changed");
+    var beforeJson=Newtonsoft.Json.Linq.JObject.Parse(buildingBefore);var afterJson=Newtonsoft.Json.Linq.JObject.Parse(UnityEditor.EditorJsonUtility.ToJson(b));
+    var beforeBody=(beforeJson["MonoBehaviour"] as Newtonsoft.Json.Linq.JObject)??beforeJson;var afterBody=(afterJson["MonoBehaviour"] as Newtonsoft.Json.Linq.JObject)??afterJson;
+    foreach(string key in new[]{"exteriorMaterialOverride","baseTrimMaterialOverride"}){beforeBody.Remove(key);afterBody.Remove(key);}
+    if(!Newtonsoft.Json.Linq.JToken.DeepEquals(beforeJson,afterJson)||b.buildingId!=identity||b.profile!=profile)throw new System.Exception("Unexpected building metadata change");
+    foreach(var p in intended)if(!p.Key.sharedMaterials.All(m=>m==p.Value))throw new System.Exception("Material assignment mismatch");
+    UnityEditor.Undo.CollapseUndoOperations(group);UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(scene);
+    var report=new{pass=true,target=b.name,buildingID=identity,scene=scene.path,saved=false,transforms=poses.Count,unaffectedRenderers=untouched.Count,apartments=apartments.Count,yellowRenderers=intended.Count(p=>p.Value==yellow),redFacadeRenderers=intended.Count(p=>p.Value==red),plinthRenderers=intended.Count(p=>p.Value==plinth),assignments=intended.Select(p=>new{renderer=p.Key.name,id=p.Key.GetEntityId().ToString(),material=UnityEditor.AssetDatabase.GetAssetPath(p.Value)})};
+    string json=Newtonsoft.Json.JsonConvert.SerializeObject(report,Newtonsoft.Json.Formatting.Indented);System.IO.File.WriteAllText(dir+"PaintResult.json",json);return json;
+}
+catch{UnityEditor.Undo.RevertAllDownToGroup(group);throw;}
