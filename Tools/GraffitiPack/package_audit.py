@@ -21,9 +21,12 @@ with tarfile.open(package,'r:gz') as archive:
     for path,digest in paths.items():
         local=root/path
         if not local.exists() or sha(local.read_bytes())!=digest:mismatch.append(path)
-    texture_paths=[p for p in paths if '/Textures/' in p and p.endswith('.png')]
-    prefab_paths=[p for p in paths if '/Prefabs/' in p and p.endswith('.prefab')]
+    texture_paths=[p for p in paths if '/Textures/' in p and p.endswith('.png') and '/Impacts/' not in p]
+    prefab_paths=[p for p in paths if '/Prefabs/' in p and p.endswith('.prefab') and '/Impacts/' not in p]
+    impact_textures=[p for p in paths if '/Textures/Impacts/' in p and p.endswith('.png')]
+    impact_prefabs=[p for p in paths if '/Prefabs/Impacts/' in p and p.endswith('.prefab')]
     assert len(texture_paths)==expected and len(prefab_paths)==expected,(len(texture_paths),len(prefab_paths))
+    assert len(impact_textures)==3 and len(impact_prefabs)==3,(len(impact_textures),len(impact_prefabs))
     assert not mismatch,mismatch
 texture_report=json.loads((output/'texture_validation.json').read_text(encoding='utf-8'))
 assert texture_report['count']==expected and texture_report['uniqueHashes']==expected
@@ -34,6 +37,6 @@ for row in texture_report['items']:
     assert all(x.max()==0 for x in [a[0],a[-1],a[:,0],a[:,-1]])
 files=[dict(path=str(p.relative_to(root)).replace('\\','/'),bytes=p.stat().st_size,sha256=sha(p.read_bytes())) for p in sorted(pack.rglob('*')) if p.is_file()]
 (output/'asset_manifest.json').write_text(json.dumps(dict(files=files),ensure_ascii=False,indent=2),encoding='utf-8')
-result=dict(package=str(package.relative_to(root)),packageSha256=sha(package.read_bytes()),packageBytes=package.stat().st_size,packagedAssets=len(paths),sourcePNGs=expected,prefabs=expected,allPackagePayloadsMatchCheckout=True,allPNGsRGBA2048AndZeroAlphaBorders=True)
+result=dict(package=str(package.relative_to(root)),packageSha256=sha(package.read_bytes()),packageBytes=package.stat().st_size,packagedAssets=len(paths),sourcePNGs=expected,prefabs=expected,impactTextures=len(impact_textures),impactPrefabs=len(impact_prefabs),allPackagePayloadsMatchCheckout=True,allPNGsRGBA2048AndZeroAlphaBorders=True)
 (output/'package_integrity.json').write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding='utf-8')
 print(json.dumps(result,ensure_ascii=False))

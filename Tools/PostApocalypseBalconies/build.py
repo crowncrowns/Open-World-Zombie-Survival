@@ -9,6 +9,7 @@ from math import sin, cos, pi, sqrt
 from random import Random
 import bpy, bmesh, json, sys
 from mathutils import Vector
+from mathutils.bvhtree import BVHTree
 
 ROOT = Path(__file__).resolve().parents[2]
 args = sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else []
@@ -95,7 +96,7 @@ for material_name in SURFACE: make_material(material_name)
 
 
 class Mesh:
-    def __init__(self): self.v=[]; self.f=[]; self.uv=[]; self.mi=[]
+    def __init__(self): self.v=[]; self.f=[]; self.uv=[]; self.mi=[]; self.labels=[]; self.label=0
     def face(self, points, mat, uvs=None):
         points=[tuple(float(c) for c in p) for p in points]
         if uvs is None:
@@ -104,7 +105,7 @@ class Mesh:
                 uvs=[(0,0),((b-a).length,0),((b-a).length,(c-b).length)]
                 if len(points)==4: uvs.append((0,(points[3][1]-points[0][1])**2**.5 if False else (Vector(points[3])-a).length))
             else: uvs=[(0,0)]*len(points)
-        start=len(self.v); self.v.extend(points); self.uv.extend(uvs); self.f.append(tuple(range(start,start+len(points)))); self.mi.append(mat)
+        start=len(self.v); self.v.extend(points); self.labels.extend([self.label]*len(points)); self.uv.extend(uvs); self.f.append(tuple(range(start,start+len(points)))); self.mi.append(mat)
     def box(self, center, size, mat, bevel=0.0):
         x,y,z=center; sx,sy,sz=[max(.001,float(q))/2 for q in size]
         if bevel>0:
@@ -185,13 +186,18 @@ def create_obj(name, mesh, collision=False):
     used=sorted(set(mesh.mi))
     for mi in used: bm.materials.append(make_material(MAT_NAMES[mi]))
     uv=bm.uv_layers.new(name='UV0')
+    labels=bm.color_attributes.new(name='SupportLabel',type='FLOAT_COLOR',domain='CORNER')
     for poly,mi in zip(bm.polygons,mesh.mi):
         poly.material_index=used.index(mi)
-        for li in poly.loop_indices: uv.data[li].uv=mesh.uv[bm.loops[li].vertex_index]
+        for li in poly.loop_indices:
+            vi=bm.loops[li].vertex_index
+            uv.data[li].uv=mesh.uv[vi]
+            tag=mesh.labels[vi]
+            labels.data[li].color=(float(tag&1),float((tag>>1)&1),float((tag>>2)&1),1.0)
     bm.validate(clean_customdata=False)
     bm.calc_loop_triangles()
     ob=bpy.data.objects.new(name,bm); bpy.context.collection.objects.link(ob)
-    edit=bmesh.new();edit.from_mesh(bm);bmesh.ops.recalc_face_normals(edit,faces=list(edit.faces));edit.to_mesh(bm);edit.free();bm.update()
+    edit=bmesh.new();edit.from_mesh(bm);bmesh.ops.remove_doubles(edit,verts=list(edit.verts),dist=1e-7);bmesh.ops.recalc_face_normals(edit,faces=list(edit.faces));edit.to_mesh(bm);edit.free();bm.update()
     for poly in bm.polygons: poly.use_smooth=False
     if not collision and name.startswith('LOD'):
         # Small manufactured edge radii catch light at close inspection without
@@ -231,6 +237,14 @@ def slab_outline(state, rng, depth=1.2):
     return []
 
 
+def inside_polygon(x,z,outline):
+    inside=False
+    for i,(ax,az) in enumerate(outline):
+        bx,bz=outline[(i+1)%len(outline)]
+        if (az>z)!=(bz>z) and x<(bx-ax)*(z-az)/(bz-az)+ax:inside=not inside
+    return inside
+
+
 def add_slab(m, state, rng, depth=1.2, floor_mat='BAL_Concrete', thickness=.15, collision=False):
     if state=='D':
         # Two surviving slab shelves; the large central/front void is real geometry
@@ -252,11 +266,15 @@ def add_slab(m, state, rng, depth=1.2, floor_mat='BAL_Concrete', thickness=.15, 
         for _ in range(3 if state=='B' else 6):
             x=rng.uniform(-1.15,1.15);length=rng.uniform(.12,.32);z=rng.uniform(.3,max(.31,depth-.20-length))
             if abs(x)>1.18 or z>depth-.12:continue
-            m.rod_path([(x,.151,z),(x+rng.uniform(-.05,.05),.151,z+length*.45),(x+rng.uniform(-.06,.06),.151,z+length)],.0028,B('BAL_ConcreteDamage'),5)
+            points=[(x,.151,z),(x+rng.uniform(-.05,.05),.151,z+length*.45),(x+rng.uniform(-.06,.06),.151,z+length)]
+            if all(inside_polygon(px,pz,slab_outline(state,rng,depth)) for px,py,pz in points):m.rod_path(points,.0028,B('BAL_ConcreteDamage'),5)
 
 
 def add_metal_supports(m, level, depth, mat='BAL_CorrodedSteel'):
     s=B(mat);r=[.024,.022,.018,.016][level]
+    # Surviving anchored steel skeleton carries rail fragments above missing concrete.
+    for x in (-1.18,1.18):m.box((x,.06,depth/2),(.045,.06,depth-.04),s)
+    m.box((0,.06,depth-.045),(2.64,.06,.045),s)
     for x in (-1.08,1.08):
         m.box((x,.013,depth/2),(.065,.035,depth-.12),s)
         m.rod_path([(x,0,.07),(x,.60,.38),(x,.02,.78)],r,s,[10,8,6,5][level])
@@ -264,17 +282,19 @@ def add_metal_supports(m, level, depth, mat='BAL_CorrodedSteel'):
 
 
 def add_concrete_cracks(m, level, rng, state, depth):
+    if state=='D':return
     n=[7,4,2,1][level]
     mat=B('BAL_ConcreteDamage')
     for i in range(n):
         x=-1.12+i*.34+rng.uniform(-.07,.07); z=.28+(i%3)*.24
         pts=[(x,.153,z),(x+.035,.154,z+.045),(x-.025,.154,z+.105),(x+.06,.154,z+.17)]
-        m.rod_path(pts,[.003,.003,.0024,.002][level],mat,5)
+        if all(inside_polygon(x,z,slab_outline(state,rng,depth)) for x,y,z in pts):m.rod_path(pts,[.003,.003,.0024,.002][level],mat,5)
 
 
 def add_wood_floor(m, level, rng, state, depth, collision=False):
     mat=B('BAL_RottenTimber' if state in ('C','D') and rng.random()<.45 else 'BAL_Timber')
-    board_count=[13,9,6,4][level]
+    # Missing boards are structural openings: retain their layout at every LOD.
+    board_count=13
     x0=-1.31; x1=1.31; width=(x1-x0)/board_count
     missing={
         'A':set(), 'B':{board_count-2},
@@ -335,6 +355,8 @@ def add_guardrails(m, level, rng, state, kind, depth):
     if kind in ('glazedwood','loggia'):
         return
     for x0,x1 in segments:
+        # Every disconnected upper rail segment has full-height end posts.
+        for x in (x0,x1):m.cylinder((x,.06,frontz),(x,1.18,frontz),r,railmat,[10,8,6,5][level])
         def top_path(y):
             if state in ('C','D') and x1-x0>.6:return [(x0,y,frontz),(x0+(x1-x0)*.45,y-.06,frontz+.035),(x1,y-.10,frontz)]
             return [(x0,y,frontz),(x1,y,frontz)]
@@ -402,9 +424,9 @@ def add_glazing(m, level, rng, state, depth, modern=False):
     glass=B('BAL_Glass'); dirty=B('BAL_Plastic' if state=='D' and not modern else 'BAL_Glass')
     outerz=depth-.06; y0=.34; y1=2.18; x0=-1.28; x1=1.28
     bays=5 if modern else 4; xs=[x0+(x1-x0)*i/bays for i in range(bays+1)]
+    for x in (-1.28,0,1.28):m.box((x,(.06+y0)/2,outerz),(.045,y0-.06,.055),frame)
     # Outer frame and track. Individual profiles produce real openings rather than one filled box.
     for x in xs:
-        if state=='D' and rng.random()<.38:continue
         off=.045 if modern else .055
         m.box((x,(y0+y1)/2,outerz), (off,y1-y0,.055),frame)
     m.box((0,y0,outerz),(2.62,.07,.08),frame)
@@ -417,11 +439,11 @@ def add_glazing(m, level, rng, state, depth, modern=False):
         board = state in ('C','D') and i==(1 if modern else 0)
         if missing and not board:continue
         mat=B('BAL_RottenTimber') if board else (dirty if state in ('B','C','D') and rng.random()<.48 else glass)
-        height=y1-y0-.12
+        height=y1-y0-.06
         if board:
             for j in range(3 if level<2 else 2):
                 yy=y0+.12+j*height/(3 if level<2 else 2)
-                m.box(((left+right)/2,yy,outerz+.008),(right-left,.055,.025),B('BAL_Timber'))
+                m.box(((left+right)/2,yy,outerz+.008),(right-left+.05,.055,.025),B('BAL_Timber'))
         else:
             pane_depth=.012 if modern else .018
             m.box(((left+right)/2,(y0+y1)/2,outerz+.01),(right-left,height,pane_depth),mat)
@@ -429,7 +451,7 @@ def add_glazing(m, level, rng, state, depth, modern=False):
             if level==0:
                 m.box(((left+right)/2,y0+.13,outerz+.024),(right-left,.022,.018),frame)
                 if modern:m.box(((left+right)/2,(y0+y1)/2,outerz+.026),(.018,height,.018),frame)
-        if not modern and state in ('B','C','D') and i==0:
+        if not modern and state in ('B','C') and i==0:
             # One visibly loose sash is tilted but stays inside the facade module.
             m.rod_path([(left,y1-.05,outerz+.005),(right-.12,y1-.15,outerz+.015)],.018,frame,[8,7,6,5][level])
     # Small sill and lower exterior drip rail.
@@ -438,31 +460,44 @@ def add_glazing(m, level, rng, state, depth, modern=False):
 
 def add_vines(m, level, rng, state, depth):
     count={'A':2,'B':5,'C':8,'D':10}[state]
-    leafmat=B('BAL_Organic'); stem=B('BAL_RottenTimber')
+    leafmat=B('BAL_Organic');stem=B('BAL_RottenTimber')
+    anchors={'C':[-.55,-.22,.55,.88],'D':[-.88,-.54,.08,.77]}
     for i in range(count):
-        x=-1.18+2.36*i/max(1,count-1)
-        z=depth-.055
-        direction=1 if i%2==0 else -1
-        length=rng.uniform(.55,1.25)*(1.0 if state in ('C','D') else .72)
-        points=[(x,1.18,z),(x+direction*.08,.92,z+.01),(x-direction*.06,.68,z+.01),(x+direction*.10,.45,z+.02),(x+direction*.05,.27,z+.03)]
-        m.rod_path(points[:4 if level<2 else 3],.008,stem,[7,6,5,4][level])
+        x=-1.18+2.36*i/max(1,count-1);top=1.18
+        if state in anchors:
+            x=anchors[state][i%len(anchors[state])];top=1.10
+        z=depth-.045;direction=1 if i%2==0 else -1
+        length=min(.97,rng.uniform(.55,1.25)*(1.0 if state in ('C','D') else .72))
+        knots=[6,5,4,3][level]
+        points=[]
+        for j in range(knots):
+            t=j/(knots-1)
+            points.append(Vector((max(-1.18,min(1.18,x+direction*.055*sin(t*pi*2))),top-t*length,z-.018*sin(t*pi))))
+        m.rod_path(points,.008,stem,[7,6,5,4][level])
         leaves=[8,5,3,2][level]
         for j in range(leaves):
-            t=(j+1)/(leaves+1); yy=1.12-t*length; xx=max(-1.12,min(1.12,x+direction*.07*sin(t*pi*2)))
-            size=rng.uniform(.035,.075)
-            m.ellipsoid((xx+size,yy,z+.018),(size*1.6,size*.45,.012),leafmat,3,5)
-            m.ellipsoid((xx-size,yy-.015,z+.022),(size*1.4,size*.40,.012),leafmat,3,5)
-    for x in (-1.0,-.3,.5,1.0):
-        if state in ('C','D'):
-            m.ellipsoid((x,.159,depth*.6),(.22,.012,.13),B('BAL_Organic'),3,7)
+            t=(j+1)/(leaves+1);segment=min(knots-2,int(t*(knots-1)))
+            root=points[segment].lerp(points[segment+1],t*(knots-1)-segment)
+            size=rng.uniform(.035,.065)
+            for side in (-1,1):
+                center=root+Vector((side*size*.60,-.012,.006))
+                m.cylinder(root,center,.003,stem,5)
+                m.ellipsoid(center,(size*1.6,size*.45,.012),leafmat,3,5)
+    if state=='C':
+        outline=slab_outline(state,rng,depth)
+        for x in (-1.0,-.3,.5,1.0):
+            z=depth*.6
+            if all(inside_polygon(x+dx,z+dz,outline) for dx in (-.11,.11) for dz in (-.065,.065)):
+                m.ellipsoid((x,.156,z),(.22,.012,.13),leafmat,3,7)
 
 
 def add_burn_damage(m, level, rng, state, depth):
     mat=B('BAL_Burnt'); soot=B('BAL_ConcreteDamage')
-    for i in range([12,8,5,3][level]):
+    for i in range(0 if state=='D' else [12,8,5,3][level]):
         x=-1.20+i*.21;z=.24+(i%4)*.22
         length=rng.uniform(.10,.24)
-        m.rod_path([(x,.153,z),(x+.025,.154,z+length*.35),(x-.018,.154,z+length)],.003 if level<2 else .002,soot,5)
+        points=[(x,.153,z),(x+.025,.154,z+length*.35),(x-.018,.154,z+length)]
+        if all(inside_polygon(px,pz,slab_outline(state,rng,depth)) for px,py,pz in points):m.rod_path(points,.003 if level<2 else .002,soot,5)
     # Charred remnants of wooden glazing rails.
     for x in (-1.16,-.63,.05,.72,1.18):
         if state=='D' and abs(x)<.7:continue
@@ -470,19 +505,26 @@ def add_burn_damage(m, level, rng, state, depth):
     if state in ('C','D'):
         for x in (-1.0,-.45,.35,.9):
             if state=='D' and x>0:continue
-            m.box((x,.19,.56),(.16,.08,.13),B('BAL_Burnt'))
+            m.box((x,.19,.20 if state=='D' else .56),(.16,.08,.13),B('BAL_Burnt'))
 
 
 def prop_geo(m, prop, level, rng, center=(0,.15,.5), compact=False):
     x,y,z=center; steel=B('BAL_CorrodedSteel'); paint=B('BAL_PaintedSteel'); wood=B('BAL_Timber'); rotten=B('BAL_RottenTimber'); org=B('BAL_Organic'); glass=B('BAL_Glass')
     rad=[10,8,6,5][level]
     if prop=='SatelliteDish_Rusted':
+        m.box((x,y+.055,z),(.26,.04,.20),steel)
+        m.cylinder((x,y+.065,z),(x,y+.12,z),.012,steel,6)
         r=.25; depth=.055
         rings=[2,2,1,1][level]; n=[18,12,8,6][level]
         for k in range(rings):
             rr=r*(.48+.52*k/max(1,rings-1)); yy=y+.36+depth*(1-(rr/r)**2)
             points=[(x+rr*cos(2*pi*i/n),yy,z+rr*sin(2*pi*i/n)) for i in range(n)]
             for i in range(n):m.cylinder(points[i],points[(i+1)%n],.004,steel,5)
+        for i in range(6):
+            angle=2*pi*i/6
+            points=[(x,y+.415,z),(x+r*.48*cos(angle),y+.36+depth*(1-.48**2),z+r*.48*sin(angle))]
+            if rings>1:points.append((x+r*cos(angle),y+.36,z+r*sin(angle)))
+            m.rod_path(points,.006,steel,6)
         m.rod_path([(x,y+.10,z),(x,y+.33,z),(x,y+.43,z)],.012,steel,8)
         m.rod_path([(x-.18,y+.13,z),(x,y+.08,z),(x+.18,y+.13,z)],.009,steel,7)
         if level==0:m.cylinder((x,y+.44,z),(x,y+.49,z),.009,paint,8)
@@ -495,11 +537,12 @@ def prop_geo(m, prop, level, rng, center=(0,.15,.5), compact=False):
         m.box((x,y+.22,z),(.68,.40,.27),paint,.005)
         m.box((x,y+.22,z+.14),(.42,.32,.025),B('BAL_Aluminium'))
         for k in range([10,7,4,2][level]):
-            xx=x-.18+k*.036;m.box((xx,y+.22,z+.157),(.009,.26,.006),steel)
+            xx=x-.18+k*.036;m.box((xx,y+.22,z+.150),(.009,.26,.009),steel)
         if level<2:
-            m.rod_path([(x-.24,y+.22,z+.18),(x+.24,y+.22,z+.18)],.012,steel,6)
+            m.rod_path([(x-.24,y+.22,z+.16),(x+.24,y+.22,z+.16)],.012,steel,6)
         for dx in (-.23,.23):m.box((x+dx,y+.04,z-.02),(.10,.08,.32),steel)
     elif prop=='Clothesline':
+        for dx in (-.54,.54):m.box((x+dx,y-.007,z),(.10,.014,.24),steel)
         for dx in (-.54,.54):m.rod_path([(x+dx,y,z),(x+dx,y+.82,z)],.014,steel,7)
         for i in range([5,3,2,1][level]):
             yy=y+.78-i*.12;m.rod_path([(x-.54,yy,z),(x+.54,yy,z)],.0035,steel,5)
@@ -525,6 +568,7 @@ def prop_geo(m, prop, level, rng, center=(0,.15,.5), compact=False):
         for xx in (-.20,.20):
             for zz in (-.18,.18):m.box((x+xx,y+.18,z+zz),(.035,.36,.035),rotten)
     elif prop=='WireMesh':
+        for dx in (-.29,.29):m.box((x+dx,y-.027,z),(.12,.026,.24),steel)
         w=.72;h=.52;z0=z
         for xx in (-w/2,w/2):m.rod_path([(x+xx,y,z0),(x+xx,y+h,z0)],.018,steel,7)
         for yy in (y,y+h):m.rod_path([(x-w/2,yy,z0),(x+w/2,yy,z0)],.018,steel,7)
@@ -578,7 +622,10 @@ def prop_geo(m, prop, level, rng, center=(0,.15,.5), compact=False):
             xx=x+(i-(1.5 if level==0 else .5))*.20
             m.ellipsoid((xx,y+.12,z),(.28,.22,.18),B('BAL_Canvas'),4 if level<2 else 3,8)
     elif prop=='BrokenDryer':
+        for dx in (-.42,.42):m.box((x+dx,y,z),(.12,.03,.22),steel)
         for side in (-1,1):m.rod_path([(x+side*.42,y+.02,z),(x+side*.42,y+.66,z+.04),(x+side*.33,y+.6,z+.13)],.014,steel,7)
+        m.rod_path([(x-.33,y+.60,z+.13),(x-.46,y+.54,z+.11)],.014,steel,7)
+        m.rod_path([(x+.33,y+.60,z+.13),(x+.43,y+.69,z+.12)],.014,steel,7)
         m.rod_path([(x-.46,y+.54,z+.11),(x+.43,y+.69,z+.12),(x+.49,y+.53,z+.12)],.014,steel,7)
         if level<2:m.rod_path([(x-.4,y+.08,z+.07),(x+.35,y+.52,z+.13)],.008,steel,6)
     elif prop=='FlowerVines':
@@ -601,36 +648,111 @@ def prop_bounds(prop):
     }[prop]
 
 
-def add_variant_props(m, level, rng, state, depth, kind):
-    # Fixed candidate sockets and conservative AABB checks prevent prop intersections.
-    candidates=[(-.92,.38),(.92,.38),(-.48,.68),(.48,.68),(0,.38),(0,.70),(-1.00,.72),(1.00,.72)]
-    rng.shuffle(candidates)
+PROP_PLANS={}
+PROP_SUPPORT=[]
+
+
+def mesh_bounds(mesh):
+    return ([min(v[i] for v in mesh.v) for i in range(3)],
+            [max(v[i] for v in mesh.v) for i in range(3)])
+
+
+def append_mesh(target, source, offset=(0,0,0), label=0):
+    first=len(target.v)
+    target.v.extend(tuple(v[i]+offset[i] for i in range(3)) for v in source.v)
+    target.labels.extend([label]*len(source.v))
+    target.uv.extend(source.uv);target.mi.extend(source.mi)
+    target.f.extend(tuple(first+i for i in face) for face in source.f)
+
+
+def floor_tree(kind,state,seed,depth,level):
+    floor=Mesh();random=Random(seed)
+    if kind=='05':add_wood_floor(floor,level,random,state,depth,True)
+    elif kind=='07':add_grate_floor(floor,level,random,state,depth)
+    else:add_slab(floor,state,random,depth,collision=True)
+    return BVHTree.FromPolygons(floor.v,floor.f)
+
+
+def floor_height(tree,x,z):
+    hit,normal,_,_=tree.ray_cast(Vector((x,2,z)),Vector((0,-1,0)),3)
+    return hit.y if hit is not None and abs(normal.y)>.7 else None
+
+
+def supported_footprint(trees,box):
+    x0,x1,z0,z1=box
+    # Narrow plank seams may be bridged by a rigid object, but corners and
+    # edge midpoints must all rest on surviving material at every LOD.
+    critical=[(u,v) for u in (.06,.5,.94) for v in (.06,.5,.94)]
+    heights=[];coverage=[]
+    for tree in trees:
+        corners=[floor_height(tree,x0+(x1-x0)*u,z0+(z1-z0)*v) for u,v in critical]
+        if any(y is None for y in corners):return None
+        samples=[floor_height(tree,x0+(x1-x0)*(i+.5)/7,z0+(z1-z0)*(j+.5)/7) for i in range(7) for j in range(7)]
+        fraction=sum(y is not None for y in samples)/len(samples)
+        if fraction<.88 or max(corners)-min(corners)>.004:return None
+        heights.extend(corners);coverage.append(round(fraction,4))
+    if max(heights)-min(heights)>.004:return None
+    return max(heights),coverage
+
+
+def prop_plan(state,depth,kind,seed):
+    cache=(kind,state,seed)
+    if cache in PROP_PLANS:return PROP_PLANS[cache]
+    random=Random(seed+89123)
+    # Only genuinely floor-standing objects use floor sockets. Curtains,
+    # awnings and loose film remain separate assets requiring authored mounts.
     pools={
         '01':['Planter_Old','SatelliteDish_Rusted','Antenna_Bent','WoodenCrate','BrokenPot','Clothesline','ConcreteDebris'],
-        '02':['BrokenDryer','WoodenCrate','BrokenPot','SatelliteDish_Rusted','TornCurtain','ConcreteDebris'],
-        '03':['Planter_Old','TornCurtain','MosquitoMesh','BrokenPot','WoodenCrate','TornPlastic'],
-        '04':['AC_OutdoorUnit','Planter_Old','TornPlastic','BrokenPot','FlowerVines','WoodenCrate'],
-        '05':['WoodenCrate','BrokenPot','TornPlastic','CorrugatedAwning','ConcreteDebris','Planter_Old'],
-        '06':['Sandbags','WoodenCrate','Antenna_Bent','ConcreteDebris','TornCurtain','SatelliteDish_Rusted'],
+        '02':['BrokenDryer','WoodenCrate','BrokenPot','SatelliteDish_Rusted','ConcreteDebris'],
+        '03':['Planter_Old','BrokenPot','WoodenCrate'],
+        '04':['AC_OutdoorUnit','Planter_Old','BrokenPot','FlowerVines','WoodenCrate'],
+        '05':['WoodenCrate','BrokenPot','ConcreteDebris','Planter_Old'],
+        '06':['Sandbags','WoodenCrate','Antenna_Bent','ConcreteDebris','SatelliteDish_Rusted'],
         '07':['AC_OutdoorUnit','WireMesh','Antenna_Bent','WoodenCrate','ConcreteDebris','BrokenDryer'],
-        '08':['Planter_Old','FlowerVines','BrokenPot','TornCurtain','ConcreteDebris','WoodenCrate'],
-        '09':['ConcreteDebris','BrokenDryer','TornPlastic','WoodenCrate','SatelliteDish_Rusted'],
+        '08':['Planter_Old','FlowerVines','BrokenPot','ConcreteDebris','WoodenCrate'],
+        '09':['ConcreteDebris','BrokenDryer','WoodenCrate','SatelliteDish_Rusted'],
         '10':['ConcreteDebris','Antenna_Bent','WoodenCrate','BrokenPot','WireMesh']
     }
-    options=pools[kind][:];rng.shuffle(options); occupied=[]; placed=0
-    max_props=1 if level==3 else 2 if state=='D' else 3 if state in ('B','C') else 4
-    for prop in options:
-        if placed>=max_props or not candidates:break
-        w,h,d=prop_bounds(prop)
-        # Reject high objects on enclosed-glass variants and wide props near module edges.
-        for idx,(x,z) in enumerate(list(candidates)):
-            if abs(x)+w/2>1.28 or z+d/2>depth-.11 or z-d/2<.08:continue
+    options=pools[kind][:];random.shuffle(options);occupied=[];plan=[]
+    trees=[floor_tree(kind,state,seed,depth,lod) for lod in range(4)]
+    candidates=[(-1.05+i*.15,.13+j*.085) for i in range(15) for j in range(max(1,int((depth-.25)/.085)))]
+    random.shuffle(candidates)
+    if kind=='07':candidates=[(-1.05+i*.15,.51) for i in range(15)];random.shuffle(candidates)
+    for prop_index,prop in enumerate(options):
+        if len(plan)>=(2 if state=='D' else 3 if state in ('B','C') else 4):break
+        variants=[];bounds=[]
+        for lod in range(4):
+            geo=Mesh();prop_geo(geo,prop,lod,Random(seed+prop_index*619),(0,0,0))
+            variants.append(geo);bounds.append(mesh_bounds(geo))
+        lo=[min(b[0][i] for b in bounds) for i in range(3)]
+        hi=[max(b[1][i] for b in bounds) for i in range(3)]
+        w=hi[0]-lo[0]+.02;d=hi[2]-lo[2]+.02
+        for x,z in candidates:
             box=(x-w/2,x+w/2,z-d/2,z+d/2)
+            if box[0]<-1.28 or box[1]>1.28 or box[2]<.055 or box[3]>depth-.13:continue
             if any(not (box[1]<o[0] or box[0]>o[1] or box[3]<o[2] or box[2]>o[3]) for o in occupied):continue
-            # Keep props inside the railing/glazing line; no suspended objects or hidden placement.
-            if z+d/2>depth-.12:continue
-            prop_geo(m,prop,level,rng,(x,.15,z))
-            occupied.append(box);candidates.pop(idx);placed+=1;break
+            support=supported_footprint(trees,box) if kind!='07' else (.1505,[1.0]*4)
+            if support is None:continue
+            surface,coverage=support;tray=kind=='07'
+            plan.append({'name':prop,'label':len(plan)+1,'variants':variants,'offsetXZ':(x-(lo[0]+hi[0])/2,z-(lo[2]+hi[2])/2),
+                         'surface':surface,'tray':tray,'box':box,'coverage':coverage,'bounds':bounds})
+            occupied.append(box);break
+    PROP_PLANS[cache]=plan
+    PROP_SUPPORT.append({'type':kind,'state':state,'seed':seed,'props':[{'name':p['name'],'label':p['label'],'box':p['box'],
+        'surface':p['surface'],'support':'crossbeam-mounted steel plate' if p['tray'] else 'surviving floor',
+        'coverageByLOD':p['coverage']} for p in plan]})
+    return plan
+
+
+def add_variant_props(m,level,seed,state,depth,kind):
+    for prop in prop_plan(state,depth,kind,seed):
+        x,z=prop['offsetXZ'];surface=prop['surface'];label=prop['label']
+        if prop['tray']:
+            x0,x1,z0,z1=prop['box'];plate=Mesh()
+            plate.box(((x0+x1)/2,surface+.009,(z0+z1)/2),(x1-x0,.018,z1-z0),B('BAL_CorrodedSteel'))
+            append_mesh(m,plate,label=label);surface+=.018
+        low=prop['bounds'][level][0][1]
+        append_mesh(m,prop['variants'][level],(x,surface-low,z),label)
 
 
 def add_balcony_geometry(type_no, state, level, seed, collision=False):
@@ -648,11 +770,11 @@ def add_balcony_geometry(type_no, state, level, seed, collision=False):
         add_guardrails(m,level,rng,state,'steel',depth); add_concrete_cracks(m,level,rng,state,depth)
         # Remnants of anchors and a repaired lower rail.
         if level<2:
-            for x in (-1.08,1.08):m.box((x,.48,depth-.05),(.19,.035,.035),B('BAL_PaintedSteel'))
+            for x in (-1.08,1.08):m.box((x,.38,depth-.05),(.19,.035,.035),B('BAL_PaintedSteel'))
     elif key=='02':
         add_guardrails(m,level,rng,state,'steel',depth);add_sheet_panels(m,level,state,depth,rng,'khrush')
         if state in ('B','C','D'):
-            for x in (-.72,.72):m.rod_path([(x,.39,depth-.05),(x+(.07 if x<0 else -.08),.74,depth-.04)],.018,B('BAL_CorrodedSteel'),7)
+            for x in (-1.02,1.02):m.rod_path([(x,.39,depth-.05),(x+(.07 if x<0 else -.08),.74,depth-.04)],.018,B('BAL_CorrodedSteel'),7)
     elif key=='03':
         add_glazing(m,level,rng,state,depth,False)
         add_guardrails(m,level,rng,state,'glazedwood',depth)
@@ -670,7 +792,7 @@ def add_balcony_geometry(type_no, state, level, seed, collision=False):
             m.rod_path([(x,.04,.12),(x,.20,.65),(x,.08,depth-.08)],.026,B('BAL_Timber' if state in ('A','B') else 'BAL_RottenTimber'),7)
         # Repair braces are fastened plates plus visible bolts.
         if level==0:
-            for x in (-1.0,1.0):
+            for x in (-1.18,1.18):
                 m.box((x,.10,.47),(.11,.05,.18),B('BAL_CorrodedSteel'))
                 for yy in (.08,.12):m.cylinder((x-.027,yy,.47),(x-.027,yy+.012,.47),.006,B('BAL_PaintedSteel'),6)
     elif key=='06':
@@ -697,7 +819,7 @@ def add_balcony_geometry(type_no, state, level, seed, collision=False):
                 m.rod_path([(x-.10,.03,.28),(x,.18,.53)],.011,B('BAL_CorrodedSteel'),6)
 
     # Seeded, AABB-separated surface clutter. Never generated into the footprint of a facade or rail.
-    if not collision:add_variant_props(m,level,rng,state,depth,key)
+    if not collision:add_variant_props(m,level,seed,state,depth,key)
     return m,depth
 
 
@@ -710,12 +832,19 @@ def make_collision(type_no,state,seed,depth):
 
 
 def add_simple_prop_model(prop, seed=0):
-    rng=Random(seed);objects=[];lodcounts=[]
-    extent=prop_bounds(prop);cx,cy,cz=extent
+    rng=Random(seed);objects=[];lodcounts=[];all_bounds=[]
     for level in range(4):
         m=Mesh();prop_geo(m,prop,level,rng,(0,0,0))
-        ob=create_obj(f'LOD{level}',m);objects.append(ob);lodcounts.append(len(ob.data.loop_triangles))
-    collision=Mesh();collision.box((0,cy/2,0),(cx*.92,cy*.90,cz*.90),B('BAL_Canvas' if prop in ('Planter_Old','Sandbags') else 'BAL_CorrodedSteel'))
+        if prop not in ('CorrugatedAwning','TornCurtain','MosquitoMesh','TornPlastic'):
+            bottom=min(v[1] for v in m.v)
+            m.v=[(x,y-bottom,z) for x,y,z in m.v]
+        all_bounds.append(mesh_bounds(m))
+        ob=create_obj(f'LOD{level}',m)
+        if prop=='ConcreteDebris':
+            for modifier in list(ob.modifiers):ob.modifiers.remove(modifier)
+        objects.append(ob);lodcounts.append(len(ob.data.loop_triangles))
+    low,high=all_bounds[0]
+    collision=Mesh();collision.box(tuple((low[i]+high[i])/2 for i in range(3)),tuple(high[i]-low[i] for i in range(3)),B('BAL_Canvas' if prop in ('Planter_Old','Sandbags') else 'BAL_CorrodedSteel'))
     col=create_obj('COLLISION',collision);objects.append(col)
     return objects,lodcounts
 
@@ -724,7 +853,7 @@ def export_model(objects,path):
     bpy.ops.object.select_all(action='DESELECT')
     for ob in objects:ob.hide_set(False);ob.hide_render=False;ob.select_set(True)
     bpy.context.view_layer.objects.active=next((o for o in objects if o.name=='LOD0'),objects[0])
-    bpy.ops.export_scene.fbx(filepath=str(path),use_selection=True,object_types={'MESH'},axis_forward='-Z',axis_up='Y',apply_unit_scale=True,bake_anim=False,add_leaf_bones=False,use_mesh_modifiers=True,mesh_smooth_type='FACE',path_mode='STRIP',use_custom_props=False)
+    bpy.ops.export_scene.fbx(filepath=str(path),use_selection=True,object_types={'MESH'},axis_forward='-Z',axis_up='Y',apply_unit_scale=True,bake_anim=False,add_leaf_bones=False,use_mesh_modifiers=True,use_triangles=True,mesh_smooth_type='FACE',path_mode='STRIP',use_custom_props=False)
     for index,ob in enumerate(objects):
         ob.select_set(False)
         # Blender object names are global. Restore exact LOD0..3 names for the next FBX,
@@ -743,7 +872,9 @@ def build_model(name, category, maker, collision_builder, seed, directory):
     # Keep the imported draw cost monotonic even when detail density in a
     # specific damaged variant produces a busier intermediate hand-built LOD.
     for level in range(1,4):
-        ceiling=lod[level-1]*.54
+        # Keep independently grounded prop geometry intact; reduce only when a
+        # hand-built level would otherwise grow relative to the preceding LOD.
+        ceiling=lod[level-1]*.95
         if lod[level]>ceiling:
             ratio=max(.08,ceiling/lod[level])
             reduction=objects[level].modifiers.new(f'LOD{level} triangle budget','DECIMATE')
@@ -833,4 +964,7 @@ for image in bpy.data.images:
         except Exception:pass
 bpy.ops.wm.save_as_mainfile(filepath=str(SRC/'Balconies_Master.blend'))
 (VER/'generation.json').write_text(json.dumps(REPORT,indent=2),encoding='utf-8')
+support_json=json.dumps({'balconies':PROP_SUPPORT},indent=2)
+(VER/'prop_support_plan.json').write_text(support_json,encoding='utf-8')
+(OUT/'Editor'/'BalconyPropSupport.json').write_text(support_json,encoding='utf-8')
 print('BALCONY_BUILD_DONE',len(REPORT['balconies']),len(REPORT['props']),len(REPORT['accessories']),flush=True)

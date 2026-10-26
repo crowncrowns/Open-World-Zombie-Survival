@@ -14,7 +14,9 @@ public sealed class WindowGrilleHinge : MonoBehaviour
             animator = GetComponent<Animator>();
     }
 
+    [ContextMenu("Открыть обе створки")]
     public void Open() => SetOpen(true);
+    [ContextMenu("Закрыть обе створки")]
     public void Close() => SetOpen(false);
     public void Toggle() => SetOpen(!IsOpen);
 

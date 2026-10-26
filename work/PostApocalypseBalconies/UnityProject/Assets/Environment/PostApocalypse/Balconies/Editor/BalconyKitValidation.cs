@@ -44,6 +44,7 @@ namespace PostApocalypse.Balconies.Editor
             ValidateModelImporters(errors);
             ValidateStateGeometry(records,errors);
             ValidateAdjacency(records.Where(r=>Types.Any(t=>r.name.StartsWith(t+"_",StringComparison.Ordinal))).ToList(),errors);
+            errors.AddRange(BalconyPropSupportValidation.CheckAll());
             string sceneAbsolute=Path.Combine(Application.dataPath,"Environment/PostApocalypse/Balconies/Demo/Balcony_Showcase.unity");
             bool sceneExists=File.Exists(sceneAbsolute);
             if(!sceneExists)errors.Add("Missing showcase scene: "+BalconyKitBuilder.DemoScene);
@@ -58,8 +59,8 @@ namespace PostApocalypse.Balconies.Editor
                 prefabs=records.Select(r=>new SerializableRecord {name=r.name,model=r.model,passed=r.passed,lodTriangles=r.lodTriangles,bounds=ToArray(r.bounds),colliderBounds=ToArray(r.colliderBounds),checks=r.checks.ToArray(),errors=r.errors.ToArray()}).ToArray()
             };
             string json=JsonUtility.ToJson(report,true);
-            string path=Path.GetFullPath(Path.Combine(Application.dataPath,"../../../../Verification/PostApocalypseBalconies/unity_validation.json"));
-            Directory.CreateDirectory(Path.GetDirectoryName(path));File.WriteAllText(path,json);
+            string path=Path.Combine(BalconyPropSupportValidation.ReportDirectory(),"unity_validation.json");
+            Directory.CreateDirectory(Path.GetDirectoryName(path));BalconyPropSupportValidation.WriteReport(path,json);
             AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
             if(errors.Count==0)Debug.Log($"BALCONY_KIT_VALIDATION_PASS 40 balconies / {propCount} props / {accessoryCount} door accessories");
             else Debug.LogError("BALCONY_KIT_VALIDATION_FAIL\n"+string.Join("\n",errors));

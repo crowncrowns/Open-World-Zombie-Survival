@@ -1,6 +1,6 @@
 """Render a Blender beauty-check gallery from the editable source library."""
 from pathlib import Path
-import bpy
+import bpy, os
 from mathutils import Vector
 
 ROOT=Path(__file__).resolve().parents[2]
@@ -34,6 +34,8 @@ def area(name,location,power,color,size,target=(0,0,8)):
 area('Warm Key',(0,20,25),5200,(1.0,.83,.68),20)
 area('Cool Fill',(-17,14,9),3400,(.62,.75,1.0),14)
 area('Top Rim',(16,8,22),4600,(1.0,.93,.78),12)
-scene.render.filepath=str(OUT)
+temporary=OUT.with_name('BlenderGallery_rendered.png')
+scene.render.filepath=str(temporary)
 bpy.ops.render.render(write_still=True)
+os.replace(temporary,OUT)
 print('BALCONY_PREVIEW_RENDERED',OUT,flush=True)

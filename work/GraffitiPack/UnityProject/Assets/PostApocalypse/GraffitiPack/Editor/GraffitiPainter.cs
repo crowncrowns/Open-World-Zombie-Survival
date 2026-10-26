@@ -10,10 +10,12 @@ namespace PostApocalypse.Graffiti.Editor
     public sealed class GraffitiPainter : EditorWindow
     {
         public const string Root = "Assets/PostApocalypse/GraffitiPack";
+        const string ImpactRoot = Root + "/Prefabs/Impacts";
         static readonly string[] Categories = { "Все", "Warnings", "Survivors", "Factions", "ZombieArt", "StreetArt", "Military2022" };
         GraffitiEntry[] entries = Array.Empty<GraffitiEntry>();
         int selected, category, seed = 17, stroke;
         bool painting, randomize, allowPartial, forceQuad;
+        int bulletMarks = 4;
         float width = 1.5f, opacity = 1, rotation, sizeSpread = .15f, angleSpread = 8, alphaSpread = .1f, offset = .003f;
         int layers = Physics.DefaultRaycastLayers;
         Vector2 scroll;
@@ -55,6 +57,7 @@ namespace PostApocalypse.Graffiti.Editor
             sizeSpread=EditorGUILayout.Slider("Разброс размера, доля",sizeSpread,0,.5f);
             angleSpread=EditorGUILayout.Slider("Разброс поворота, °",angleSpread,0,90);
             alphaSpread=EditorGUILayout.Slider("Разброс прозрачности",alphaSpread,0,.5f);
+            bulletMarks=EditorGUILayout.IntSlider(new GUIContent("Пулевые попадания на мазок", "Случайно распределённые следы попаданий внутри области граффити; 0 отключает."),bulletMarks,0,16);
             allowPartial=EditorGUILayout.Toggle("Разрешить проёмы/рельеф",allowPartial);
             if(GUILayout.Button("Обновить каталог / поверхности")) {Reload();GraffitiSurfaceQuery.Invalidate();}
             if(GUILayout.Button("Удалить граффити инструмента в активной сцене")) DeletePainted();
@@ -142,7 +145,14 @@ namespace PostApocalypse.Graffiti.Editor
             Handles.BeginGUI();GUI.Label(new Rect(12,view.position.height-75,600,30),$"{entry.number:00} {entry.title} · {w:F2} м · опоры {(49-bad)}/49"+(bad>0?" · ПРОЁМ/РЕЛЬЕФ":""));Handles.EndGUI();
             if(e.type==EventType.MouseDown&&e.button==0)
             {
-                if(bad==0||allowPartial) {Place(entry,p,rot,w,a,hit.transform,!forceQuad);stroke++;}
+                if(bad==0||allowPartial)
+                {
+                    int undoGroup=Undo.GetCurrentGroup();
+                    Place(entry,p,rot,w,a,hit.transform,!forceQuad);
+                    PlaceRandomBulletMarks(hit.point,rot,w,w/entry.Aspect,layers,hit.transform,bulletMarks,rng);
+                    Undo.CollapseUndoOperations(undoGroup);
+                    stroke++;
+                }
                 e.Use();
             }
             if(e.type==EventType.MouseMove) view.Repaint();
@@ -160,6 +170,36 @@ namespace PostApocalypse.Graffiti.Editor
             PrefabUtility.RecordPrefabInstancePropertyModifications(go.GetComponent<Renderer>());
             EditorUtility.SetDirty(placement);EditorSceneManager.MarkSceneDirty(go.scene);
             return go;
+        }
+        public static int PlaceRandomBulletMarks(Vector3 center,Quaternion surfaceRotation,float width,float height,int mask,Transform surface,int maxCount,System.Random rng)
+        {
+            if(maxCount<=0||rng==null)return 0;
+            var prefabs=AssetDatabase.FindAssets("t:Prefab",new[]{ImpactRoot})
+                .Select(id=>AssetDatabase.LoadAssetAtPath<GameObject>(AssetDatabase.GUIDToAssetPath(id)))
+                .Where(p=>p&&p.GetComponent<Renderer>()&&p.GetComponent<GraffitiPlacement>()).OrderBy(p=>p.name).ToArray();
+            if(prefabs.Length==0)return 0;
+            int count=rng.Next(1,maxCount+1),placed=0;
+            var normal=surfaceRotation*Vector3.back;
+            for(int i=0;i<count;i++)
+            {
+                float u=(float)(rng.NextDouble()-.5)*.88f*width;
+                float v=(float)(rng.NextDouble()-.5f)*.88f*height;
+                var sample=center+surfaceRotation*new Vector3(u,v,0);
+                if(!Hit(new Ray(sample+normal*.08f,-normal),mask,out var hit))continue;
+                if(Mathf.Abs(Vector3.Dot(hit.point-sample,normal))>.035f||Vector3.Dot(hit.normal,normal)<.94f)continue;
+                var variant=prefabs[rng.Next(prefabs.Length)];
+                var go=(GameObject)PrefabUtility.InstantiatePrefab(variant,surface.gameObject.scene);
+                Undo.RegisterCreatedObjectUndo(go,"Нанести следы попаданий");
+                go.transform.SetPositionAndRotation(hit.point+hit.normal*.0035f,SurfaceRotation(hit.normal,(float)rng.NextDouble()*360f));
+                float size=Mathf.Lerp(.075f,.19f,(float)rng.NextDouble());
+                float aspect=variant.GetComponent<Renderer>().sharedMaterial.mainTexture is Texture2D tex&&tex.height>0?(float)tex.width/tex.height:1;
+                go.transform.localScale=new Vector3(size,size/aspect,1);
+                var marker=go.GetComponent<GraffitiPlacement>();marker.paintedByTool=true;marker.opacity=Mathf.Lerp(.72f,1f,(float)rng.NextDouble());marker.ApplyOpacity();
+                PrefabUtility.RecordPrefabInstancePropertyModifications(go.transform);
+                PrefabUtility.RecordPrefabInstancePropertyModifications(marker);
+                EditorUtility.SetDirty(marker);EditorSceneManager.MarkSceneDirty(go.scene);placed++;
+            }
+            return placed;
         }
         public static void DeletePainted()
         {
