@@ -1,0 +1,32 @@
+const string dir="Verification/ApartmentExtraDoor_20261027/";
+var main=UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+var source=UnityEditor.AssetDatabase.LoadAssetAtPath<ZombieSurvival.ModularBuildings.BuildingSeriesProfile>("Assets/ModularBuildings/Generated/CityProfileV6.asset");
+var lines=new System.Collections.Generic.List<string>();
+void Check(bool value,string name){if(!value)throw new System.Exception(name);lines.Add("PASS "+name);}
+foreach(var spec in new[]{new[]{3,1},new[]{6,3}}){
+ var scene=UnityEditor.SceneManagement.EditorSceneManager.NewPreviewScene();var profile=UnityEngine.Object.Instantiate(source);profile.citySeed=25;
+ try{
+  var b=ZombieSurvival.ModularBuildings.Editor.BuildingGenerator.Build(profile,1980,spec[0],spec[1],"unused-door-check-"+spec[0]+"-"+spec[1],scene);
+  var seals=b.GetComponentsInChildren<UnityEngine.Transform>(true).Where(t=>t.name==ZombieSurvival.ModularBuildings.Editor.BuildingApartmentDoorCleanup.SealName).ToArray();
+  Check(seals.Length>0,"new build contains sealed unused slots "+spec[0]+"F"+spec[1]+"E");
+  Check(ZombieSurvival.ModularBuildings.Editor.BuildingApartmentDoorCleanup.Validate(b).Count==0,"cleanup validation");
+  var errors=ZombieSurvival.ModularBuildings.Editor.BuildingGenerator.Validate(b);Check(errors.Count==0,"full production validation: "+string.Join(";",errors));
+  Check(ZombieSurvival.ModularBuildings.Editor.BuildingApartmentDoorCleanup.Apply(b,false)==0,"repeat apply changes nothing");
+  foreach(var seal in seals){
+   var slot=seal.GetComponentInParent<ZombieSurvival.ModularBuildings.ApartmentSlot>();var box=seal.GetComponent<UnityEngine.BoxCollider>();
+   Check(!slot.transform.Find("ApartmentDoor").gameObject.activeSelf&&slot.doorHinge&&slot.doorLeaf,"redundant assembly hidden but references preserved");
+   UnityEngine.Physics.SyncTransforms();Check(box.Raycast(new UnityEngine.Ray(slot.transform.TransformPoint(new UnityEngine.Vector3(0,1,-1)),slot.transform.forward),out var hit,2),"sealed opening has collision");
+  }
+  var apartments=b.GetComponentsInChildren<ZombieSurvival.ModularBuildings.GeneratedApartment>(true);
+  Check(apartments.All(a=>a.entranceDoor&&a.entranceDoor.gameObject.activeInHierarchy),"selected entrances remain active");
+  Check(apartments.All(a=>a.prefabInstance.GetComponentsInChildren<UnityEngine.Transform>(true).Where(t=>t.name=="Door_Single_Metal").All(t=>t.gameObject.activeSelf)),"all source internal doors preserved");
+  var first=seals[0].parent.Find("ApartmentDoor");var payload=new UnityEngine.GameObject("Unexpected custom payload");payload.transform.SetParent(first,false);
+  Check(ZombieSurvival.ModularBuildings.Editor.BuildingApartmentDoorCleanup.Preflight(b).Count>0,"custom payload refuses cleanup");UnityEngine.Object.DestroyImmediate(payload);
+  if(spec[1]==1){
+   b.profile=source;string path=UnityEditor.AssetDatabase.GenerateUniqueAssetPath("Assets/ModularBuildings/Generated/CityV6_NoExtraDoor_20261027.prefab");Check(UnityEditor.PrefabUtility.SaveAsPrefabAsset(b.gameObject,path)!=null,"review prefab saved");
+   var saved=UnityEditor.PrefabUtility.LoadPrefabContents(path);try{Check(ZombieSurvival.ModularBuildings.Editor.BuildingApartmentDoorCleanup.Validate(saved.GetComponent<ZombieSurvival.ModularBuildings.GeneratedBuilding>()).Count==0,"saved prefab reload retains cleanup");}finally{UnityEditor.PrefabUtility.UnloadPrefabContents(saved);}
+   System.IO.File.WriteAllText(dir+"ReviewPrefab.txt",path);
+  }
+ }finally{UnityEditor.SceneManagement.EditorSceneManager.ClosePreviewScene(scene);UnityEngine.Object.DestroyImmediate(profile);}
+}
+System.IO.File.WriteAllLines(dir+"NewBuildChecks.txt",lines);return lines.ToArray();

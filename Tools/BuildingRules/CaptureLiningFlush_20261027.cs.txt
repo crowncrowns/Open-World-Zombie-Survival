@@ -1,0 +1,14 @@
+const string label="Before";const string dir="Verification/InteriorLiningFlush_20261027/";
+var main=UnityEngine.SceneManagement.SceneManager.GetActiveScene();var view=UnityEditor.SceneView.lastActiveSceneView.camera;
+var eye=view.transform.position;var rotation=view.transform.rotation;float fov=view.fieldOfView;
+var marker=main.GetRootGameObjects().SelectMany(g=>g.GetComponentsInChildren<ZombieSurvival.ModularBuildings.GeneratedInteriorLining>(true)).OrderBy(m=>(m.GetComponent<UnityEngine.Renderer>().bounds.ClosestPoint(eye)-eye).sqrMagnitude).First();
+var b=marker.apartment.GetComponentInParent<ZombieSurvival.ModularBuildings.GeneratedBuilding>();var scene=UnityEditor.SceneManagement.EditorSceneManager.NewPreviewScene();
+UnityEngine.RenderTexture rt=null;UnityEngine.Texture2D tex=null;var previous=UnityEngine.RenderTexture.active;
+try{
+ var copy=UnityEngine.Object.Instantiate(b.gameObject);UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(copy,scene);
+ var camera=new UnityEngine.GameObject("Flush close-up camera").AddComponent<UnityEngine.Camera>();UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(camera.gameObject,scene);camera.enabled=false;camera.scene=scene;camera.aspect=1200f/800;camera.fieldOfView=fov;camera.nearClipPlane=.001f;camera.farClipPlane=100;camera.transform.SetPositionAndRotation(eye,rotation);
+ var fill=camera.gameObject.AddComponent<UnityEngine.Light>();fill.type=UnityEngine.LightType.Point;fill.range=10;fill.intensity=.01f;
+ rt=new UnityEngine.RenderTexture(1200,800,24);tex=new UnityEngine.Texture2D(1200,800,UnityEngine.TextureFormat.RGB24,false);UnityEngine.Rendering.RenderPipeline.SubmitRenderRequest(camera,new UnityEngine.Rendering.Universal.UniversalRenderPipeline.SingleCameraRequest{destination=rt});UnityEngine.RenderTexture.active=rt;tex.ReadPixels(new UnityEngine.Rect(0,0,1200,800),0,0);tex.Apply();System.IO.File.WriteAllBytes(dir+label+"CloseUp.png",tex.EncodeToPNG());
+}finally{UnityEngine.RenderTexture.active=previous;if(tex)UnityEngine.Object.DestroyImmediate(tex);if(rt){rt.Release();UnityEngine.Object.DestroyImmediate(rt);}UnityEditor.SceneManagement.EditorSceneManager.ClosePreviewScene(scene);}
+return new{target=b.name,apartment=marker.apartment.apartmentId};
+

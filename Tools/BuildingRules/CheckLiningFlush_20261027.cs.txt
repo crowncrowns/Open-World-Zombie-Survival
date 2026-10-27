@@ -1,0 +1,11 @@
+var scene=UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+var markers=scene.GetRootGameObjects().SelectMany(g=>g.GetComponentsInChildren<ZombieSurvival.ModularBuildings.GeneratedInteriorLining>(true)).ToArray();
+var data=markers.Select(m=>{
+ float wallMin=m.facadeModule.GetComponentsInChildren<UnityEngine.Renderer>(true).Where(r=>r.name.StartsWith("Wall")).Min(r=>{
+  var matrix=UnityEngine.Matrix4x4.identity;var t=r.transform;while(t!=m.facadeModule){if(!t)throw new System.Exception("Non-descendant wall");matrix=UnityEngine.Matrix4x4.TRS(t.localPosition,t.localRotation,t.localScale)*matrix;t=t.parent;}
+  var box=r.localBounds;return Enumerable.Range(0,8).Min(i=>matrix.MultiplyPoint3x4(box.center+UnityEngine.Vector3.Scale(box.extents,new UnityEngine.Vector3((i&1)==0?-1:1,(i&2)==0?-1:1,(i&4)==0?-1:1))).z);
+ });var skin=m.GetComponent<UnityEngine.MeshFilter>().sharedMesh.bounds;return new{template=m.template.name,visibleOffset=wallMin-skin.min.z,airGap=Mathf.Max(0,wallMin-skin.max.z)};
+}).ToArray();
+if(data.Length!=153||data.Any(d=>d.airGap>.0002f||Mathf.Abs(d.visibleOffset-.001f)>.0002f))throw new System.Exception("Flush mismatch");
+System.IO.File.WriteAllText("Verification/InteriorLiningFlush_20261027/AfterDepths.json",Newtonsoft.Json.JsonConvert.SerializeObject(new{pass=true,count=data.Length,airGapMax=data.Max(x=>x.airGap),offsetMin=data.Min(x=>x.visibleOffset),offsetMax=data.Max(x=>x.visibleOffset),types=data.GroupBy(x=>x.template).Select(g=>new{type=g.Key,count=g.Count()})},Newtonsoft.Json.Formatting.Indented));
+return "all153 flush; no air gap";

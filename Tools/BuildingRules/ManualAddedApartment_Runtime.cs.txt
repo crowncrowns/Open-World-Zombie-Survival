@@ -1,0 +1,18 @@
+using UnityEngine;
+using ZombieSurvival.Interaction;
+namespace ZombieSurvival.ModularBuildings
+{
+    /// <summary>Interior-only addition to an authored manual house; never a GeneratedBuilding.</summary>
+    public sealed class ManualAddedApartment : MonoBehaviour
+    {
+        [Tooltip("Ручной дом-владелец; наружная геометрия сохраняется.")] public Transform house;
+        [Tooltip("Исходный цельный prefab квартиры.")] public GameObject source;
+        [Tooltip("Единственный nested prefab экземпляр квартиры.")] public GameObject instance;
+        [Tooltip("Существующая внутренняя дверь квартиры.")] public DoorInteractable entrance;
+        [Tooltip("Номер этажа от нуля.")] public int floor;
+        [Tooltip("Номер подъезда от нуля.")] public int entranceIndex;
+        [Tooltip("Постоянный авторский ключ добавления; не SaveIdentity.")] public string additionId;
+        [Tooltip("Старые приватные перегородки, отключённые только внутри квартиры.")] public GameObject[] hiddenPrivatePartitions;
+        [Tooltip("Совмещённый вход на полу в локальных координатах дома.")] public Vector3 entryLocal;
+    }
+}

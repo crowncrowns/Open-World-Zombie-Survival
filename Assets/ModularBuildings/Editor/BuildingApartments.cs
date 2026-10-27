@@ -65,6 +65,8 @@ namespace ZombieSurvival.ModularBuildings.Editor
             }
             catch{foreach(var root in created)if(root)Object.DestroyImmediate(root);throw;}
             ConfigureEntranceAccess(b);
+            BuildingApartmentDoorCleanup.Apply(b,false);
+            BuildingInteriorLining.Apply(b,false);
         }
         private static Transform EntranceSection(Transform t,GeneratedBuilding b)
         {
@@ -191,6 +193,7 @@ namespace ZombieSurvival.ModularBuildings.Editor
             foreach(var apartment in b.GetComponentsInChildren<GeneratedApartment>(true))
             foreach(var renderer in apartment.GetComponentsInChildren<Renderer>(true).Where(r=>r.enabled))
             {
+                if(BuildingInteriorLining.IsVerifiedOwned(renderer))continue;
                 var wall=InBuilding(b,renderer);if(CutsOpening(wall,apartment.floor,openings))errors.Add(apartment.apartmentId+": квартирная стена закрывает фасадный проём: "+renderer.name+" bounds="+wall);
             }
             return errors;
@@ -219,13 +222,13 @@ namespace ZombieSurvival.ModularBuildings.Editor
                 var slot=a.GetComponentInParent<ApartmentSlot>();if(!slot||!a.entranceDoor||!a.entranceDoor.enabled||Mathf.Abs(Mathf.Abs(a.entranceAngle)-125)>.01f||Mathf.Abs(Mathf.DeltaAngle(slot.doorHinge.localEulerAngles.y,a.entranceAngle))>.01f)errors.Add(a.apartmentId+": вход не открыт на125°.");
             }
             for(int i=0;i<apartments.Length;i++)for(int j=i+1;j<apartments.Length;j++)if(apartments[i].occupiedRegions!=null&&apartments[j].occupiedRegions!=null&&apartments[i].floor==apartments[j].floor&&apartments[i].occupiedRegions.Any(a=>apartments[j].occupiedRegions.Any(c=>Overlap(a,c))))errors.Add("Пересечение квартир "+apartments[i].apartmentId+" / "+apartments[j].apartmentId);
-            errors.AddRange(ValidateEntranceAccess(b));errors.AddRange(ValidateFacadeOpenings(b));errors.AddRange(ValidateFixedLobbyAndDoors(b));errors.AddRange(ValidateNoGeneratedWalls(b));return errors;
+            errors.AddRange(BuildingInteriorLining.Validate(b));errors.AddRange(BuildingApartmentDoorCleanup.Validate(b));errors.AddRange(ValidateEntranceAccess(b));errors.AddRange(ValidateFacadeOpenings(b));errors.AddRange(ValidateFixedLobbyAndDoors(b));errors.AddRange(ValidateNoGeneratedWalls(b));return errors;
         }
         public static List<string> ValidateFixedLobbyAndDoors(GeneratedBuilding b)
         {
             var errors=new List<string>();if(!b){errors.Add("Нет дома.");return errors;}
             var slots=b.GetComponentsInChildren<ApartmentSlot>(true);
-            if(slots.Length!=Math.Min(b.floors,4)*b.entrances*3)errors.Add("Фиксированный подъезд потерял исходные3слота на этаж.");
+            if(slots.Length!=(b.profile&&b.profile.extendedCityRules?Math.Min(b.floors,4):b.floors)*b.entrances*3)errors.Add("Фиксированный подъезд потерял исходные3слота на этаж.");
             foreach(var slot in slots)
             {
                 var expected=slot.slotId.EndsWith("/R",StringComparison.Ordinal)?new Vector3(1.55f,0,0):slot.slotId.EndsWith("/L2",StringComparison.Ordinal)?new Vector3(-1.55f,0,3):new Vector3(-1.55f,0,0);
@@ -254,6 +257,7 @@ namespace ZombieSurvival.ModularBuildings.Editor
                 if(!apartment.prefabInstance)continue;
                 foreach(var component in apartment.GetComponentsInChildren<Component>(true).Where(c=>c is Renderer||c is MeshFilter||c is Collider))
                 {
+                    if(BuildingInteriorLining.IsVerifiedOwned(component))continue;
                     if(!component.transform.IsChildOf(apartment.prefabInstance.transform))
                         errors.Add(apartment.apartmentId+": дополнительная геометрия/коллизия за дверью: "+component.name+" / "+component.GetType().Name);
                     else if(PrefabUtility.GetCorrespondingObjectFromSource(component)==null)

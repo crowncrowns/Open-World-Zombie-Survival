@@ -1,0 +1,6 @@
+var scene=UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+var bs=scene.GetRootGameObjects().SelectMany(g=>g.GetComponentsInChildren<ZombieSurvival.ModularBuildings.GeneratedBuilding>(true)).Where(b=>b.GetComponentsInChildren<ZombieSurvival.ModularBuildings.GeneratedApartment>(true).Length>0).ToArray();
+var plans=bs.Select(ZombieSurvival.ModularBuildings.Editor.BuildingInteriorLining.Plan).ToArray();
+var result=plans.Select(p=>Newtonsoft.Json.Linq.JObject.Parse(p.ToJson())).ToArray();
+System.IO.File.WriteAllText("Verification/ApartmentInteriorLining_20261027/Plans.json",Newtonsoft.Json.JsonConvert.SerializeObject(result,Newtonsoft.Json.Formatting.Indented));
+return new{buildings=bs.Length,rows=plans.Sum(p=>p.rows.Count),errors=plans.SelectMany(p=>p.errors).ToArray()};

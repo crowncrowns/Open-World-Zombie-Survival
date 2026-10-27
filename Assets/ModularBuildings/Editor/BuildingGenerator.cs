@@ -296,7 +296,7 @@ namespace ZombieSurvival.ModularBuildings.Editor
                 if(exteriorMaterial||includeEntranceDoors)BuildingExteriorMaterials.Apply(b,exteriorMaterial?exteriorMaterial:p.facadeMaterial,includeEntranceDoors,false);
                 BuildingBaseTrim.Add(b,baseTrimMaterial);
                 BuildingEntranceStairs.Refit(b,null,false,false);
-                if(p.extendedCityRules){BuildingCityDetails.Add(b);BuildingApartments.Add(b,p.citySeed);}
+                if(p.extendedCityRules){BuildingCityDetails.Add(b);BuildingApartments.Add(b,p.citySeed);BuildingPublicFloorFinish.Apply(b,false);}
                 Physics.SyncTransforms();return b;
             }catch{Object.DestroyImmediate(root);throw;}
         }
@@ -331,6 +331,7 @@ namespace ZombieSurvival.ModularBuildings.Editor
                 // Refresh physics poses before Collider.Raycast/ClosestPoint, as in the legacy branch.
                 Physics.SyncTransforms();
                 errors.AddRange(BuildingFloorShell.Validate(b));
+                errors.AddRange(BuildingPublicFloorFinish.Validate(b));
                 errors.AddRange(BuildingCityDetails.Validate(b));
                 errors.AddRange(BuildingApartments.Validate(b));
                 errors.AddRange(BuildingApartments.ValidateInheritedPaths(b));

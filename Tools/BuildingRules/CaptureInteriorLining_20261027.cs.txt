@@ -1,0 +1,17 @@
+const string prefix="After";
+const string dir="Verification/ApartmentInteriorLining_20261027/";
+var main=UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+var rows=main.GetRootGameObjects().SelectMany(g=>g.GetComponentsInChildren<ZombieSurvival.ModularBuildings.GeneratedBuilding>(true)).Where(b=>b.GetComponentsInChildren<ZombieSurvival.ModularBuildings.GeneratedApartment>(true).Length>0).SelectMany(b=>ZombieSurvival.ModularBuildings.Editor.BuildingInteriorLining.Plan(b).rows).Where(r=>r.apartment.prefabInstance&&r.min<-.95f&&r.max>.95f).GroupBy(r=>r.template.name).Select(g=>g.First()).ToArray();
+foreach(var row in rows){
+ var preview=UnityEditor.SceneManagement.EditorSceneManager.NewPreviewScene();UnityEngine.RenderTexture rt=null;UnityEngine.Texture2D tex=null;var old=UnityEngine.RenderTexture.active;
+ try{
+  var source=row.apartment.GetComponentInParent<ZombieSurvival.ModularBuildings.GeneratedBuilding>();var copy=UnityEngine.Object.Instantiate(source.gameObject);UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(copy,preview);
+  var camera=new UnityEngine.GameObject("Interior lining check camera").AddComponent<UnityEngine.Camera>();UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(camera.gameObject,preview);camera.enabled=false;camera.scene=preview;camera.aspect=1280f/800;camera.fieldOfView=70;camera.nearClipPlane=.03f;camera.farClipPlane=200;
+  camera.transform.position=row.module.TransformPoint(new UnityEngine.Vector3(0,1.55f,row.plane-2.4f));camera.transform.LookAt(row.module.TransformPoint(new UnityEngine.Vector3(0,1.5f,row.plane)));
+  var fill=camera.gameObject.AddComponent<UnityEngine.Light>();fill.type=UnityEngine.LightType.Point;fill.range=15;fill.intensity=2.5f;
+  var sun=new UnityEngine.GameObject("Interior check daylight").AddComponent<UnityEngine.Light>();UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(sun.gameObject,preview);sun.type=UnityEngine.LightType.Directional;sun.intensity=1;sun.transform.rotation=UnityEngine.Quaternion.Euler(40,-30,0);
+  rt=new UnityEngine.RenderTexture(1280,800,24);tex=new UnityEngine.Texture2D(1280,800,UnityEngine.TextureFormat.RGB24,false);UnityEngine.Rendering.RenderPipeline.SubmitRenderRequest(camera,new UnityEngine.Rendering.Universal.UniversalRenderPipeline.SingleCameraRequest{destination=rt});UnityEngine.RenderTexture.active=rt;tex.ReadPixels(new UnityEngine.Rect(0,0,1280,800),0,0);tex.Apply();System.IO.File.WriteAllBytes(dir+prefix+"_"+row.template.name+".png",tex.EncodeToPNG());
+ }finally{UnityEngine.RenderTexture.active=old;if(tex)UnityEngine.Object.DestroyImmediate(tex);if(rt){rt.Release();UnityEngine.Object.DestroyImmediate(rt);}UnityEditor.SceneManagement.EditorSceneManager.ClosePreviewScene(preview);}
+}
+return rows.Select(r=>r.template.name).ToArray();
+

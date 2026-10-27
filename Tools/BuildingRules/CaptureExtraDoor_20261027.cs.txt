@@ -1,0 +1,15 @@
+const string output="Verification/ApartmentExtraDoor_20261027/After.png";
+var main=UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+var b=main.GetRootGameObjects().SelectMany(g=>g.GetComponentsInChildren<ZombieSurvival.ModularBuildings.GeneratedBuilding>(true)).Single(b=>b.name=="Building_demo-building-012");
+var preview=UnityEditor.SceneManagement.EditorSceneManager.NewPreviewScene();
+UnityEngine.RenderTexture rt=null;UnityEngine.Texture2D tex=null;var active=UnityEngine.RenderTexture.active;
+try{
+ var copy=UnityEngine.Object.Instantiate(b.gameObject);UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(copy,preview);
+ var cam=new UnityEngine.GameObject("Door check camera").AddComponent<UnityEngine.Camera>();UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(cam.gameObject,preview);cam.enabled=false;cam.scene=preview;cam.aspect=1280f/800;cam.fieldOfView=60;cam.nearClipPlane=.03f;cam.farClipPlane=100;
+ // In front of the confirmed unwanted L door and the genuine L2 entrance.
+ cam.transform.position=copy.transform.TransformPoint(new UnityEngine.Vector3(1,1.55f,-.6f));cam.transform.LookAt(copy.transform.TransformPoint(new UnityEngine.Vector3(-1.55f,1.3f,1.5f)));
+ var light=cam.gameObject.AddComponent<UnityEngine.Light>();light.type=UnityEngine.LightType.Point;light.range=12;light.intensity=2;
+ rt=new UnityEngine.RenderTexture(1280,800,24);tex=new UnityEngine.Texture2D(1280,800,UnityEngine.TextureFormat.RGB24,false);
+ UnityEngine.Rendering.RenderPipeline.SubmitRenderRequest(cam,new UnityEngine.Rendering.Universal.UniversalRenderPipeline.SingleCameraRequest{destination=rt});UnityEngine.RenderTexture.active=rt;tex.ReadPixels(new UnityEngine.Rect(0,0,1280,800),0,0);tex.Apply();System.IO.File.WriteAllBytes(output,tex.EncodeToPNG());
+}finally{UnityEngine.RenderTexture.active=active;if(tex)UnityEngine.Object.DestroyImmediate(tex);if(rt){rt.Release();UnityEngine.Object.DestroyImmediate(rt);}UnityEditor.SceneManagement.EditorSceneManager.ClosePreviewScene(preview);}
+return output;

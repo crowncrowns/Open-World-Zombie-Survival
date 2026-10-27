@@ -1,0 +1,173 @@
+#if UNITY_EDITOR
+using System;
+using System.IO;
+using System.Linq;
+using System.Collections.Generic;
+using System.Reflection;
+using UnityEditor;
+using UnityEditor.SceneManagement;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using ZombieSurvival.Interaction;
+using Object=UnityEngine.Object;
+namespace ZombieSurvival.ModularBuildings.Editor
+{
+    /// <summary>Explicit interior-only Finish adapter. No envelope, floor, stairs or profile rebuild.</summary>
+    public static class ManualApartmentAddition
+    {
+        const string SourcePath="Assets/Maps/Buildings/Apartments Prefabs/Apart_Variant_1.prefab";
+        const string GroupName="Manual apartment additions";
+        static readonly Vector3 SourceEntry=new Vector3(3.47753f,-3,1.126367f);
+        static readonly float[] FinishColumns={-11.0371742f,3.96282578f,18.9628258f};
+        public sealed class Placement {public Transform door;public int floor,entrance;public Vector3 entry,rootPosition;public Bounds bounds;public readonly List<Transform> hide=new List<Transform>();}
+        public sealed class AdditionPlan
+        {
+            public GameObject house,source;public int seed,existingApartments;public string stamp;
+            public readonly List<Placement> placements=new List<Placement>();public readonly List<string> diagnostics=new List<string>();public readonly List<string> errors=new List<string>();
+            public string ToJson()=>Newtonsoft.Json.JsonConvert.SerializeObject(new{house=house?house.name:null,seed,existingApartments,errors,diagnostics,placements=placements.Select(p=>new{door=Path(p.door),floor=p.floor,entrance=p.entrance,x=p.entry.x,y=p.entry.y,z=p.entry.z,rootX=p.rootPosition.x,rootY=p.rootPosition.y,rootZ=p.rootPosition.z,bounds=p.bounds.ToString("F4"),hiddenPartitions=p.hide.Select(Path)})},Newtonsoft.Json.Formatting.Indented);
+        }
+        sealed class Wall {public Bounds bounds;public string name;public Transform transform;}
+        public sealed class PreviewResult : IDisposable
+        {
+            public Scene scene;public GameObject house;public AdditionPlan plan;public List<string> errors;
+            public void Dispose(){if(scene.IsValid())EditorSceneManager.ClosePreviewScene(scene);}
+        }
+        static string Path(Transform t)=>t.parent?Path(t.parent)+"/"+t.name:t.name;
+        static Matrix4x4 Relative(Transform from,Transform to)
+        {var root=to;while(root&&from!=root&&!from.IsChildOf(root))root=root.parent;return root?CoplanarAudit.RelativeMatrix(to,root).inverse*CoplanarAudit.RelativeMatrix(from,root):to.worldToLocalMatrix*from.localToWorldMatrix;}
+        static Bounds TransformBounds(Bounds b,Matrix4x4 m)
+        {Bounds result=default;bool first=true;for(int i=0;i<8;i++){var p=m.MultiplyPoint3x4(b.center+Vector3.Scale(b.extents,new Vector3((i&1)==0?-1:1,(i&2)==0?-1:1,(i&4)==0?-1:1)));if(first){result=new Bounds(p,Vector3.zero);first=false;}else result.Encapsulate(p);}return result;}
+        static Bounds BoundsIn(Transform root,Renderer r)=>TransformBounds(r.localBounds,Relative(r.transform,root));
+        static bool WallRenderer(Renderer r)=>r.enabled&&(r.name.IndexOf("Wall",StringComparison.OrdinalIgnoreCase)>=0||r.name.IndexOf("Partition",StringComparison.OrdinalIgnoreCase)>=0)&&r.name.IndexOf("Frame",StringComparison.OrdinalIgnoreCase)<0;
+        static string Stamp(GameObject house)=>house.GetEntityId()+"|"+house.transform.position.ToString("R")+"|"+house.transform.rotation.ToString("R")+"|"+house.transform.lossyScale.ToString("R")+"|"+house.GetComponentsInChildren<Transform>(true).Length;
+        static int Hash(string s,int seed){unchecked{uint h=(uint)seed^2166136261;foreach(char c in s){h^=c;h*=16777619;}return (int)h;}}
+        static bool IntersectsVolume(Bounds a,Bounds b,float tolerance=.015f)=>Mathf.Min(a.max.x,b.max.x)-Mathf.Max(a.min.x,b.min.x)>tolerance&&Mathf.Min(a.max.y,b.max.y)-Mathf.Max(a.min.y,b.min.y)>tolerance&&Mathf.Min(a.max.z,b.max.z)-Mathf.Max(a.min.z,b.min.z)>tolerance;
+        public static AdditionPlan Plan(GameObject house,int seed=25,int desired=2)
+        {
+            var plan=new AdditionPlan{house=house,seed=seed,source=AssetDatabase.LoadAssetAtPath<GameObject>(SourcePath)};
+            if(!house||!plan.source){plan.errors.Add("Нет дома или исходного prefab квартиры.");return plan;}
+            if(Application.isPlaying||EditorUtility.IsPersistent(house)){plan.errors.Add("Нужен экземпляр ручного дома в Edit.");return plan;}
+            if(house.GetComponent<GeneratedBuilding>()){plan.errors.Add("GeneratedBuilding обслуживается другим инструментом.");return plan;}
+            bool finish=house.name.StartsWith("Building_Shk_68_FINISH",StringComparison.Ordinal)||house.name.StartsWith("FINISH_Shk_68",StringComparison.Ordinal);
+            bool gaev=house.name.StartsWith("Gaevskogo_10",StringComparison.Ordinal);
+            if(!finish&&!gaev){plan.errors.Add("Для этого ручного корпуса anchors не подтверждены; Gaevskogo нельзя угадывать по Finish.");return plan;}
+            if(Vector3.Distance(house.transform.lossyScale,Vector3.one)>.001f||Vector3.Angle(house.transform.up,Vector3.up)>.01f){plan.errors.Add("Не поддержан масштаб/наклон корпуса.");return plan;}
+            var existing=house.GetComponentsInChildren<Transform>(true).Where(t=>t!=house.transform&&(t.GetComponent<ManualAddedApartment>()||t.name.StartsWith("Apart_Variant_1",StringComparison.Ordinal)||PrefabUtility.GetCorrespondingObjectFromSource(t.gameObject)==plan.source)).ToArray();
+            plan.existingApartments=existing.Length;plan.stamp=Stamp(house);if(existing.Length>0){plan.diagnostics.Add("Квартира уже существует; дом сохранён без добавлений.");return plan;}
+            var sourceWalls=plan.source.GetComponentsInChildren<Renderer>(true).Where(WallRenderer).Select(r=>BoundsIn(plan.source.transform,r)).Where(b=>b.size.y>=2.45f).ToArray();
+            if(sourceWalls.Length==0){plan.errors.Add("Нет геометрии стен источника.");return plan;}
+            var oldWalls=house.GetComponentsInChildren<Renderer>(true).Where(WallRenderer).Select(r=>new Wall{bounds=BoundsIn(house.transform,r),name=Path(r.transform),transform=r.transform}).Where(w=>w.bounds.size.y>=2.45f).ToArray();
+            var candidates=new List<Placement>();
+            foreach(var door in house.GetComponentsInChildren<Transform>(true).Where(t=>t.name=="Door_Single_Metal"))
+            {
+                var p=Relative(door,house.transform).MultiplyPoint3x4(Vector3.zero);float baseY=finish?.6550016f:1.500139f;int floor=Mathf.RoundToInt((p.y-baseY)/3);
+                if(floor<0||floor>2||Mathf.Abs(p.y-(baseY+floor*3))>.03f)continue;
+                int entrance=-1;
+                if(finish){if(Mathf.Abs(p.z+22.53716f)>.03f)continue;entrance=Array.FindIndex(FinishColumns,c=>Mathf.Abs(p.x-(c-1.55f))<.03f);}
+                else if(Mathf.Abs(p.x-27.7526283f)<.08f&&Mathf.Abs(p.z-14.8901215f)<.08f)entrance=1;
+                else if(Mathf.Abs(p.x-9.852627f)<.12f&&Mathf.Abs(p.z-14.7901382f)<.12f)entrance=0;
+                if(entrance<0)continue;
+                var existingDoor=door.GetComponent<DoorInteractable>();if(existingDoor&&!existingDoor.enabled){plan.diagnostics.Add(Path(door)+": отключённая авторская дверь пропущена.");continue;}
+                var hinge=door.GetComponentsInChildren<Transform>(true).FirstOrDefault(t=>t.name=="Door_Hinge");var leaf=door.GetComponentsInChildren<Transform>(true).FirstOrDefault(t=>t.name=="Door_Leaf");if(!hinge||!leaf||!leaf.GetComponent<BoxCollider>()){plan.diagnostics.Add(Path(door)+": не распознана петля/коллизия.");continue;}
+                if(door.GetComponentsInChildren<MonoBehaviour>(true).Any(c=>c&&!(c is DoorInteractable))){plan.diagnostics.Add(Path(door)+": пользовательский script, пропущено.");continue;}
+                var candidate=new Placement{door=door,floor=floor,entrance=entrance,entry=p,rootPosition=p-SourceEntry};
+                candidate.bounds=sourceWalls[0];foreach(var part in sourceWalls.Skip(1)){var bounds=candidate.bounds;bounds.Encapsulate(part);candidate.bounds=bounds;}var placedBounds=candidate.bounds;placedBounds.center+=candidate.rootPosition;candidate.bounds=placedBounds;
+                // Only wholly-contained old private Room_Wall_* modules may be hidden.
+                // No facade module, public separator or partially intersecting module is trimmed.
+                foreach(var module in house.GetComponentsInChildren<Transform>(true).Where(t=>t.name.StartsWith("Room_Wall_",StringComparison.Ordinal)))
+                {
+                    var rs=module.GetComponentsInChildren<Renderer>(true);if(rs.Length==0)continue;var mb=BoundsIn(house.transform,rs[0]);foreach(var r in rs.Skip(1))mb.Encapsulate(BoundsIn(house.transform,r));
+                    bool contained=mb.min.x>=candidate.bounds.min.x-.015f&&mb.max.x<=p.x-.10f&&mb.min.z>=candidate.bounds.min.z-.015f&&mb.max.z<=candidate.bounds.max.z+.015f&&mb.min.y>=p.y-.08f&&mb.max.y<=p.y+3.01f;
+                    if(!contained||door.IsChildOf(module))continue;
+                    bool custom=module.GetComponentsInChildren<Component>(true).Any(c=>!c||(!(c is Transform)&&!(c is MeshFilter)&&!(c is MeshRenderer)&&!(c is Collider)&&!(c is DoorInteractable)));
+                    if(!custom)candidate.hide.Add(module);
+                }
+                bool blocked=false;
+                foreach(var w in sourceWalls)
+                {
+                    var target=w;target.center+=candidate.rootPosition;
+                    foreach(var old in oldWalls)
+                    {
+                        if(candidate.hide.Any(t=>old.transform==t||old.transform.IsChildOf(t)))continue;
+                        if(!IntersectsVolume(target,old.bounds))continue;
+                        // Existing private boundary is shared, not replaced. Only its exact
+                        // plane at the selected door is permitted, never arbitrary interior walls.
+                        bool privatePlane=target.size.x<.25f&&old.bounds.size.x<.55f&&Mathf.Abs(target.center.x-p.x)<.1f&&Mathf.Abs(old.bounds.center.x-p.x)<.1f;
+                        if(privatePlane)continue;
+                        plan.diagnostics.Add(Path(door)+": collision sourceWall="+target+" existing="+old.name+" "+old.bounds);blocked=true;break;
+                    }
+                    if(blocked)break;
+                }
+                if(!blocked)candidates.Add(candidate);
+            }
+            var random=new System.Random(Hash(house.name,seed));for(int i=candidates.Count-1;i>0;i--){int j=random.Next(i+1);var t=candidates[i];candidates[i]=candidates[j];candidates[j]=t;}
+            foreach(var candidate in candidates)
+            {
+                if(plan.placements.Any(p=>p.floor==candidate.floor&&IntersectsVolume(p.bounds,candidate.bounds)))continue;
+                plan.placements.Add(candidate);if(plan.placements.Count>=Mathf.Clamp(desired,1,3))break;
+            }
+            if(plan.placements.Count==0)plan.errors.Add("Нет безопасного места для целой квартиры у подтверждённых дверей Finish; геометрия не сжималась/не удалялась.");
+            return plan;
+        }
+        static void ConfigureEntrance(Transform owner,Transform house,bool undo)
+        {
+            var hinge=owner.GetComponentsInChildren<Transform>(true).Single(t=>t.name=="Door_Hinge");var leaf=owner.GetComponentsInChildren<Transform>(true).Single(t=>t.name=="Door_Leaf").GetComponent<BoxCollider>();
+            var interaction=owner.GetComponent<DoorInteractable>();if(!interaction)interaction=undo?Undo.AddComponent<DoorInteractable>(owner.gameObject):owner.gameObject.AddComponent<DoorInteractable>();
+            if(undo){Undo.RecordObject(interaction,"Открыть внутреннюю дверь квартиры");Undo.RecordObject(hinge,"Положение входа квартиры");}
+            var so=new SerializedObject(interaction);var existingClosed=so.FindProperty("hasAuthoredInitialOpen").boolValue;var source=PrefabUtility.GetCorrespondingObjectFromSource(hinge);var closed=existingClosed?so.FindProperty("authoredClosedRotation").quaternionValue:source?source.localRotation:hinge.localRotation;
+            so.FindProperty("hinge").objectReferenceValue=hinge;so.FindProperty("leaf").objectReferenceValue=leaf;so.FindProperty("hasAuthoredInitialOpen").boolValue=true;so.FindProperty("authoredClosedRotation").quaternionValue=closed;so.ApplyModifiedPropertiesWithoutUndo();
+            typeof(DoorInteractable).GetField("initialized",BindingFlags.Instance|BindingFlags.NonPublic).SetValue(interaction,false);
+            var center=hinge.InverseTransformPoint(leaf.transform.TransformPoint(leaf.center));var parentRotation=hinge.parent.rotation;
+            float Score(float sign)=>Vector3.Dot(house.InverseTransformVector(parentRotation*closed*(Quaternion.Euler(0,125*sign,0)*center-center)),Vector3.right);
+            interaction.SetInitialOpenPose(125,Score(1)>Score(-1)?1:-1);interaction.enabled=true;EditorUtility.SetDirty(interaction);EditorUtility.SetDirty(hinge);PrefabUtility.RecordPrefabInstancePropertyModifications(interaction);PrefabUtility.RecordPrefabInstancePropertyModifications(hinge);
+        }
+        public static int Apply(AdditionPlan plan,bool recordUndo=true)
+        {
+            if(!recordUndo)return ApplyCore(plan,false);
+            Undo.IncrementCurrentGroup();int group=Undo.GetCurrentGroup();Undo.SetCurrentGroupName("Добавить квартиры в ручной дом");
+            try{int count=ApplyCore(plan,true);Undo.CollapseUndoOperations(group);return count;}catch{Undo.RevertAllDownToGroup(group);throw;}
+        }
+        static int ApplyCore(AdditionPlan plan,bool recordUndo)
+        {
+            if(plan==null||plan.errors.Count>0)throw new InvalidOperationException(plan==null?"Нет плана.":string.Join(";",plan.errors));if(Application.isPlaying||!plan.house||Stamp(plan.house)!=plan.stamp)throw new InvalidOperationException("План устарел/не Edit.");if(plan.placements.Count==0)return 0;
+            var oldTransforms=plan.house.GetComponentsInChildren<Transform>(true).ToDictionary(t=>t,t=>(t.parent?t.parent.GetEntityId().ToString():"root")+"|"+t.localPosition.ToString("R")+"|"+t.localRotation.ToString("R")+"|"+t.localScale.ToString("R"));
+            var oldMaterials=plan.house.GetComponentsInChildren<Renderer>(true).ToDictionary(r=>r,r=>r.sharedMaterials.ToArray());var hinges=new HashSet<Transform>(plan.placements.Select(p=>p.door.GetComponentsInChildren<Transform>(true).Single(t=>t.name=="Door_Hinge")));
+            var group=plan.house.transform.Find(GroupName);if(!group){var go=new GameObject(GroupName);go.transform.SetParent(plan.house.transform,false);group=go.transform;if(recordUndo)Undo.RegisterCreatedObjectUndo(go,"Квартиры ручного дома");}
+            foreach(var p in plan.placements)
+            {
+                foreach(var old in p.hide){if(recordUndo)Undo.RecordObject(old.gameObject,"Освободить только приватную квартиру");old.gameObject.SetActive(false);EditorUtility.SetDirty(old.gameObject);PrefabUtility.RecordPrefabInstancePropertyModifications(old.gameObject);}
+                var wrapper=new GameObject("Apartment E"+(p.entrance+1)+" F"+(p.floor+1));wrapper.transform.SetParent(group,false);
+                var instance=(GameObject)PrefabUtility.InstantiatePrefab(plan.source,wrapper.transform);instance.transform.localPosition=p.rootPosition;instance.transform.localRotation=Quaternion.identity;instance.transform.localScale=Vector3.one;
+                typeof(BuildingApartments).GetMethod("ConfigureInternalDoors",BindingFlags.Static|BindingFlags.NonPublic).Invoke(null,new object[]{instance});
+                ConfigureEntrance(p.door,plan.house.transform,recordUndo);
+                var marker=wrapper.AddComponent<ManualAddedApartment>();marker.house=plan.house.transform;marker.source=plan.source;marker.instance=instance;marker.entrance=p.door.GetComponent<DoorInteractable>();marker.entryLocal=p.entry;marker.floor=p.floor;marker.entranceIndex=p.entrance;marker.additionId=plan.house.name+"/E"+(p.entrance+1)+"/F"+(p.floor+1);marker.hiddenPrivatePartitions=p.hide.Select(t=>t.gameObject).ToArray();
+                if(recordUndo)Undo.RegisterCreatedObjectUndo(wrapper,"Цельная квартира");
+            }
+            foreach(var pair in oldTransforms)
+            {
+                var t=pair.Key;if(!t)throw new InvalidOperationException("Потерян исходный объект.");var pose=(t.parent?t.parent.GetEntityId().ToString():"root")+"|"+t.localPosition.ToString("R")+"|"+t.localRotation.ToString("R")+"|"+t.localScale.ToString("R");if(!hinges.Contains(t)&&pose!=pair.Value)throw new InvalidOperationException("Изменена исходная геометрия "+Path(t));
+            }
+            foreach(var p in oldMaterials)if(!p.Key||!p.Key.sharedMaterials.SequenceEqual(p.Value))throw new InvalidOperationException("Изменён исходный материал.");
+            var errors=Validate(plan.house);if(errors.Count>0)throw new InvalidOperationException(string.Join(";",errors));if(recordUndo)EditorSceneManager.MarkSceneDirty(plan.house.scene);return plan.placements.Count;
+        }
+        public static List<string> Validate(GameObject house)
+        {
+            var errors=new List<string>();var apartments=house.GetComponentsInChildren<ManualAddedApartment>(true);
+            if(apartments.Length>3)errors.Add("Более3добавленных квартир.");
+            foreach(var a in apartments)
+            {
+                if(a.house!=house.transform||!a.instance||a.source!=AssetDatabase.LoadAssetAtPath<GameObject>(SourcePath)||PrefabUtility.GetCorrespondingObjectFromSource(a.instance)!=a.source){errors.Add("Потерян источник квартиры.");continue;}
+                if(a.floor<0||a.floor>2||a.instance.transform.localScale!=Vector3.one)errors.Add("Неверный этаж/масштаб.");
+                var entry=Relative(a.instance.transform,house.transform).MultiplyPoint3x4(SourceEntry);if(Vector3.Distance(entry,a.entryLocal)>.001f)errors.Add("Вход квартиры не совпадает с существующей дверью.");
+                if(!a.entrance||!a.entrance.enabled)errors.Add("Нет доступа к квартире.");else{var so=new SerializedObject(a.entrance);if(!so.FindProperty("hasAuthoredInitialOpen").boolValue||Mathf.Abs(so.FindProperty("openAngle").floatValue-125)>.01f)errors.Add("Вход не открыт125°.");}
+            }
+            return errors;
+        }
+        public static PreviewResult Preview(GameObject house,int seed=25,int desired=2)
+        {
+            var result=new PreviewResult{scene=EditorSceneManager.NewPreviewScene()};
+            try{result.house=Object.Instantiate(house);result.house.name=house.name;SceneManager.MoveGameObjectToScene(result.house,result.scene);result.plan=Plan(result.house,seed,desired);if(result.plan.errors.Count==0)Apply(result.plan,false);result.errors=result.plan.errors.Concat(Validate(result.house)).ToList();return result;}catch{result.Dispose();throw;}
+        }
+    }
+}
+#endif

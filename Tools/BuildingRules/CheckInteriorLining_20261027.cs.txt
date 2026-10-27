@@ -1,0 +1,34 @@
+// Native isolated Preview checks. Never saves or modifies the working scene.
+const string dir="Verification/ApartmentInteriorLining_20261027/";System.IO.Directory.CreateDirectory(dir);
+if(UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)throw new System.Exception("Edit only");
+var source=UnityEditor.AssetDatabase.LoadAssetAtPath<ZombieSurvival.ModularBuildings.BuildingSeriesProfile>("Assets/ModularBuildings/Generated/CityProfileV6.asset");
+var main=UnityEngine.SceneManagement.SceneManager.GetActiveScene();string stamp=main.isDirty+"|"+string.Join(";",main.GetRootGameObjects().Select(g=>g.GetEntityId()+":"+g.transform.position.ToString("R")));
+string folder="Assets/__InteriorLiningChecks_"+System.Guid.NewGuid().ToString("N");UnityEditor.AssetDatabase.CreateFolder("Assets",folder.Substring(7));var lines=new System.Collections.Generic.List<string>();
+void Check(bool ok,string name){if(!ok)throw new System.Exception(name);lines.Add("PASS "+name);}
+try
+{
+    foreach(var spec in new[]{new[]{3,2},new[]{6,3},new[]{3,1}})
+    {
+        var scene=UnityEditor.SceneManagement.EditorSceneManager.NewPreviewScene();var p=UnityEngine.Object.Instantiate(source);p.citySeed=25;
+        try
+        {
+            var b=ZombieSurvival.ModularBuildings.Editor.BuildingGenerator.Build(p,1980,spec[0],spec[1],"lining-check-"+spec[0]+"-"+spec[1],scene);
+            var errors=ZombieSurvival.ModularBuildings.Editor.BuildingGenerator.Validate(b);Check(errors.Count==0,"production "+spec[0]+"F"+spec[1]+"E "+string.Join(";",errors.Take(10)));
+            var markers=b.GetComponentsInChildren<ZombieSurvival.ModularBuildings.GeneratedInteriorLining>(true);Check(markers.Length>0,"owned skins exist");
+            Check(markers.All(m=>m.GetComponentsInChildren<UnityEngine.Collider>(true).Length==0),"no duplicate lining colliders");
+            Check(ZombieSurvival.ModularBuildings.Editor.BuildingInteriorLining.Validate(b).Count==0,"room material/bounds/all opening probes");
+            int count=markers.Length;ZombieSurvival.ModularBuildings.Editor.BuildingInteriorLining.Apply(b,false);Check(b.GetComponentsInChildren<ZombieSurvival.ModularBuildings.GeneratedInteriorLining>(true).Length==count,"repeat no duplicates");
+            var a=b.GetComponentsInChildren<ZombieSurvival.ModularBuildings.GeneratedApartment>(true).First(x=>x.prefabInstance);var rogue=UnityEngine.GameObject.CreatePrimitive(UnityEngine.PrimitiveType.Cube);rogue.transform.SetParent(a.transform,false);
+            Check(ZombieSurvival.ModularBuildings.Editor.BuildingApartments.ValidateNoGeneratedWalls(b).Count>0,"rogue wall outside owned rejected");UnityEngine.Object.DestroyImmediate(rogue);
+            Check(ZombieSurvival.ModularBuildings.Editor.BuildingApartments.ValidateNoGeneratedWalls(b).Count==0,"verified owned only accepted");
+            b.profile=source;string path=folder+"/F"+spec[0]+"E"+spec[1]+".prefab";UnityEditor.PrefabUtility.SaveAsPrefabAsset(b.gameObject,path);
+            var loaded=UnityEditor.PrefabUtility.LoadPrefabContents(path);
+            try{var rb=loaded.GetComponent<ZombieSurvival.ModularBuildings.GeneratedBuilding>();foreach(var door in loaded.GetComponentsInChildren<ZombieSurvival.Interaction.DoorInteractable>(true))typeof(ZombieSurvival.Interaction.DoorInteractable).GetMethod("EnsureInitialized",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic).Invoke(door,null);Check(ZombieSurvival.ModularBuildings.Editor.BuildingInteriorLining.Validate(rb).Count==0,"saved prefab room/mesh/material reload");Check(ZombieSurvival.ModularBuildings.Editor.BuildingApartments.ValidateNoGeneratedWalls(rb).Count==0,"saved provenance guard");}finally{UnityEditor.PrefabUtility.UnloadPrefabContents(loaded);}
+        }
+        finally{UnityEditor.SceneManagement.EditorSceneManager.ClosePreviewScene(scene);UnityEngine.Object.DestroyImmediate(p);}
+    }
+    Check(stamp==main.isDirty+"|"+string.Join(";",main.GetRootGameObjects().Select(g=>g.GetEntityId()+":"+g.transform.position.ToString("R"))),"main roots/dirty retained");
+    System.IO.File.WriteAllText(dir+"NewBuildChecks.txt",string.Join("\n",lines));return string.Join("\n",lines);
+}
+catch(System.Exception e){System.IO.File.WriteAllText(dir+"NewBuildChecks.txt",string.Join("\n",lines)+"\nFAIL "+e);throw;}
+finally{UnityEditor.AssetDatabase.DeleteAsset(folder);}

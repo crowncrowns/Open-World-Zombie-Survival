@@ -1,0 +1,37 @@
+// Explicit Unity CLI eval body; DRY_RUN first. Root owns live backup and final save.
+const string mode="DRY_RUN";const string dir="Verification/ApartmentInteriorLining_20261027/";System.IO.Directory.CreateDirectory(dir);
+if(UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)throw new System.Exception("Edit only");
+var scene=UnityEngine.SceneManagement.SceneManager.GetActiveScene();var roots=scene.GetRootGameObjects();
+var buildings=roots.SelectMany(r=>r.GetComponentsInChildren<ZombieSurvival.ModularBuildings.GeneratedBuilding>(true)).Where(b=>b.GetComponentsInChildren<ZombieSurvival.ModularBuildings.GeneratedApartment>(true).Length>0).ToArray();
+var plans=buildings.Select(ZombieSurvival.ModularBuildings.Editor.BuildingInteriorLining.Plan).ToArray();
+System.IO.File.WriteAllText(dir+"MigrationPlans.json","["+string.Join(",",plans.Select(p=>p.ToJson()))+"]");
+var errors=plans.SelectMany(p=>p.errors).ToArray();if(errors.Length>0)throw new System.Exception(string.Join(";",errors));
+if(mode=="DRY_RUN")return "DRY_RUN buildings="+buildings.Length+" rows="+plans.Sum(p=>p.rows.Count)+" errors=0";
+if(mode!="APPLY")throw new System.Exception("Unknown mode");
+string Pose(UnityEngine.Transform t)=>(t.parent?t.parent.GetEntityId().ToString():"root")+"|"+t.localPosition.ToString("R")+"|"+t.localRotation.ToString("R")+"|"+t.localScale.ToString("R")+"|"+t.gameObject.activeSelf;
+string Materials(UnityEngine.Renderer r)=>string.Join(",",r.sharedMaterials.Select(m=>m?m.GetEntityId().ToString():"null"));
+var transforms=roots.SelectMany(r=>r.GetComponentsInChildren<UnityEngine.Transform>(true)).Where(t=>!t.GetComponentInParent<ZombieSurvival.ModularBuildings.GeneratedInteriorLining>()).ToDictionary(t=>t,t=>Pose(t));
+var renderers=roots.SelectMany(r=>r.GetComponentsInChildren<UnityEngine.Renderer>(true)).Where(r=>!r.GetComponentInParent<ZombieSurvival.ModularBuildings.GeneratedInteriorLining>()).ToDictionary(r=>r,r=>Materials(r));
+var apartments=buildings.SelectMany(b=>b.GetComponentsInChildren<ZombieSurvival.ModularBuildings.GeneratedApartment>(true)).ToDictionary(a=>a,a=>UnityEditor.EditorJsonUtility.ToJson(a));
+var doors=roots.SelectMany(r=>r.GetComponentsInChildren<ZombieSurvival.Interaction.DoorInteractable>(true)).ToDictionary(d=>d,d=>UnityEditor.EditorJsonUtility.ToJson(d));
+var colliders=new System.Collections.Generic.HashSet<UnityEngine.Collider>(roots.SelectMany(r=>r.GetComponentsInChildren<UnityEngine.Collider>(true)));
+System.IO.File.WriteAllText(dir+"BeforeApplySnapshot.json",Newtonsoft.Json.JsonConvert.SerializeObject(new{transforms=transforms.Select(p=>new{id=p.Key.GetEntityId().ToString(),pose=p.Value}),renderers=renderers.Select(p=>new{id=p.Key.GetEntityId().ToString(),materials=p.Value}),apartments=apartments.Select(p=>new{id=p.Key.apartmentId,json=p.Value}),doors=doors.Select(p=>new{id=p.Key.GetEntityId().ToString(),json=p.Value})},Newtonsoft.Json.Formatting.Indented));
+UnityEditor.Undo.IncrementCurrentGroup();int group=UnityEditor.Undo.GetCurrentGroup();UnityEditor.Undo.SetCurrentGroupName("Внутренняя облицовка окон квартир");
+try
+{
+    foreach(var plan in plans)ZombieSurvival.ModularBuildings.Editor.BuildingInteriorLining.Apply(plan,true);
+    void ValidateAll(){foreach(var b in buildings){var e=ZombieSurvival.ModularBuildings.Editor.BuildingInteriorLining.Validate(b);e.AddRange(ZombieSurvival.ModularBuildings.Editor.BuildingApartments.ValidateNoGeneratedWalls(b));if(e.Count>0)throw new System.Exception(string.Join(";",e.Take(30)));}}
+    ValidateAll();int firstCount=buildings.Sum(b=>b.GetComponentsInChildren<ZombieSurvival.ModularBuildings.GeneratedInteriorLining>(true).Length);
+    foreach(var b in buildings)ZombieSurvival.ModularBuildings.Editor.BuildingInteriorLining.Apply(b,true);
+    ValidateAll();int finalCount=buildings.Sum(b=>b.GetComponentsInChildren<ZombieSurvival.ModularBuildings.GeneratedInteriorLining>(true).Length);if(firstCount!=finalCount)throw new System.Exception("Repeat duplicates");
+    foreach(var p in transforms)if(!p.Key||Pose(p.Key)!=p.Value)throw new System.Exception("Original transform/active changed");
+    foreach(var p in renderers)if(!p.Key||Materials(p.Key)!=p.Value)throw new System.Exception("Original materials changed");
+    foreach(var p in apartments)if(!p.Key||UnityEditor.EditorJsonUtility.ToJson(p.Key)!=p.Value)throw new System.Exception("Apartment metadata changed");
+    foreach(var p in doors)if(!p.Key||UnityEditor.EditorJsonUtility.ToJson(p.Key)!=p.Value)throw new System.Exception("Door metadata changed");
+    if(!colliders.SetEquals(scene.GetRootGameObjects().SelectMany(r=>r.GetComponentsInChildren<UnityEngine.Collider>(true))))throw new System.Exception("Collider set changed");
+    UnityEditor.Undo.CollapseUndoOperations(group);
+    var markers=buildings.SelectMany(b=>b.GetComponentsInChildren<ZombieSurvival.ModularBuildings.GeneratedInteriorLining>(true)).ToArray();
+    string json=Newtonsoft.Json.JsonConvert.SerializeObject(new{pass=true,saved=false,buildings=buildings.Length,markers=markers.Length,sourceApartments=apartments.Keys.Count(a=>a.prefabInstance),legacyApartments=apartments.Keys.Count(a=>!a.prefabInstance),preservedTransforms=transforms.Count,preservedRenderers=renderers.Count,preservedApartments=apartments.Count,preservedDoors=doors.Count,unchangedColliders=colliders.Count,repeatNoDuplicates=firstCount==finalCount,materials=markers.GroupBy(m=>UnityEditor.AssetDatabase.GetAssetPath(m.roomMaterial)).Select(g=>new{material=g.Key,count=g.Count()})},Newtonsoft.Json.Formatting.Indented);
+    System.IO.File.WriteAllText(dir+"ApplyResult.json",json);return json;
+}
+catch(System.Exception e){UnityEditor.Undo.RevertAllDownToGroup(group);System.IO.File.WriteAllText(dir+"ApplyFailure.txt",e.ToString());throw;}

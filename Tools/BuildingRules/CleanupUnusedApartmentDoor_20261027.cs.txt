@@ -1,0 +1,66 @@
+// Explicit migration eval. Root owns backup and final SaveScene. No Assets compilation required.
+const string dir="Verification/ApartmentExtraDoor_20261027/";System.IO.Directory.CreateDirectory(dir);
+var scene=UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+if(UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)throw new System.Exception("Edit only");
+var roots=scene.GetRootGameObjects();var allTransforms=roots.SelectMany(r=>r.GetComponentsInChildren<UnityEngine.Transform>(true)).ToArray();
+var buildings=roots.SelectMany(r=>r.GetComponentsInChildren<ZombieSurvival.ModularBuildings.GeneratedBuilding>(true)).Where(b=>b.profile&&b.profile.extendedCityRules).ToArray();
+string Pose(UnityEngine.Transform t)=>(t.parent?t.parent.GetEntityId().ToString():"root")+"|"+t.localPosition.ToString("R")+"|"+t.localRotation.ToString("R")+"|"+t.localScale.ToString("R");
+string Materials(UnityEngine.MeshRenderer r)=>string.Join(",",r.sharedMaterials.Select(m=>m?m.GetEntityId().ToString():"null"));
+var allowedOffsets=new System.Collections.Generic.Dictionary<UnityEngine.Transform,UnityEngine.Vector3>();
+foreach(var slot in buildings.SelectMany(b=>b.GetComponentsInChildren<ZombieSurvival.ModularBuildings.ApartmentSlot>(true)).Where(s=>s.slotId.EndsWith("/L")))
+{
+    var l2=slot.transform.parent.GetComponentsInChildren<ZombieSurvival.ModularBuildings.ApartmentSlot>(true).FirstOrDefault(s=>s.transform.parent==slot.transform.parent&&s.slotId==slot.slotId+"2");
+    if(!l2||l2.GetComponentsInChildren<ZombieSurvival.ModularBuildings.GeneratedApartment>(true).Length==0)continue;
+    var wall=slot.transform.Find("ApartmentDoorWall");var seal=slot.transform.Find(ZombieSurvival.ModularBuildings.Editor.BuildingApartmentDoorCleanup.SealName);
+    if(wall&&wall.localPosition==UnityEngine.Vector3.zero){allowedOffsets[wall]=new UnityEngine.Vector3(0,0,-.01f);if(seal)allowedOffsets[seal]=seal.localPosition+new UnityEngine.Vector3(0,0,-.01f);}
+}
+var poses=allTransforms.ToDictionary(t=>t,t=>Pose(t));var oldSet=new System.Collections.Generic.HashSet<UnityEngine.Transform>(allTransforms);
+var renderers=roots.SelectMany(r=>r.GetComponentsInChildren<UnityEngine.MeshRenderer>(true)).ToDictionary(r=>r,r=>Materials(r));
+var apartments=roots.SelectMany(r=>r.GetComponentsInChildren<ZombieSurvival.ModularBuildings.GeneratedApartment>(true)).ToDictionary(a=>a,a=>UnityEditor.EditorJsonUtility.ToJson(a));
+var internalLeaves=apartments.Keys.Where(a=>a.prefabInstance).SelectMany(a=>a.prefabInstance.GetComponentsInChildren<UnityEngine.Transform>(true)).Where(t=>t.name=="Door_Leaf").Distinct().ToDictionary(t=>t,t=>t.gameObject.activeSelf+"|"+Pose(t));
+var selected=apartments.Keys.Select(a=>a.entranceDoor).Where(d=>d).Distinct().ToDictionary(d=>d,d=>new UnityEditor.SerializedObject(d).FindProperty("hinge").objectReferenceValue);
+var oldActive=allTransforms.ToDictionary(t=>t,t=>t.gameObject.activeSelf);
+var errors=buildings.SelectMany(b=>ZombieSurvival.ModularBuildings.Editor.BuildingApartmentDoorCleanup.Preflight(b)).ToArray();
+if(errors.Length>0)throw new System.Exception(string.Join(";",errors));
+UnityEditor.Undo.IncrementCurrentGroup();int group=UnityEditor.Undo.GetCurrentGroup();UnityEditor.Undo.SetCurrentGroupName("Убрать лишние двери L рядом с L2");
+try
+{
+    int changed=0;foreach(var b in buildings)changed+=ZombieSurvival.ModularBuildings.Editor.BuildingApartmentDoorCleanup.Apply(b,true);
+    foreach(var b in buildings){var e=ZombieSurvival.ModularBuildings.Editor.BuildingApartmentDoorCleanup.Validate(b);if(e.Count>0)throw new System.Exception(string.Join(";",e));}
+    int repeated=0;foreach(var b in buildings)repeated+=ZombieSurvival.ModularBuildings.Editor.BuildingApartmentDoorCleanup.Apply(b,true);
+    if(repeated!=0)throw new System.Exception("Idempotence failed");
+    foreach(var p in poses)
+    {
+        if(!p.Key)throw new System.Exception("Existing transform removed");
+        if(allowedOffsets.TryGetValue(p.Key,out var expected))
+        {
+            string actualPose=Pose(p.Key);int split=p.Value.IndexOf('|');int end=p.Value.IndexOf('|',split+1);int actualEnd=actualPose.IndexOf('|',actualPose.IndexOf('|')+1);
+            bool sameRest=p.Value.Substring(0,split)==actualPose.Substring(0,actualPose.IndexOf('|')) && p.Value.Substring(end)==actualPose.Substring(actualEnd);
+            bool isWall=p.Key.name=="ApartmentDoorWall";
+            bool positionOK=isWall?p.Key.localPosition==expected:UnityEngine.Vector3.Distance(p.Key.localPosition,expected)<=.00025f;
+            if(!sameRest||!positionOK)throw new System.Exception("Allowed wall/seal offset mismatch object="+p.Key.name+" actual="+p.Key.localPosition.ToString("R")+" expected="+expected.ToString("R")+" distance="+UnityEngine.Vector3.Distance(p.Key.localPosition,expected).ToString("R")+" parentRotationScale="+sameRest);
+        }
+        else if(Pose(p.Key)!=p.Value)throw new System.Exception("Existing transform changed");
+    }
+    foreach(var p in renderers)if(!p.Key||Materials(p.Key)!=p.Value)throw new System.Exception("Existing renderer materials changed");
+    foreach(var p in apartments)if(!p.Key||UnityEditor.EditorJsonUtility.ToJson(p.Key)!=p.Value)throw new System.Exception("Apartment metadata changed");
+    foreach(var p in internalLeaves)if(!p.Key||p.Key.gameObject.activeSelf+"|"+Pose(p.Key)!=p.Value)throw new System.Exception("Source internal door changed");
+    foreach(var p in selected)if(!p.Key||!p.Key.enabled||!p.Key.gameObject.activeInHierarchy||new UnityEditor.SerializedObject(p.Key).FindProperty("hinge").objectReferenceValue!=p.Value)throw new System.Exception("Selected apartment entrance changed");
+    int disabled=0;
+    foreach(var p in oldActive)if(p.Key.gameObject.activeSelf!=p.Value)
+    {
+        var slot=p.Key.parent?p.Key.parent.GetComponent<ZombieSurvival.ModularBuildings.ApartmentSlot>():null;
+        if(!p.Value||p.Key.gameObject.activeSelf||p.Key.name!="ApartmentDoor"||!slot||!slot.slotId.EndsWith("/L")||!slot.transform.Find(ZombieSurvival.ModularBuildings.Editor.BuildingApartmentDoorCleanup.SealName))throw new System.Exception("Unexpected activeSelf change");disabled++;
+    }
+    var added=scene.GetRootGameObjects().SelectMany(r=>r.GetComponentsInChildren<UnityEngine.Transform>(true)).Where(t=>!oldSet.Contains(t)).ToArray();
+    foreach(var t in added)
+    {
+        var slot=t.parent?t.parent.GetComponent<ZombieSurvival.ModularBuildings.ApartmentSlot>():null;
+        if(t.name!=ZombieSurvival.ModularBuildings.Editor.BuildingApartmentDoorCleanup.SealName||t.childCount!=0||!slot||!slot.slotId.EndsWith("/L"))throw new System.Exception("Unexpected new object");
+    }
+    if(disabled!=changed)throw new System.Exception("Disabled count mismatch");
+    UnityEditor.Undo.CollapseUndoOperations(group);
+    var result=new{pass=true,buildings=buildings.Length,disabled,addedSeals=added.Length,repeatChanges=repeated,offsetTransforms=allowedOffsets.Count,existingTransforms=poses.Count,unaffectedMaterials=renderers.Count,apartments=apartments.Count,internalLeaves=internalLeaves.Count,selectedEntrances=selected.Count,saved=false,scene=scene.path};
+    string json=Newtonsoft.Json.JsonConvert.SerializeObject(result,Newtonsoft.Json.Formatting.Indented);System.IO.File.WriteAllText(dir+"MigrationResult.json",json);return json;
+}
+catch(System.Exception e){UnityEditor.Undo.RevertAllDownToGroup(group);System.IO.File.WriteAllText(dir+"MigrationFailure.txt",e.ToString());throw;}
