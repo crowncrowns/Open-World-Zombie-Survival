@@ -326,8 +326,8 @@ LODGroup:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2203716796324520892}
   serializedVersion: 3
-  m_LocalReferencePoint: {x: 0.0007187724, y: -0.06284704, z: 0}
-  m_Size: 0.60143757
+  m_LocalReferencePoint: {x: 0, y: -0.06254788, z: 0}
+  m_Size: 0.6
   m_FadeMode: 0
   m_AnimateCrossFading: 0
   m_LastLODIsBillboard: 0
@@ -463,8 +463,8 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 8a2191d6c4465764da9b6d1fa7f05ce3, type: 2}
   - {fileID: 2100000, guid: 0fa8c885360845846805a6e5a85c4495, type: 2}
+  - {fileID: 2100000, guid: 8a2191d6c4465764da9b6d1fa7f05ce3, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -716,6 +716,7 @@ GameObject:
   - component: {fileID: 8893268081358122743}
   - component: {fileID: 3529460919785718606}
   - component: {fileID: 5088710861425420838}
+  - component: {fileID: 625223248718045307}
   m_Layer: 0
   m_Name: LOD0_Housing.056
   m_TagString: Untagged
@@ -796,6 +797,27 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!65 &625223248718045307
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5004004740801029272}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.006, y: 0.006, z: 0.0012509581}
+  m_Center: {x: 0, y: 0, z: -0.00062547904}
 --- !u!1 &5764785162762716861
 GameObject:
   m_ObjectHideFlags: 0
@@ -877,7 +899,7 @@ MeshCollider:
   m_LayerOverridePriority: 0
   m_IsTrigger: 0
   m_ProvidesContacts: 0
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 5
   m_Convex: 0
   m_CookingOptions: 30

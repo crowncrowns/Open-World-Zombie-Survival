@@ -98,9 +98,11 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 5e1efb293e45ae740bf7b9d896bf5ce3, type: 2}
-  - {fileID: 2100000, guid: 0fa8c885360845846805a6e5a85c4495, type: 2}
   - {fileID: 2100000, guid: 8a2191d6c4465764da9b6d1fa7f05ce3, type: 2}
+  - {fileID: 2100000, guid: 49a2ec733c25ea045a66c6a8d1da46f4, type: 2}
+  - {fileID: 2100000, guid: 0fa8c885360845846805a6e5a85c4495, type: 2}
+  - {fileID: 2100000, guid: 5e1efb293e45ae740bf7b9d896bf5ce3, type: 2}
+  - {fileID: 2100000, guid: ffa3ceae01b773e41b255863668716f8, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -201,8 +203,8 @@ LODGroup:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1239952887825964320}
   serializedVersion: 3
-  m_LocalReferencePoint: {x: 0, y: -0.1211711, z: 0.000000014901161}
-  m_Size: 0.1816831
+  m_LocalReferencePoint: {x: 0.00018627942, y: -0.10619869, z: 0.000000014901161}
+  m_Size: 0.21239741
   m_FadeMode: 0
   m_AnimateCrossFading: 0
   m_LastLODIsBillboard: 0
@@ -263,6 +265,9 @@ MonoBehaviour:
   - light: {fileID: 7014161092121468220}
     weight: 1
   emitters:
+  - renderer: {fileID: 4921125363059827450}
+    materialIndex: 0
+    weight: 1
   - renderer: {fileID: 8842323835435200048}
     materialIndex: 0
     weight: 1
@@ -494,7 +499,11 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: 8a2191d6c4465764da9b6d1fa7f05ce3, type: 2}
+  - {fileID: 2100000, guid: 49a2ec733c25ea045a66c6a8d1da46f4, type: 2}
+  - {fileID: 2100000, guid: 0fa8c885360845846805a6e5a85c4495, type: 2}
+  - {fileID: 2100000, guid: ffa3ceae01b773e41b255863668716f8, type: 2}
+  - {fileID: 2100000, guid: 5e1efb293e45ae740bf7b9d896bf5ce3, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -615,7 +624,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: 443af92596ccbb34eb85387b4010c5cb, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -687,6 +696,7 @@ GameObject:
   - component: {fileID: 8588753664690445715}
   - component: {fileID: 1314501129894027429}
   - component: {fileID: 2619762276671564716}
+  - component: {fileID: 3303319497017559067}
   m_Layer: 0
   m_Name: LOD0_Housing.068
   m_TagString: Untagged
@@ -743,8 +753,10 @@ MeshRenderer:
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 2100000, guid: 8a2191d6c4465764da9b6d1fa7f05ce3, type: 2}
-  - {fileID: 2100000, guid: 5e1efb293e45ae740bf7b9d896bf5ce3, type: 2}
+  - {fileID: 2100000, guid: 49a2ec733c25ea045a66c6a8d1da46f4, type: 2}
   - {fileID: 2100000, guid: 0fa8c885360845846805a6e5a85c4495, type: 2}
+  - {fileID: 2100000, guid: ffa3ceae01b773e41b255863668716f8, type: 2}
+  - {fileID: 2100000, guid: 5e1efb293e45ae740bf7b9d896bf5ce3, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -768,6 +780,27 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!65 &3303319497017559067
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5932300956338831706}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.0013237193, y: 0.0013218588, z: 0.002123492}
+  m_Center: {x: 0.000002000772, y: 0, z: -0.001061746}
 --- !u!1 &7756226498982832900
 GameObject:
   m_ObjectHideFlags: 0
@@ -997,7 +1030,7 @@ MeshCollider:
   m_LayerOverridePriority: 0
   m_IsTrigger: 0
   m_ProvidesContacts: 0
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 5
   m_Convex: 0
   m_CookingOptions: 30

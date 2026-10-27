@@ -130,6 +130,7 @@ MeshRenderer:
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 2100000, guid: 8a2191d6c4465764da9b6d1fa7f05ce3, type: 2}
+  - {fileID: 2100000, guid: 49a2ec733c25ea045a66c6a8d1da46f4, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -437,6 +438,7 @@ GameObject:
   - component: {fileID: 8073792815494445440}
   - component: {fileID: 4717002020601129613}
   - component: {fileID: 6054343082584403573}
+  - component: {fileID: 1083050714705794170}
   m_Layer: 0
   m_Name: LOD0_Housing.032
   m_TagString: Untagged
@@ -493,6 +495,7 @@ MeshRenderer:
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 2100000, guid: 8a2191d6c4465764da9b6d1fa7f05ce3, type: 2}
+  - {fileID: 2100000, guid: 49a2ec733c25ea045a66c6a8d1da46f4, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -516,6 +519,27 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!65 &1083050714705794170
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3777702523913698210}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.0025999998, y: 0.003647285, z: 0.0032801824}
+  m_Center: {x: 0, y: -0.0019763573, z: 0.000030091323}
 --- !u!1 &3921275475559646611
 GameObject:
   m_ObjectHideFlags: 0
@@ -651,8 +675,8 @@ LODGroup:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3969210261039442886}
   serializedVersion: 3
-  m_LocalReferencePoint: {x: 0, y: -0.10280037, z: 0.18999994}
-  m_Size: 0.53410465
+  m_LocalReferencePoint: {x: 0, y: -0.10111925, z: 0.18999994}
+  m_Size: 0.5374669
   m_FadeMode: 0
   m_AnimateCrossFading: 0
   m_LastLODIsBillboard: 0
@@ -837,6 +861,7 @@ MeshRenderer:
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 2100000, guid: 8a2191d6c4465764da9b6d1fa7f05ce3, type: 2}
+  - {fileID: 2100000, guid: 49a2ec733c25ea045a66c6a8d1da46f4, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -909,7 +934,7 @@ MeshCollider:
   m_LayerOverridePriority: 0
   m_IsTrigger: 0
   m_ProvidesContacts: 0
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 5
   m_Convex: 0
   m_CookingOptions: 30
@@ -1143,7 +1168,7 @@ MeshCollider:
   m_LayerOverridePriority: 0
   m_IsTrigger: 0
   m_ProvidesContacts: 0
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 5
   m_Convex: 0
   m_CookingOptions: 30
@@ -1295,6 +1320,7 @@ GameObject:
   - component: {fileID: 2792008225216256388}
   - component: {fileID: 2417774379080798402}
   - component: {fileID: 1917115389099809194}
+  - component: {fileID: 3633379443944858065}
   m_Layer: 0
   m_Name: LOD0_Mounting.029
   m_TagString: Untagged
@@ -1350,8 +1376,8 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 8a2191d6c4465764da9b6d1fa7f05ce3, type: 2}
   - {fileID: 2100000, guid: 49a2ec733c25ea045a66c6a8d1da46f4, type: 2}
+  - {fileID: 2100000, guid: 8a2191d6c4465764da9b6d1fa7f05ce3, type: 2}
   - {fileID: 2100000, guid: ffa3ceae01b773e41b255863668716f8, type: 2}
   - {fileID: 2100000, guid: 0fa8c885360845846805a6e5a85c4495, type: 2}
   m_StaticBatchInfo:
@@ -1377,6 +1403,27 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!65 &3633379443944858065
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7801026601150516717}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.002325, y: 0.0003727956, z: 0.0052825278}
+  m_Center: {x: 0, y: -0.0001863978, z: -0.0010572639}
 --- !u!1 &8106812360548738003
 GameObject:
   m_ObjectHideFlags: 0

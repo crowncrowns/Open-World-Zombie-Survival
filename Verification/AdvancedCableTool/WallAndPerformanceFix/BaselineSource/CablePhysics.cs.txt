@@ -1,0 +1,110 @@
+using UnityEngine;
+using UnityEngine.SceneManagement;
+
+namespace AdvancedCableTool
+{
+    // One solver per cable, no per-particle GameObjects or rigidbodies.
+    public sealed class CablePhysics
+    {
+        public Vector3[] positions, previous;
+        public bool[] pinned;
+        public Vector3[] pins;
+        public float[] lengths;
+        readonly Collider[] overlaps = new Collider[32];
+        SphereCollider probe;
+        GameObject probeObject;
+        public bool congested;
+        public void Reset(Vector3[] shape, bool[] fixedPoints, float[] rest)
+        {
+            positions = (Vector3[])shape.Clone(); previous = (Vector3[])shape.Clone();
+            pins = (Vector3[])shape.Clone(); pinned = (bool[])fixedPoints.Clone(); lengths = (float[])rest.Clone();
+        }
+        public void AddImpulse(Vector3 point, Vector3 velocity, float radius)
+        {
+            if (positions == null) return;
+            for (int i = 0; i < positions.Length; ++i)
+                if (!pinned[i]) previous[i] -= velocity * .02f * Mathf.Clamp01(1 - Vector3.Distance(point, positions[i]) / Mathf.Max(.01f, radius));
+        }
+        public void Step(CableGenerator cable, float dt)
+        {
+            if (positions == null) return;
+            float radius = cable.diameter * .5f + .002f;
+            PhysicsScene scene = cable.gameObject.scene.GetPhysicsScene();
+            if (cable.collisionEnabled && !probe)
+            {
+                probeObject = new GameObject("Cable collision query") { hideFlags = HideFlags.HideAndDontSave, layer = 2 };
+                SceneManager.MoveGameObjectToScene(probeObject, cable.gameObject.scene);
+                probe = probeObject.AddComponent<SphereCollider>(); probe.enabled = false;
+            }
+            if (probe) probe.radius = radius;
+            congested = false;
+            for (int sub = 0; sub < 3; ++sub)
+            {
+                float h = dt / 3;
+                for (int i = 0; i < positions.Length; ++i)
+                {
+                    if (pinned[i]) { positions[i] = pins[i]; previous[i] = pins[i]; continue; }
+                    Vector3 old = positions[i];
+                    Vector3 wind = cable.windDirection.normalized * cable.windStrength * (0.7f + .3f * Mathf.Sin(cable.SimulationTime * 1.7f + i * .27f));
+                    Vector3 next = old + (old - previous[i]) * Mathf.Exp(-cable.damping * h) + (cable.gravity + wind) * h * h;
+                    if (cable.collisionEnabled) next = Sweep(scene, old, next, radius, cable.collisionMask);
+                    positions[i] = next; previous[i] = old;
+                }
+                int iterations = Mathf.RoundToInt(Mathf.Lerp(12, 48, cable.stiffness));
+                for (int it = 0; it < iterations; ++it)
+                {
+                    for (int i = 0; i < positions.Length - 1; ++i)
+                    {
+                        Vector3 delta = positions[i + 1] - positions[i]; float d = delta.magnitude;
+                        if (d < 1e-8f) continue;
+                        Vector3 correction = delta * ((d - lengths[i]) / d);
+                        if (!pinned[i] && !pinned[i + 1]) { positions[i] += correction * .5f; positions[i + 1] -= correction * .5f; }
+                        else if (!pinned[i]) positions[i] += correction;
+                        else if (!pinned[i + 1]) positions[i + 1] -= correction;
+                    }
+                    if (cable.collisionEnabled)
+                    {
+                        for (int i = 0; i < positions.Length; ++i)
+                        {
+                            if (pinned[i]) { positions[i] = pins[i]; continue; }
+                            Vector3 before = positions[i];
+                            positions[i] = Sweep(scene, previous[i], before, radius, cable.collisionMask);
+                            int hits = scene.OverlapSphere(positions[i], radius, overlaps, cable.collisionMask, QueryTriggerInteraction.Ignore);
+                            if (hits == overlaps.Length) congested = true;
+                            for (int j = 0; j < hits; ++j)
+                            {
+                                if (!overlaps[j] || overlaps[j] == probe) continue;
+                                if (Physics.ComputePenetration(probe, positions[i], Quaternion.identity,
+                                    overlaps[j], overlaps[j].transform.position, overlaps[j].transform.rotation, out Vector3 direction, out float depth))
+                                { positions[i] += direction * (depth + .0001f); previous[i] = Vector3.Lerp(previous[i], positions[i], .12f); }
+                            }
+                        }
+                        // Sweep the edges too: thin obstacles between particles are not silently accepted.
+                        for (int i = 0; i < positions.Length - 1; ++i)
+                        {
+                            Vector3 delta = positions[i + 1] - positions[i];
+                            if (scene.SphereCast(positions[i], radius, delta.normalized, out RaycastHit hit, delta.magnitude, cable.collisionMask, QueryTriggerInteraction.Ignore))
+                            {
+                                congested = true;
+                                Vector3 push = hit.normal * Mathf.Min(delta.magnitude * .15f, radius * 2);
+                                if (!pinned[i]) positions[i] += push;
+                                if (!pinned[i + 1]) positions[i + 1] += push;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        static Vector3 Sweep(PhysicsScene scene, Vector3 from, Vector3 to, float r, int mask)
+        {
+            Vector3 delta = to - from; float d = delta.magnitude;
+            if (d > 1e-7f && scene.SphereCast(from, r, delta / d, out RaycastHit hit, d, mask, QueryTriggerInteraction.Ignore))
+                return from + delta / d * Mathf.Max(0, hit.distance - .001f);
+            return to;
+        }
+        public void Dispose()
+        {
+            if (probeObject) { if (Application.isPlaying) Object.Destroy(probeObject); else Object.DestroyImmediate(probeObject); }
+        }
+    }
+}

@@ -138,6 +138,7 @@ GameObject:
   - component: {fileID: 6383715825835168221}
   - component: {fileID: 3150453131966270678}
   - component: {fileID: 4315379894993387488}
+  - component: {fileID: 7672187721239598868}
   m_Layer: 0
   m_Name: LOD0_Mounting.023
   m_TagString: Untagged
@@ -193,8 +194,8 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 8a2191d6c4465764da9b6d1fa7f05ce3, type: 2}
   - {fileID: 2100000, guid: 49a2ec733c25ea045a66c6a8d1da46f4, type: 2}
+  - {fileID: 2100000, guid: 8a2191d6c4465764da9b6d1fa7f05ce3, type: 2}
   - {fileID: 2100000, guid: ffa3ceae01b773e41b255863668716f8, type: 2}
   - {fileID: 2100000, guid: 0fa8c885360845846805a6e5a85c4495, type: 2}
   m_StaticBatchInfo:
@@ -220,6 +221,27 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!65 &7672187721239598868
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 477046679362113122}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.0023999999, y: 0.0003727956, z: 0.0038116476}
+  m_Center: {x: 0, y: -0.0001863978, z: -0.0009558238}
 --- !u!1 &767013209354486084
 GameObject:
   m_ObjectHideFlags: 0
@@ -265,8 +287,8 @@ LODGroup:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 767013209354486084}
   serializedVersion: 3
-  m_LocalReferencePoint: {x: 0, y: -0.08149547, z: 0.29999992}
-  m_Size: 0.59999985
+  m_LocalReferencePoint: {x: -0.00006284565, y: -0.08229315, z: 0.32788816}
+  m_Size: 0.6557763
   m_FadeMode: 0
   m_AnimateCrossFading: 0
   m_LastLODIsBillboard: 0
@@ -388,7 +410,7 @@ MeshCollider:
   m_LayerOverridePriority: 0
   m_IsTrigger: 0
   m_ProvidesContacts: 0
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 5
   m_Convex: 0
   m_CookingOptions: 30
@@ -526,6 +548,7 @@ GameObject:
   - component: {fileID: 2068891574214209989}
   - component: {fileID: 5720097534208187252}
   - component: {fileID: 3265772088608938427}
+  - component: {fileID: 2259950139011518336}
   m_Layer: 0
   m_Name: LOD0_Housing.026
   m_TagString: Untagged
@@ -581,8 +604,8 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 0fa8c885360845846805a6e5a85c4495, type: 2}
   - {fileID: 2100000, guid: 8a2191d6c4465764da9b6d1fa7f05ce3, type: 2}
+  - {fileID: 2100000, guid: 0fa8c885360845846805a6e5a85c4495, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -606,6 +629,27 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!65 &2259950139011518336
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2767520361053279905}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.0032, y: 0.006469734, z: 0.0013986246}
+  m_Center: {x: 0, y: -0.003322898, z: 0.00051874935}
 --- !u!1 &4432245542126254688
 GameObject:
   m_ObjectHideFlags: 0
@@ -672,8 +716,8 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 0fa8c885360845846805a6e5a85c4495, type: 2}
   - {fileID: 2100000, guid: 8a2191d6c4465764da9b6d1fa7f05ce3, type: 2}
+  - {fileID: 2100000, guid: 0fa8c885360845846805a6e5a85c4495, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -918,9 +962,9 @@ MeshRenderer:
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 2100000, guid: 49a2ec733c25ea045a66c6a8d1da46f4, type: 2}
+  - {fileID: 2100000, guid: ffa3ceae01b773e41b255863668716f8, type: 2}
   - {fileID: 2100000, guid: 8a2191d6c4465764da9b6d1fa7f05ce3, type: 2}
   - {fileID: 2100000, guid: 0fa8c885360845846805a6e5a85c4495, type: 2}
-  - {fileID: 2100000, guid: ffa3ceae01b773e41b255863668716f8, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1119,7 +1163,7 @@ MeshCollider:
   m_LayerOverridePriority: 0
   m_IsTrigger: 0
   m_ProvidesContacts: 0
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 5
   m_Convex: 0
   m_CookingOptions: 30
