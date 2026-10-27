@@ -1,0 +1,43 @@
+PASS 108 real 2048 PBR maps imported
+PASS Demo: six scenarios / ten independent cables
+PASS Catenary arc length 8m, unequal-height anchors, error <2mm
+PASS Real tube mesh and three LODs
+PASS Clamps use real shared circular band geometry and mounting tabs
+PASS Tube normals, indexed geometry
+PASS Tube triangles face outward
+PASS Wear selection updates preset material
+PASS Damaged cable has separate exposed-copper surface
+PASS Returning from damaged type resets material slots
+PASS Moving Transform support A updates shape without changing rest length
+PASS Moving anchor B
+PASS Undo diameter
+PASS Redo diameter
+PASS Length changes catenary
+PASS UV V = physical arc length times tiling
+PASS Deleting support B leaves existing cable intact
+PASS Free end responds to gravity / wind
+PASS Verlet first end remains pinned
+PASS Verification ground Collider ray: Ground Y=0
+PASS Detached cable collides with ground; minimum Y=0,0320
+PASS Verlet length constraint relative error below 3.5 percent after contact
+PASS Static freeze preserves simulated shape
+PASS First Scene placement click accepted
+PASS One-click cable remains visible / free end
+PASS Second Scene placement click attaches end B
+PASS Two clicks create one cable
+PASS Intermediate support inserted through Scene placement handler
+PASS Freed B can be reattached through Scene handler
+PASS Deleting all authoring anchors preserves a fully detached cable
+PASS Five parallel wires created by two-click handler
+PASS Parallel wires have deterministic slack variation
+PASS Copy settings preserves target anchors
+PASS Join cables shares a junction Transform
+PASS Static batch disables original cables
+PASS Static batch is persistent mesh geometry
+PASS Undo static batch restores originals
+PASS Static cable intersection is detected and reported
+PASS Scene save / reopen preserves all ten cables
+PASS Actual Play Mode invokes cable FixedUpdate
+PASS Play Mode free end motion
+PASS Play Mode anchor pin
+PASS Play Mode caps catch-up simulation at two steps per rendered frame

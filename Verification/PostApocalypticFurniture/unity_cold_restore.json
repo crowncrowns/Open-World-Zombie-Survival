@@ -1,0 +1,24 @@
+{
+    "passed": true,
+    "unity": "6000.6.3f1",
+    "furniturePrefab": "Assets/PostApocalypticFurniture/Prefabs/Wardrobes/F071_Wardrobes_01.prefab",
+    "radioPrefab": "Assets/PostApocalypticFurniture/Prefabs/Radios/F141_Radios_01.prefab",
+    "snapshotFile": "cold_saved_world.json",
+    "writerProcessId": 19600,
+    "readerProcessId": 12060,
+    "writerProcessStartUtcTicks": 639287185594241726,
+    "readerProcessStartUtcTicks": 639287185863073996,
+    "checks": [
+        "cold fixture metadata from writer process is complete",
+        "reader is a different Unity process from snapshot writer",
+        "same saved fixture prefab types load after cold process start",
+        "fresh cold-instantiated prefabs start closed and powered off",
+        "disk world snapshot restores opened furniture in new Unity process",
+        "cold restore applies actual moving transform rather than only logical open flag",
+        "cold restore recovers powered radio channel and volume",
+        "cold restore recovers procedural wear seed and exact dirt fade damage degrees",
+        "cold world load restores saved root pose while retaining stable authored IDs",
+        "second disk load in cold reader leaves exactly two authored roots without duplicates",
+        "repeat cold load preserves opened furniture radio and wear"
+    ]
+}

@@ -49,7 +49,7 @@ MeshCollider:
   m_LayerOverridePriority: 0
   m_IsTrigger: 0
   m_ProvidesContacts: 0
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 5
   m_Convex: 0
   m_CookingOptions: 30
@@ -211,6 +211,7 @@ MeshRenderer:
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 2100000, guid: 25ffda2fe3b501d4785b937779dc3d7e, type: 2}
+  - {fileID: 2100000, guid: 0624d229ccfa9dd4998943ccf1405e7e, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -486,6 +487,7 @@ MeshRenderer:
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 2100000, guid: 25ffda2fe3b501d4785b937779dc3d7e, type: 2}
+  - {fileID: 2100000, guid: 0624d229ccfa9dd4998943ccf1405e7e, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -684,6 +686,7 @@ GameObject:
   - component: {fileID: 625649363680498181}
   - component: {fileID: 4814761361373862371}
   - component: {fileID: 7091526610806250951}
+  - component: {fileID: 2624393637189575902}
   m_Layer: 0
   m_Name: LOD0_Housing.069
   m_TagString: Untagged
@@ -740,6 +743,7 @@ MeshRenderer:
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 2100000, guid: 25ffda2fe3b501d4785b937779dc3d7e, type: 2}
+  - {fileID: 2100000, guid: 0624d229ccfa9dd4998943ccf1405e7e, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -763,6 +767,27 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!65 &2624393637189575902
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4875046067833824564}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.0066163098, y: 0.006, z: 0.00054131506}
+  m_Center: {x: 0, y: 0, z: -0.000004342466}
 --- !u!1 &5449384661794976436
 GameObject:
   m_ObjectHideFlags: 0
@@ -898,8 +923,8 @@ LODGroup:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7102023967234364302}
   serializedVersion: 3
-  m_LocalReferencePoint: {x: 0, y: -0.016499992, z: 0}
-  m_Size: 0.606625
+  m_LocalReferencePoint: {x: 0, y: -0.003122637, z: 0}
+  m_Size: 0.661631
   m_FadeMode: 0
   m_AnimateCrossFading: 0
   m_LastLODIsBillboard: 0

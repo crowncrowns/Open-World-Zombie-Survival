@@ -1,0 +1,26 @@
+PASS Raycast finds visible mesh without Collider
+PASS Surface binding resolves to original wall Transform, not query proxy
+PASS Reproduction: original physics-only validation misses renderer-only wall
+PASS New validation blocks renderer-only wall
+PASS Pick support A
+PASS First placement creates valid hanging cable
+PASS Pick support B
+PASS Second click through wall rejected
+PASS Rejected click restores free B and original length
+PASS Rejected click restores every previous vertex of cable path
+PASS Restored hanging cable does not remain through the wall
+PASS Reattach also rejects blocked wall route
+PASS Optimized mesh still supplies finite normalized normal-map tangents
+PASS Moving existing anchor through wall is rejected
+PASS Anchor and settings roll back together
+PASS Pick first wall-top corner
+PASS Incomplete wall bypass stays in preview without committing a crossing
+PASS Pick second wall-top corner
+PASS Two staged supports commit a complete collision-free wall bypass
+PASS No Collider was added to user's source wall
+PASS Fixture uses a genuinely non-readable mesh
+PASS Cable through real doorway remains allowed
+PASS Single-sided wall blocks from direction -1
+PASS Single-sided wall blocks from direction 1
+PASS Mirrored wall still blocks
+PASS Collision mask excludes wall explicitly

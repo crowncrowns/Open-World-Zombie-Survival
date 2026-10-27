@@ -1,0 +1,1208 @@
+{
+    "passed": true,
+    "unity": "6000.6.3f1",
+    "measurementContext": "Unity Editor Play. One explicit native Camera.Render per sampled frame at 1280x720. cameraRenderCpuMs measures CPU time around Camera.Render; it does not measure GPU completion or standalone game FPS. editorPlayFrameIntervalMs includes Editor scheduling. Main Thread profiler counter covers the Editor process. No world-streaming or build benchmark.",
+    "furnitureInstances": 288,
+    "apartments": 12,
+    "width": 1280,
+    "height": 720,
+    "views": [
+        {
+            "name": "Entrance diagonal",
+            "cameraPosition": {
+                "x": 1.0,
+                "y": 2.200000047683716,
+                "z": 1.0
+            },
+            "cameraTarget": {
+                "x": 14.0,
+                "y": 1.2000000476837158,
+                "z": -10.0
+            },
+            "warmupFrames": 120,
+            "measuredFrames": 90,
+            "cameraRenderCpuMs": {
+                "samples": 90,
+                "mean": 2.0466399999999996,
+                "p95": 2.5027,
+                "min": 1.8002,
+                "max": 3.6897
+            },
+            "editorPlayFrameIntervalMs": {
+                "samples": 90,
+                "mean": 4.660059987670845,
+                "p95": 5.848802626132965,
+                "min": 4.008900374174118,
+                "max": 7.731802761554718
+            },
+            "counters": [
+                {
+                    "name": "Draw Calls Count",
+                    "unit": "calls",
+                    "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                    "unavailableReason": "",
+                    "available": true,
+                    "values": {
+                        "samples": 90,
+                        "mean": 654.0,
+                        "p95": 654.0,
+                        "min": 654.0,
+                        "max": 654.0
+                    }
+                },
+                {
+                    "name": "Batches Count",
+                    "unit": "batches",
+                    "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                    "unavailableReason": "Batch Editor supplied only zeros while triangles were rendered; submission count is not verified",
+                    "available": false,
+                    "values": {
+                        "samples": 0,
+                        "mean": 0.0,
+                        "p95": 0.0,
+                        "min": 0.0,
+                        "max": 0.0
+                    }
+                },
+                {
+                    "name": "SetPass Calls Count",
+                    "unit": "calls",
+                    "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                    "unavailableReason": "",
+                    "available": true,
+                    "values": {
+                        "samples": 90,
+                        "mean": 75.0,
+                        "p95": 75.0,
+                        "min": 75.0,
+                        "max": 75.0
+                    }
+                },
+                {
+                    "name": "Triangles Count",
+                    "unit": "triangles",
+                    "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                    "unavailableReason": "",
+                    "available": true,
+                    "values": {
+                        "samples": 90,
+                        "mean": 113044.0,
+                        "p95": 113044.0,
+                        "min": 113044.0,
+                        "max": 113044.0
+                    }
+                },
+                {
+                    "name": "Vertices Count",
+                    "unit": "vertices",
+                    "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                    "unavailableReason": "",
+                    "available": true,
+                    "values": {
+                        "samples": 90,
+                        "mean": 0.0,
+                        "p95": 0.0,
+                        "min": 0.0,
+                        "max": 0.0
+                    }
+                },
+                {
+                    "name": "Main Thread",
+                    "unit": "ms",
+                    "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                    "unavailableReason": "",
+                    "available": true,
+                    "values": {
+                        "samples": 90,
+                        "mean": 4.653048888888888,
+                        "p95": 5.642399999999999,
+                        "min": 3.9850999999999996,
+                        "max": 7.7149
+                    }
+                },
+                {
+                    "name": "GC Allocated In Frame",
+                    "unit": "bytes",
+                    "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                    "unavailableReason": "",
+                    "available": true,
+                    "values": {
+                        "samples": 90,
+                        "mean": 405.64444444444445,
+                        "p95": 2946.0,
+                        "min": 34.0,
+                        "max": 11650.0
+                    }
+                },
+                {
+                    "name": "GC Reserved Memory",
+                    "unit": "bytes",
+                    "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                    "unavailableReason": "",
+                    "available": true,
+                    "values": {
+                        "samples": 90,
+                        "mean": 180490240.0,
+                        "p95": 180490240.0,
+                        "min": 180490240.0,
+                        "max": 180490240.0
+                    }
+                },
+                {
+                    "name": "GC Used Memory",
+                    "unit": "bytes",
+                    "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                    "unavailableReason": "",
+                    "available": true,
+                    "values": {
+                        "samples": 90,
+                        "mean": 32152098.133333333,
+                        "p95": 32153600.0,
+                        "min": 32149504.0,
+                        "max": 32153600.0
+                    }
+                }
+            ],
+            "predictedLodCounts": [
+                0,
+                6,
+                76,
+                206
+            ],
+            "lodCountsMeaning": "LOD0/1/2/below cull threshold predicted from authored screen-height thresholds, size, camera and current LOD bias. These counts do not claim actual occlusion visibility."
+        },
+        {
+            "name": "Apartment eye level",
+            "cameraPosition": {
+                "x": 4.0,
+                "y": 1.649999976158142,
+                "z": -4.0
+            },
+            "cameraTarget": {
+                "x": 5.0,
+                "y": 1.0,
+                "z": -8.0
+            },
+            "warmupFrames": 120,
+            "measuredFrames": 90,
+            "cameraRenderCpuMs": {
+                "samples": 90,
+                "mean": 2.2394211111111115,
+                "p95": 3.0536,
+                "min": 1.8607,
+                "max": 3.3685
+            },
+            "editorPlayFrameIntervalMs": {
+                "samples": 90,
+                "mean": 5.192443304177788,
+                "p95": 6.775205489248037,
+                "min": 4.25139581784606,
+                "max": 7.404896430671215
+            },
+            "counters": [
+                {
+                    "name": "Draw Calls Count",
+                    "unit": "calls",
+                    "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                    "unavailableReason": "",
+                    "available": true,
+                    "values": {
+                        "samples": 90,
+                        "mean": 625.0,
+                        "p95": 625.0,
+                        "min": 625.0,
+                        "max": 625.0
+                    }
+                },
+                {
+                    "name": "Batches Count",
+                    "unit": "batches",
+                    "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                    "unavailableReason": "Batch Editor supplied only zeros while triangles were rendered; submission count is not verified",
+                    "available": false,
+                    "values": {
+                        "samples": 0,
+                        "mean": 0.0,
+                        "p95": 0.0,
+                        "min": 0.0,
+                        "max": 0.0
+                    }
+                },
+                {
+                    "name": "SetPass Calls Count",
+                    "unit": "calls",
+                    "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                    "unavailableReason": "",
+                    "available": true,
+                    "values": {
+                        "samples": 90,
+                        "mean": 79.0,
+                        "p95": 79.0,
+                        "min": 79.0,
+                        "max": 79.0
+                    }
+                },
+                {
+                    "name": "Triangles Count",
+                    "unit": "triangles",
+                    "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                    "unavailableReason": "",
+                    "available": true,
+                    "values": {
+                        "samples": 90,
+                        "mean": 115940.0,
+                        "p95": 115940.0,
+                        "min": 115940.0,
+                        "max": 115940.0
+                    }
+                },
+                {
+                    "name": "Vertices Count",
+                    "unit": "vertices",
+                    "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                    "unavailableReason": "",
+                    "available": true,
+                    "values": {
+                        "samples": 90,
+                        "mean": 0.0,
+                        "p95": 0.0,
+                        "min": 0.0,
+                        "max": 0.0
+                    }
+                },
+                {
+                    "name": "Main Thread",
+                    "unit": "ms",
+                    "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                    "unavailableReason": "",
+                    "available": true,
+                    "values": {
+                        "samples": 90,
+                        "mean": 5.196098888888889,
+                        "p95": 6.690099999999999,
+                        "min": 4.2229,
+                        "max": 7.7748
+                    }
+                },
+                {
+                    "name": "GC Allocated In Frame",
+                    "unit": "bytes",
+                    "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                    "unavailableReason": "",
+                    "available": true,
+                    "values": {
+                        "samples": 90,
+                        "mean": 90.7,
+                        "p95": 259.0,
+                        "min": 34.0,
+                        "max": 2146.0
+                    }
+                },
+                {
+                    "name": "GC Reserved Memory",
+                    "unit": "bytes",
+                    "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                    "unavailableReason": "",
+                    "available": true,
+                    "values": {
+                        "samples": 90,
+                        "mean": 180490240.0,
+                        "p95": 180490240.0,
+                        "min": 180490240.0,
+                        "max": 180490240.0
+                    }
+                },
+                {
+                    "name": "GC Used Memory",
+                    "unit": "bytes",
+                    "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                    "unavailableReason": "",
+                    "available": true,
+                    "values": {
+                        "samples": 90,
+                        "mean": 32452608.0,
+                        "p95": 32452608.0,
+                        "min": 32452608.0,
+                        "max": 32452608.0
+                    }
+                }
+            ],
+            "predictedLodCounts": [
+                6,
+                10,
+                92,
+                180
+            ],
+            "lodCountsMeaning": "LOD0/1/2/below cull threshold predicted from authored screen-height thresholds, size, camera and current LOD bias. These counts do not claim actual occlusion visibility."
+        },
+        {
+            "name": "Apartment overview",
+            "cameraPosition": {
+                "x": 27.0,
+                "y": 17.0,
+                "z": -18.0
+            },
+            "cameraTarget": {
+                "x": 27.0,
+                "y": 0.0,
+                "z": -18.0
+            },
+            "warmupFrames": 120,
+            "measuredFrames": 90,
+            "cameraRenderCpuMs": {
+                "samples": 90,
+                "mean": 1.6821722222222215,
+                "p95": 2.3707,
+                "min": 1.4245,
+                "max": 2.8835
+            },
+            "editorPlayFrameIntervalMs": {
+                "samples": 90,
+                "mean": 3.928734382821454,
+                "p95": 5.316397175192833,
+                "min": 3.219699487090111,
+                "max": 6.978805176913738
+            },
+            "counters": [
+                {
+                    "name": "Draw Calls Count",
+                    "unit": "calls",
+                    "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                    "unavailableReason": "",
+                    "available": true,
+                    "values": {
+                        "samples": 90,
+                        "mean": 452.0,
+                        "p95": 452.0,
+                        "min": 452.0,
+                        "max": 452.0
+                    }
+                },
+                {
+                    "name": "Batches Count",
+                    "unit": "batches",
+                    "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                    "unavailableReason": "Batch Editor supplied only zeros while triangles were rendered; submission count is not verified",
+                    "available": false,
+                    "values": {
+                        "samples": 0,
+                        "mean": 0.0,
+                        "p95": 0.0,
+                        "min": 0.0,
+                        "max": 0.0
+                    }
+                },
+                {
+                    "name": "SetPass Calls Count",
+                    "unit": "calls",
+                    "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                    "unavailableReason": "",
+                    "available": true,
+                    "values": {
+                        "samples": 90,
+                        "mean": 45.0,
+                        "p95": 45.0,
+                        "min": 45.0,
+                        "max": 45.0
+                    }
+                },
+                {
+                    "name": "Triangles Count",
+                    "unit": "triangles",
+                    "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                    "unavailableReason": "",
+                    "available": true,
+                    "values": {
+                        "samples": 90,
+                        "mean": 119267.0,
+                        "p95": 119267.0,
+                        "min": 119267.0,
+                        "max": 119267.0
+                    }
+                },
+                {
+                    "name": "Vertices Count",
+                    "unit": "vertices",
+                    "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                    "unavailableReason": "",
+                    "available": true,
+                    "values": {
+                        "samples": 90,
+                        "mean": 0.0,
+                        "p95": 0.0,
+                        "min": 0.0,
+                        "max": 0.0
+                    }
+                },
+                {
+                    "name": "Main Thread",
+                    "unit": "ms",
+                    "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                    "unavailableReason": "",
+                    "available": true,
+                    "values": {
+                        "samples": 90,
+                        "mean": 3.9316722222222222,
+                        "p95": 5.7138,
+                        "min": 3.2470999999999997,
+                        "max": 7.0214
+                    }
+                },
+                {
+                    "name": "GC Allocated In Frame",
+                    "unit": "bytes",
+                    "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                    "unavailableReason": "",
+                    "available": true,
+                    "values": {
+                        "samples": 90,
+                        "mean": 88.94444444444444,
+                        "p95": 242.0,
+                        "min": 34.0,
+                        "max": 2146.0
+                    }
+                },
+                {
+                    "name": "GC Reserved Memory",
+                    "unit": "bytes",
+                    "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                    "unavailableReason": "",
+                    "available": true,
+                    "values": {
+                        "samples": 90,
+                        "mean": 180490240.0,
+                        "p95": 180490240.0,
+                        "min": 180490240.0,
+                        "max": 180490240.0
+                    }
+                },
+                {
+                    "name": "GC Used Memory",
+                    "unit": "bytes",
+                    "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                    "unavailableReason": "",
+                    "available": true,
+                    "values": {
+                        "samples": 90,
+                        "mean": 33004066.133333333,
+                        "p95": 33005568.0,
+                        "min": 33001472.0,
+                        "max": 33005568.0
+                    }
+                }
+            ],
+            "predictedLodCounts": [
+                0,
+                0,
+                140,
+                148
+            ],
+            "lodCountsMeaning": "LOD0/1/2/below cull threshold predicted from authored screen-height thresholds, size, camera and current LOD bias. These counts do not claim actual occlusion visibility."
+        },
+        {
+            "name": "Far corner",
+            "cameraPosition": {
+                "x": 51.0,
+                "y": 3.0,
+                "z": -32.0
+            },
+            "cameraTarget": {
+                "x": 39.0,
+                "y": 1.0,
+                "z": -24.0
+            },
+            "warmupFrames": 120,
+            "measuredFrames": 90,
+            "cameraRenderCpuMs": {
+                "samples": 90,
+                "mean": 2.838777777777778,
+                "p95": 3.7825,
+                "min": 2.1724,
+                "max": 4.0013
+            },
+            "editorPlayFrameIntervalMs": {
+                "samples": 90,
+                "mean": 6.582771091618472,
+                "p95": 7.822498679161072,
+                "min": 4.855895880609751,
+                "max": 10.166999883949757
+            },
+            "counters": [
+                {
+                    "name": "Draw Calls Count",
+                    "unit": "calls",
+                    "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                    "unavailableReason": "",
+                    "available": true,
+                    "values": {
+                        "samples": 90,
+                        "mean": 723.0,
+                        "p95": 723.0,
+                        "min": 723.0,
+                        "max": 723.0
+                    }
+                },
+                {
+                    "name": "Batches Count",
+                    "unit": "batches",
+                    "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                    "unavailableReason": "Batch Editor supplied only zeros while triangles were rendered; submission count is not verified",
+                    "available": false,
+                    "values": {
+                        "samples": 0,
+                        "mean": 0.0,
+                        "p95": 0.0,
+                        "min": 0.0,
+                        "max": 0.0
+                    }
+                },
+                {
+                    "name": "SetPass Calls Count",
+                    "unit": "calls",
+                    "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                    "unavailableReason": "",
+                    "available": true,
+                    "values": {
+                        "samples": 90,
+                        "mean": 91.0,
+                        "p95": 91.0,
+                        "min": 91.0,
+                        "max": 91.0
+                    }
+                },
+                {
+                    "name": "Triangles Count",
+                    "unit": "triangles",
+                    "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                    "unavailableReason": "",
+                    "available": true,
+                    "values": {
+                        "samples": 90,
+                        "mean": 152303.0,
+                        "p95": 152303.0,
+                        "min": 152303.0,
+                        "max": 152303.0
+                    }
+                },
+                {
+                    "name": "Vertices Count",
+                    "unit": "vertices",
+                    "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                    "unavailableReason": "",
+                    "available": true,
+                    "values": {
+                        "samples": 90,
+                        "mean": 0.0,
+                        "p95": 0.0,
+                        "min": 0.0,
+                        "max": 0.0
+                    }
+                },
+                {
+                    "name": "Main Thread",
+                    "unit": "ms",
+                    "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                    "unavailableReason": "",
+                    "available": true,
+                    "values": {
+                        "samples": 90,
+                        "mean": 6.566633333333333,
+                        "p95": 8.5496,
+                        "min": 4.8155,
+                        "max": 9.421899999999999
+                    }
+                },
+                {
+                    "name": "GC Allocated In Frame",
+                    "unit": "bytes",
+                    "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                    "unavailableReason": "",
+                    "available": true,
+                    "values": {
+                        "samples": 90,
+                        "mean": 92.41111111111111,
+                        "p95": 259.0,
+                        "min": 34.0,
+                        "max": 2163.0
+                    }
+                },
+                {
+                    "name": "GC Reserved Memory",
+                    "unit": "bytes",
+                    "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                    "unavailableReason": "",
+                    "available": true,
+                    "values": {
+                        "samples": 90,
+                        "mean": 180490240.0,
+                        "p95": 180490240.0,
+                        "min": 180490240.0,
+                        "max": 180490240.0
+                    }
+                },
+                {
+                    "name": "GC Used Memory",
+                    "unit": "bytes",
+                    "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                    "unavailableReason": "",
+                    "available": true,
+                    "values": {
+                        "samples": 90,
+                        "mean": 33416305.777777776,
+                        "p95": 33419264.0,
+                        "min": 33415168.0,
+                        "max": 33419264.0
+                    }
+                }
+            ],
+            "predictedLodCounts": [
+                5,
+                14,
+                99,
+                170
+            ],
+            "lodCountsMeaning": "LOD0/1/2/below cull threshold predicted from authored screen-height thresholds, size, camera and current LOD bias. These counts do not claim actual occlusion visibility."
+        }
+    ],
+    "lodProbe": [
+        {
+            "distance": 18.475116729736328,
+            "predictedLod": 0,
+            "meshTriangles": [
+                11532,
+                5646,
+                1948
+            ],
+            "measurement": {
+                "name": "Isolated sofa native automatic LOD 0",
+                "cameraPosition": {
+                    "x": 1008.9596557617188,
+                    "y": 5.895155429840088,
+                    "z": 1015.2200317382813
+                },
+                "cameraTarget": {
+                    "x": 999.9978637695313,
+                    "y": 0.5181061625480652,
+                    "z": 999.9850463867188
+                },
+                "warmupFrames": 35,
+                "measuredFrames": 40,
+                "cameraRenderCpuMs": {
+                    "samples": 40,
+                    "mean": 0.4768275,
+                    "p95": 0.5304,
+                    "min": 0.4426,
+                    "max": 0.5626
+                },
+                "editorPlayFrameIntervalMs": {
+                    "samples": 40,
+                    "mean": 1.3374048634432256,
+                    "p95": 1.4886053977534175,
+                    "min": 1.2171980924904346,
+                    "max": 1.5326034044846892
+                },
+                "counters": [
+                    {
+                        "name": "Draw Calls Count",
+                        "unit": "calls",
+                        "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                        "unavailableReason": "",
+                        "available": true,
+                        "values": {
+                            "samples": 40,
+                            "mean": 23.0,
+                            "p95": 23.0,
+                            "min": 23.0,
+                            "max": 23.0
+                        }
+                    },
+                    {
+                        "name": "Batches Count",
+                        "unit": "batches",
+                        "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                        "unavailableReason": "Batch Editor supplied only zeros while triangles were rendered; submission count is not verified",
+                        "available": false,
+                        "values": {
+                            "samples": 0,
+                            "mean": 0.0,
+                            "p95": 0.0,
+                            "min": 0.0,
+                            "max": 0.0
+                        }
+                    },
+                    {
+                        "name": "SetPass Calls Count",
+                        "unit": "calls",
+                        "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                        "unavailableReason": "",
+                        "available": true,
+                        "values": {
+                            "samples": 40,
+                            "mean": 8.0,
+                            "p95": 8.0,
+                            "min": 8.0,
+                            "max": 8.0
+                        }
+                    },
+                    {
+                        "name": "Triangles Count",
+                        "unit": "triangles",
+                        "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                        "unavailableReason": "",
+                        "available": true,
+                        "values": {
+                            "samples": 40,
+                            "mean": 24744.0,
+                            "p95": 24744.0,
+                            "min": 24744.0,
+                            "max": 24744.0
+                        }
+                    },
+                    {
+                        "name": "Vertices Count",
+                        "unit": "vertices",
+                        "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                        "unavailableReason": "",
+                        "available": true,
+                        "values": {
+                            "samples": 40,
+                            "mean": 0.0,
+                            "p95": 0.0,
+                            "min": 0.0,
+                            "max": 0.0
+                        }
+                    },
+                    {
+                        "name": "Main Thread",
+                        "unit": "ms",
+                        "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                        "unavailableReason": "",
+                        "available": true,
+                        "values": {
+                            "samples": 40,
+                            "mean": 1.3352599999999997,
+                            "p95": 1.5312999999999999,
+                            "min": 1.2187,
+                            "max": 1.5974
+                        }
+                    },
+                    {
+                        "name": "GC Allocated In Frame",
+                        "unit": "bytes",
+                        "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                        "unavailableReason": "",
+                        "available": true,
+                        "values": {
+                            "samples": 40,
+                            "mean": 94.875,
+                            "p95": 354.0,
+                            "min": 34.0,
+                            "max": 1122.0
+                        }
+                    },
+                    {
+                        "name": "GC Reserved Memory",
+                        "unit": "bytes",
+                        "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                        "unavailableReason": "",
+                        "available": true,
+                        "values": {
+                            "samples": 40,
+                            "mean": 180490240.0,
+                            "p95": 180490240.0,
+                            "min": 180490240.0,
+                            "max": 180490240.0
+                        }
+                    },
+                    {
+                        "name": "GC Used Memory",
+                        "unit": "bytes",
+                        "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                        "unavailableReason": "",
+                        "available": true,
+                        "values": {
+                            "samples": 40,
+                            "mean": 35393536.0,
+                            "p95": 35393536.0,
+                            "min": 35393536.0,
+                            "max": 35393536.0
+                        }
+                    }
+                ],
+                "predictedLodCounts": [],
+                "lodCountsMeaning": ""
+            }
+        },
+        {
+            "distance": 36.950233459472656,
+            "predictedLod": 1,
+            "meshTriangles": [
+                11532,
+                5646,
+                1948
+            ],
+            "measurement": {
+                "name": "Isolated sofa native automatic LOD 1",
+                "cameraPosition": {
+                    "x": 1017.9214477539063,
+                    "y": 11.272205352783203,
+                    "z": 1030.4549560546875
+                },
+                "cameraTarget": {
+                    "x": 999.9978637695313,
+                    "y": 0.5181061625480652,
+                    "z": 999.9850463867188
+                },
+                "warmupFrames": 35,
+                "measuredFrames": 40,
+                "cameraRenderCpuMs": {
+                    "samples": 40,
+                    "mean": 0.5427325000000002,
+                    "p95": 0.6397,
+                    "min": 0.4364,
+                    "max": 0.6952
+                },
+                "editorPlayFrameIntervalMs": {
+                    "samples": 40,
+                    "mean": 1.5410700085340068,
+                    "p95": 1.8107001669704914,
+                    "min": 1.2579010799527168,
+                    "max": 1.83309952262789
+                },
+                "counters": [
+                    {
+                        "name": "Draw Calls Count",
+                        "unit": "calls",
+                        "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                        "unavailableReason": "",
+                        "available": true,
+                        "values": {
+                            "samples": 40,
+                            "mean": 23.0,
+                            "p95": 23.0,
+                            "min": 23.0,
+                            "max": 23.0
+                        }
+                    },
+                    {
+                        "name": "Batches Count",
+                        "unit": "batches",
+                        "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                        "unavailableReason": "Batch Editor supplied only zeros while triangles were rendered; submission count is not verified",
+                        "available": false,
+                        "values": {
+                            "samples": 0,
+                            "mean": 0.0,
+                            "p95": 0.0,
+                            "min": 0.0,
+                            "max": 0.0
+                        }
+                    },
+                    {
+                        "name": "SetPass Calls Count",
+                        "unit": "calls",
+                        "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                        "unavailableReason": "",
+                        "available": true,
+                        "values": {
+                            "samples": 40,
+                            "mean": 8.0,
+                            "p95": 8.0,
+                            "min": 8.0,
+                            "max": 8.0
+                        }
+                    },
+                    {
+                        "name": "Triangles Count",
+                        "unit": "triangles",
+                        "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                        "unavailableReason": "",
+                        "available": true,
+                        "values": {
+                            "samples": 40,
+                            "mean": 12972.0,
+                            "p95": 12972.0,
+                            "min": 12972.0,
+                            "max": 12972.0
+                        }
+                    },
+                    {
+                        "name": "Vertices Count",
+                        "unit": "vertices",
+                        "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                        "unavailableReason": "",
+                        "available": true,
+                        "values": {
+                            "samples": 40,
+                            "mean": 0.0,
+                            "p95": 0.0,
+                            "min": 0.0,
+                            "max": 0.0
+                        }
+                    },
+                    {
+                        "name": "Main Thread",
+                        "unit": "ms",
+                        "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                        "unavailableReason": "",
+                        "available": true,
+                        "values": {
+                            "samples": 40,
+                            "mean": 1.5395774999999996,
+                            "p95": 1.8361999999999998,
+                            "min": 1.3154,
+                            "max": 1.9924
+                        }
+                    },
+                    {
+                        "name": "GC Allocated In Frame",
+                        "unit": "bytes",
+                        "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                        "unavailableReason": "",
+                        "available": true,
+                        "values": {
+                            "samples": 40,
+                            "mean": 96.175,
+                            "p95": 354.0,
+                            "min": 34.0,
+                            "max": 1122.0
+                        }
+                    },
+                    {
+                        "name": "GC Reserved Memory",
+                        "unit": "bytes",
+                        "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                        "unavailableReason": "",
+                        "available": true,
+                        "values": {
+                            "samples": 40,
+                            "mean": 180490240.0,
+                            "p95": 180490240.0,
+                            "min": 180490240.0,
+                            "max": 180490240.0
+                        }
+                    },
+                    {
+                        "name": "GC Used Memory",
+                        "unit": "bytes",
+                        "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                        "unavailableReason": "",
+                        "available": true,
+                        "values": {
+                            "samples": 40,
+                            "mean": 35484364.8,
+                            "p95": 35487744.0,
+                            "min": 35483648.0,
+                            "max": 35487744.0
+                        }
+                    }
+                ],
+                "predictedLodCounts": [],
+                "lodCountsMeaning": ""
+            }
+        },
+        {
+            "distance": 98.53395080566406,
+            "predictedLod": 2,
+            "meshTriangles": [
+                11532,
+                5646,
+                1948
+            ],
+            "measurement": {
+                "name": "Isolated sofa native automatic LOD 2",
+                "cameraPosition": {
+                    "x": 1047.7939453125,
+                    "y": 29.195701599121094,
+                    "z": 1081.23828125
+                },
+                "cameraTarget": {
+                    "x": 999.9978637695313,
+                    "y": 0.5181061625480652,
+                    "z": 999.9850463867188
+                },
+                "warmupFrames": 35,
+                "measuredFrames": 40,
+                "cameraRenderCpuMs": {
+                    "samples": 40,
+                    "mean": 0.565755,
+                    "p95": 0.6908,
+                    "min": 0.4046,
+                    "max": 0.8096
+                },
+                "editorPlayFrameIntervalMs": {
+                    "samples": 40,
+                    "mean": 1.9059100275626406,
+                    "p95": 2.6347008533775806,
+                    "min": 1.2965986970812082,
+                    "max": 2.891695126891136
+                },
+                "counters": [
+                    {
+                        "name": "Draw Calls Count",
+                        "unit": "calls",
+                        "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                        "unavailableReason": "",
+                        "available": true,
+                        "values": {
+                            "samples": 40,
+                            "mean": 12.0,
+                            "p95": 12.0,
+                            "min": 12.0,
+                            "max": 12.0
+                        }
+                    },
+                    {
+                        "name": "Batches Count",
+                        "unit": "batches",
+                        "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                        "unavailableReason": "Batch Editor supplied only zeros while triangles were rendered; submission count is not verified",
+                        "available": false,
+                        "values": {
+                            "samples": 0,
+                            "mean": 0.0,
+                            "p95": 0.0,
+                            "min": 0.0,
+                            "max": 0.0
+                        }
+                    },
+                    {
+                        "name": "SetPass Calls Count",
+                        "unit": "calls",
+                        "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                        "unavailableReason": "",
+                        "available": true,
+                        "values": {
+                            "samples": 40,
+                            "mean": 7.0,
+                            "p95": 7.0,
+                            "min": 7.0,
+                            "max": 7.0
+                        }
+                    },
+                    {
+                        "name": "Triangles Count",
+                        "unit": "triangles",
+                        "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                        "unavailableReason": "",
+                        "available": true,
+                        "values": {
+                            "samples": 40,
+                            "mean": 3628.0,
+                            "p95": 3628.0,
+                            "min": 3628.0,
+                            "max": 3628.0
+                        }
+                    },
+                    {
+                        "name": "Vertices Count",
+                        "unit": "vertices",
+                        "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                        "unavailableReason": "",
+                        "available": true,
+                        "values": {
+                            "samples": 40,
+                            "mean": 0.0,
+                            "p95": 0.0,
+                            "min": 0.0,
+                            "max": 0.0
+                        }
+                    },
+                    {
+                        "name": "Main Thread",
+                        "unit": "ms",
+                        "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                        "unavailableReason": "",
+                        "available": true,
+                        "values": {
+                            "samples": 40,
+                            "mean": 1.9257499999999996,
+                            "p95": 2.6199999999999997,
+                            "min": 1.2646,
+                            "max": 2.702
+                        }
+                    },
+                    {
+                        "name": "GC Allocated In Frame",
+                        "unit": "bytes",
+                        "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                        "unavailableReason": "",
+                        "available": true,
+                        "values": {
+                            "samples": 40,
+                            "mean": 95.3,
+                            "p95": 371.0,
+                            "min": 34.0,
+                            "max": 1122.0
+                        }
+                    },
+                    {
+                        "name": "GC Reserved Memory",
+                        "unit": "bytes",
+                        "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                        "unavailableReason": "",
+                        "available": true,
+                        "values": {
+                            "samples": 40,
+                            "mean": 180490240.0,
+                            "p95": 180490240.0,
+                            "min": 180490240.0,
+                            "max": 180490240.0
+                        }
+                    },
+                    {
+                        "name": "GC Used Memory",
+                        "unit": "bytes",
+                        "source": "ProfilerRecorder, with UnityStats fallback for render submission counters",
+                        "unavailableReason": "",
+                        "available": true,
+                        "values": {
+                            "samples": 40,
+                            "mean": 35536896.0,
+                            "p95": 35536896.0,
+                            "min": 35536896.0,
+                            "max": 35536896.0
+                        }
+                    }
+                ],
+                "predictedLodCounts": [],
+                "lodCountsMeaning": ""
+            }
+        }
+    ],
+    "checks": [
+        "12 apartments contain 288 authored furniture instances",
+        "all 288 furniture roots are registered in existing world-save registry",
+        "360 measured native camera renders across four views after 120 warmup frames per view",
+        "benchmark leaves every registered furniture transform mechanism device and wear state unchanged",
+        "isolated sofa probe has three genuine LODs",
+        "sofa source triangle counts decrease across three LODs",
+        "native sofa probe distance 18,47512 m matches automatic LOD0 threshold (no ForceLOD)",
+        "native sofa probe distance 36,95023 m matches automatic LOD1 threshold (no ForceLOD)",
+        "native sofa probe distance 98,53395 m matches automatic LOD2 threshold (no ForceLOD)",
+        "native rendered triangle profiler counter decreases with automatic sofa LOD transitions",
+        "wear example 1 reuses exact source meshes and materials",
+        "wear example 2 reuses exact source meshes and materials",
+        "wear example 3 reuses exact source meshes and materials",
+        "wear example 4 reuses exact source meshes and materials",
+        "wear example 5 reuses exact source meshes and materials",
+        "wear example 6 reuses exact source meshes and materials",
+        "wear example 7 reuses exact source meshes and materials",
+        "wear example 8 reuses exact source meshes and materials",
+        "wear example 9 reuses exact source meshes and materials",
+        "wear example 10 reuses exact source meshes and materials",
+        "wear example 11 reuses exact source meshes and materials",
+        "wear example 12 reuses exact source meshes and materials",
+        "wear example 13 reuses exact source meshes and materials",
+        "wear example 14 reuses exact source meshes and materials",
+        "wear example 15 reuses exact source meshes and materials",
+        "wear example 16 reuses exact source meshes and materials",
+        "wear example 17 reuses exact source meshes and materials",
+        "wear example 18 reuses exact source meshes and materials",
+        "wear example 19 reuses exact source meshes and materials",
+        "wear example 20 reuses exact source meshes and materials"
+    ],
+    "unavailableCounters": [
+        "Batches Count"
+    ]
+}
