@@ -1,0 +1,40 @@
+PASS UnityEngine.Random unchanged seed=1
+PASS seed=1 apartment metadata/layout: 
+PASS seed=1 inherited doorway/room paths: 
+INFO seed=1 apartments=3 living=11 bathroom=2 toilet=1 available=12
+PASS new temporary building prefab saved
+PASS prefab roundtrip apartment count
+PASS roundtrip door reference variant-1/E01/F01/L
+PASS roundtrip initialized door open at authored125 degrees variant-1/E01/F01/L
+PASS roundtrip door reference variant-1/E01/F01/R
+PASS roundtrip initialized door open at authored125 degrees variant-1/E01/F01/R
+PASS roundtrip door reference variant-1/E01/F02/L
+PASS roundtrip initialized door open at authored125 degrees variant-1/E01/F02/L
+PASS prefab roundtrip layout signature unchanged
+PASS UnityEngine.Random unchanged seed=2
+PASS seed=2 apartment metadata/layout: 
+PASS seed=2 inherited doorway/room paths: 
+INFO seed=2 apartments=2 living=7 bathroom=0 toilet=1 available=5
+PASS UnityEngine.Random unchanged seed=3
+PASS seed=3 apartment metadata/layout: 
+PASS seed=3 inherited doorway/room paths: 
+INFO seed=3 apartments=3 living=10 bathroom=2 toilet=1 available=11
+PASS UnityEngine.Random unchanged seed=4
+PASS seed=4 apartment metadata/layout: 
+PASS seed=4 inherited doorway/room paths: 
+INFO seed=4 apartments=3 living=7 bathroom=3 toilet=1 available=10
+PASS UnityEngine.Random unchanged seed=5
+PASS seed=5 apartment metadata/layout: 
+PASS seed=5 inherited doorway/room paths: 
+INFO seed=5 apartments=2 living=6 bathroom=0 toilet=0 available=7
+PASS UnityEngine.Random unchanged seed=6
+PASS seed=6 apartment metadata/layout: 
+PASS seed=6 inherited doorway/room paths: 
+INFO seed=6 apartments=1 living=2 bathroom=1 toilet=1 available=3
+PASS UnityEngine.Random unchanged seed=1
+PASS seed=1 apartment metadata/layout: 
+PASS seed=1 inherited doorway/room paths: 
+INFO seed=1 apartments=3 living=11 bathroom=2 toilet=1 available=12
+PASS same seed/building ID reproduces exact apartment/room/availability/size/angle signature
+INFO distinct signatures among six seeded building IDs=6; random sample does not promise every allowed combination
+PASS source profile and preexisting scene disk SHA unchanged

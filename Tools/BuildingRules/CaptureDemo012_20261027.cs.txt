@@ -1,0 +1,21 @@
+var main=UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+var source=main.GetRootGameObjects().SelectMany(g=>g.GetComponentsInChildren<ZombieSurvival.ModularBuildings.GeneratedBuilding>(true)).Single(b=>b.name=="Building_demo-building-012");
+var preview=UnityEditor.SceneManagement.EditorSceneManager.NewPreviewScene();
+UnityEngine.RenderTexture rt=null;UnityEngine.Texture2D tex=null;var active=UnityEngine.RenderTexture.active;
+try{
+ 
+ var copy=UnityEngine.Object.Instantiate(source.gameObject);UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(copy,preview);
+ var sun=new UnityEngine.GameObject("Capture sunlight").AddComponent<UnityEngine.Light>();UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(sun.gameObject,preview);sun.type=UnityEngine.LightType.Directional;sun.intensity=1.5f;sun.transform.rotation=UnityEngine.Quaternion.Euler(40,-35,0);
+ var camera=new UnityEngine.GameObject("Capture camera").AddComponent<UnityEngine.Camera>();UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(camera.gameObject,preview);camera.enabled=false;camera.scene=preview;camera.aspect=1280f/900;camera.fieldOfView=48;camera.nearClipPlane=.1f;camera.farClipPlane=500;camera.clearFlags=UnityEngine.CameraClearFlags.SolidColor;camera.backgroundColor=new UnityEngine.Color(.42f,.5f,.58f);
+ rt=new UnityEngine.RenderTexture(1280,900,24);tex=new UnityEngine.Texture2D(1280,900,UnityEngine.TextureFormat.RGB24,false);
+ var centre=copy.transform.TransformPoint(new UnityEngine.Vector3(0,16.5f,4.5f));
+ foreach(bool rear in new[]{false,true}){
+  camera.transform.position=centre+copy.transform.TransformVector(new UnityEngine.Vector3(rear?-28:28,7,rear?48:-48));camera.transform.LookAt(centre);
+  UnityEngine.Rendering.RenderPipeline.SubmitRenderRequest(camera,new UnityEngine.Rendering.Universal.UniversalRenderPipeline.SingleCameraRequest{destination=rt});
+  UnityEngine.RenderTexture.active=rt;tex.ReadPixels(new UnityEngine.Rect(0,0,1280,900),0,0);tex.Apply();System.IO.File.WriteAllBytes("Verification/Demo012Paint_20261027/"+(rear?"Rear":"Front")+".png",tex.EncodeToPNG());
+ }
+}finally{
+ UnityEngine.RenderTexture.active=active;if(tex)UnityEngine.Object.DestroyImmediate(tex);if(rt){rt.Release();UnityEngine.Object.DestroyImmediate(rt);}UnityEditor.SceneManagement.EditorSceneManager.ClosePreviewScene(preview);UnityEngine.SceneManagement.SceneManager.SetActiveScene(main);
+}
+return "captured front/rear isolated previews";
+

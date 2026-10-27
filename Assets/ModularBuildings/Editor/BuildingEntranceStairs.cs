@@ -38,7 +38,9 @@ namespace ZombieSurvival.ModularBuildings.Editor
   static Plan Make(GeneratedBuilding b,int entrance,float x,Terrain preferred,bool strict){
    // One fixed shape for every entrance; Terrain never changes vertices or step count.
    var p=b.profile;float width=Mathf.Max(1.2f,p.entranceStairWidth),riser=Mathf.Clamp(p.entranceMaxRiser,.1f,.19f),tread=Mathf.Max(.28f,p.entranceTreadDepth),landing=Mathf.Max(1.2f,p.entranceLandingDepth),height=Mathf.Clamp(p.entranceStairHeight,1f,40f);
-   var floor=b.transform.Find("Entrance_"+entrance+"/Floor_1/MainLandingAndOpenFloor");if(!floor)throw new InvalidOperationException("Не найдена площадка подъезда "+entrance);
+   var floor=b.transform.Find("Entrance_"+entrance+"/Floor_1/MainLandingAndOpenFloor");
+   if(!floor&&p.extendedCityRules)floor=b.transform.Find("ContinuousFloorSlabs/FloorSlab_1");
+   if(!floor)throw new InvalidOperationException("Не найдена площадка подъезда "+entrance);
    var floorBox=BuildingBaseTrim.LocalBounds(b.transform,floor.GetComponentsInChildren<MeshFilter>(true));float threshold=floorBox.max.y,inside=floorBox.min.z,front=BuildingBaseTrim.Foundation(b).min.z-Mathf.Clamp(p.baseTrimProjection,.005f,.05f);
    var plan=new Plan();var path=new List<Vector3>();plan.terrain=TerrainAt(b,b.transform.TransformPoint(new Vector3(x,threshold,front)),preferred);
    float top=threshold+.005f,z=front-landing,bottom=top-height-.2f;

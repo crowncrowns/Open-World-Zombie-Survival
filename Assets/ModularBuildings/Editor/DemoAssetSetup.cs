@@ -211,6 +211,7 @@ namespace ZombieSurvival.ModularBuildings.Editor
         }
         static Mesh MeshAsset(string path,Func<Mesh> create){var m=Load<Mesh>(path);if(m)return m;m=create();AssetDatabase.CreateAsset(m,path);return m;}
         public static float RoofHeight(float z)=>.08f+.02f*(6.2f-Mathf.Abs(z-4.5f));
+        public static Mesh CreateRoofMesh(int entrances,float sectionWidth)=>Roof(entrances,sectionWidth);
         static Mesh Roof(int entrances,float sectionWidth=9)
         {
             float x0=-sectionWidth/2-.2f,x1=(entrances-1)*sectionWidth+sectionWidth/2+.2f;

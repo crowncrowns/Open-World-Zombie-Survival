@@ -1,0 +1,140 @@
+// Explicit Unity CLI eval body, no Assets code compilation. Replace mode before eval.
+const string mode="DRY_RUN";
+const string dir="Verification/CityRulesMigration_20261027/";
+System.IO.Directory.CreateDirectory(dir);
+if(UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)throw new System.Exception("Edit only");
+var scene=UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+var buildings=scene.GetRootGameObjects().SelectMany(g=>g.GetComponentsInChildren<ZombieSurvival.ModularBuildings.GeneratedBuilding>(true)).ToArray();
+var triple=UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.GameObject>(ZombieSurvival.ModularBuildings.Editor.BuildingGenerator.TripleWindowPath);
+if(!triple)throw new System.Exception("Missing triple prefab");
+var replace=new System.Collections.Generic.List<UnityEngine.Transform>();
+var drains=new System.Collections.Generic.List<UnityEngine.Transform>();
+var entranceBuildings=new System.Collections.Generic.List<ZombieSurvival.ModularBuildings.GeneratedBuilding>();
+var exceptions=new System.Collections.Generic.List<string>();
+var hingeExceptions=new System.Collections.Generic.HashSet<UnityEngine.Transform>();
+var wallMaterials=new System.Collections.Generic.Dictionary<UnityEngine.Transform,UnityEngine.Material>();
+var extraMaterials=new System.Collections.Generic.Dictionary<UnityEngine.Transform,System.Collections.Generic.Dictionary<string,UnityEngine.Material[]>>();
+var generated=new System.Collections.Generic.List<UnityEngine.GameObject>();
+string Path(UnityEngine.Transform t)=>t.parent?Path(t.parent)+"/"+t.name:t.name;
+bool IsWall(UnityEngine.MeshRenderer r)=>r.name=="Wall_Window"||ZombieSurvival.ModularBuildings.Editor.BuildingExteriorMaterials.IsTripleWall(r);
+bool Covered(UnityEngine.Transform t)=>replace.Concat(drains).Any(r=>t==r||t.IsChildOf(r));
+string Pose(UnityEngine.Transform t)=>t.GetEntityId()+"|"+(t.parent?t.parent.GetEntityId().ToString():"root")+"|"+t.localPosition.ToString("R")+"|"+(hingeExceptions.Contains(t)?"HINGE_ROTATION":t.localRotation.ToString("R"))+"|"+t.localScale.ToString("R");
+string Mats(UnityEngine.MeshRenderer r)=>string.Join(",",r.sharedMaterials.Select(m=>m?UnityEditor.AssetDatabase.GetAssetPath(m)+":"+m.GetEntityId():"null"));
+foreach(var b in buildings)
+{
+    if(!b.profile)throw new System.Exception("Missing profile "+b.name);
+    if(b.floors>5)
+    {
+        var d=b.transform.Find("CityDetails_V6/Водостоки — замкнутые соединения и крепления");
+        if(d)
+        {
+            foreach(var t in d.GetComponentsInChildren<UnityEngine.Transform>(true))
+            {
+                foreach(var c in t.GetComponents<UnityEngine.Component>())
+                    if(!c || (!(c is UnityEngine.Transform)&&!(c is UnityEngine.MeshFilter)&&!(c is UnityEngine.MeshRenderer)&&!(c is UnityEngine.Collider)&& !((c is UnityEngine.LODGroup || c.GetType().FullName=="ZombieSurvival.ModularRoofKit.RoofSnapPoint" || c.GetType().FullName=="ZombieSurvival.ModularRoofKit.RoofKitModule") && UnityEditor.PrefabUtility.GetCorrespondingObjectFromSource(c) && UnityEditor.PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(c.gameObject).StartsWith("Assets/Environment/ModularRoofKit/Prefabs/",System.StringComparison.Ordinal))))exceptions.Add("Unknown drainage component "+Path(t));
+                if(t!=d && !UnityEditor.PrefabUtility.IsPartOfPrefabInstance(t.gameObject))exceptions.Add("Nonprefab drainage payload "+Path(t));
+            }
+            drains.Add(d);
+        }
+    }
+    if(b.floors>5&&b.entrances>=3)
+    {
+        int middle=UnityEngine.Mathf.RoundToInt(ZombieSurvival.ModularBuildings.BuildingFootprint.SectionWidth(b)/3)/2;
+        foreach(var floor in ZombieSurvival.ModularBuildings.Editor.BuildingExteriorMaterials.Floors(b))
+        foreach(string face in new[]{"Front_","Rear_"})foreach(int bay in new[]{middle-2,middle+2})
+        {
+            var t=floor.Find(face+bay);if(!t){exceptions.Add("Missing module "+Path(floor)+"/"+face+bay);continue;}
+            if(ZombieSurvival.ModularBuildings.Editor.BuildingGenerator.IsTripleWindow(t))continue;
+            string actual=UnityEditor.PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(t.gameObject),expected=UnityEditor.AssetDatabase.GetAssetPath(b.profile.windowWall);
+            if(actual!=expected){exceptions.Add("Unexpected source "+Path(t)+" "+actual);continue;}
+            foreach(var c in t.GetComponentsInChildren<UnityEngine.Component>(true))
+            {
+                if(!c){exceptions.Add("Missing script "+Path(t));continue;}
+                bool collision=c.name=="ClosedWindowCollision" || c.transform.name=="ClosedWindowCollision";
+                if(!UnityEditor.PrefabUtility.GetCorrespondingObjectFromSource(c) && !collision)exceptions.Add("Added component/child would be lost "+Path(c.transform)+" "+c.GetType().Name);
+            }
+            var props=UnityEditor.PrefabUtility.GetPropertyModifications(t.gameObject)??new UnityEditor.PropertyModification[0];
+            foreach(var prop in props)
+            {
+                bool seamMesh=prop.propertyPath=="m_Mesh" && (prop.target is UnityEngine.MeshFilter || prop.target is UnityEngine.MeshCollider) && prop.objectReference is UnityEngine.Mesh && UnityEditor.AssetDatabase.GetAssetPath(prop.objectReference).StartsWith("Assets/ModularBuildings/LibraryV3/SeamMeshes/Joined_",System.StringComparison.Ordinal) && UnityEditor.AssetDatabase.GetAssetPath(prop.objectReference).EndsWith(".asset",System.StringComparison.Ordinal);
+                if(prop.target && prop.target!=UnityEditor.PrefabUtility.GetCorrespondingObjectFromSource(t) && !prop.propertyPath.StartsWith("m_Materials") && prop.propertyPath!="m_Name" && !seamMesh)exceptions.Add("Unmapped prefab override "+Path(t)+" "+prop.propertyPath);
+            }
+            var walls=t.GetComponentsInChildren<UnityEngine.MeshRenderer>(true).Where(IsWall).ToArray();
+            var wm=walls.SelectMany(r=>r.sharedMaterials).Distinct().ToArray();if(wm.Length!=1||!wm[0]){exceptions.Add("Ambiguous wall material "+Path(t));continue;}
+            wallMaterials[t]=wm[0];
+            var others=new System.Collections.Generic.Dictionary<string,UnityEngine.Material[]>();
+            foreach(var r in t.GetComponentsInChildren<UnityEngine.MeshRenderer>(true).Where(r=>!IsWall(r)))
+                if(others.ContainsKey(r.name))exceptions.Add("Ambiguous renderer mapping "+Path(t)+" "+r.name);else others[r.name]=r.sharedMaterials;
+            // Different window designs need not share frame names: reject only actual authored overrides without a semantic destination.
+            foreach(var r in t.GetComponentsInChildren<UnityEngine.MeshRenderer>(true).Where(r=>!IsWall(r)))
+            {
+                var src=UnityEditor.PrefabUtility.GetCorrespondingObjectFromSource(r);
+                if(src && !r.sharedMaterials.SequenceEqual(src.sharedMaterials) && triple.GetComponentsInChildren<UnityEngine.MeshRenderer>(true).Count(n=>n.name==r.name)!=1)exceptions.Add("Unmapped material override "+Path(r.transform));
+            }
+            extraMaterials[t]=others;replace.Add(t);
+        }
+    }
+    if(b.GetComponentsInChildren<ZombieSurvival.ModularBuildings.GeneratedApartment>(true).Length>0)
+    {
+        entranceBuildings.Add(b);
+        foreach(var t in b.GetComponentsInChildren<UnityEngine.Transform>(true).Where(t=>t.name=="EntranceDoor"))foreach(var h in t.GetComponentsInChildren<UnityEngine.Transform>(true).Where(h=>h.name=="Door_Hinge"))hingeExceptions.Add(h);
+    }
+}
+System.IO.File.WriteAllText(dir+"MigrationPlan.json",Newtonsoft.Json.JsonConvert.SerializeObject(new{mode,buildings=buildings.Length,windows=replace.Select(Path),drainage=drains.Select(Path),entrances=entranceBuildings.Select(b=>b.buildingId),errors=exceptions},Newtonsoft.Json.Formatting.Indented));
+if(exceptions.Count>0)throw new System.Exception("Preflight refused: "+string.Join(";",exceptions.Take(20)));
+var transforms=scene.GetRootGameObjects().SelectMany(r=>r.GetComponentsInChildren<UnityEngine.Transform>(true)).Where(t=>!Covered(t)).ToDictionary(t=>t,t=>Pose(t));
+var materials=scene.GetRootGameObjects().SelectMany(r=>r.GetComponentsInChildren<UnityEngine.MeshRenderer>(true)).Where(r=>!Covered(r.transform)).ToDictionary(r=>r,r=>Mats(r));
+var apartments=buildings.SelectMany(b=>b.GetComponentsInChildren<ZombieSurvival.ModularBuildings.GeneratedApartment>(true)).ToDictionary(a=>a,a=>UnityEditor.EditorJsonUtility.ToJson(a));
+var metadata=buildings.ToDictionary(b=>b,b=>UnityEditor.EditorJsonUtility.ToJson(b));
+void Verify()
+{
+    foreach(var b in buildings)
+    {
+        if(b.floors>5 && b.transform.Find("CityDetails_V6/Водостоки — замкнутые соединения и крепления"))throw new System.Exception("Drain remains "+b.name);
+        if(b.floors>5&&b.entrances>=3)
+        {
+            int middle=UnityEngine.Mathf.RoundToInt(ZombieSurvival.ModularBuildings.BuildingFootprint.SectionWidth(b)/3)/2;
+            foreach(var f in ZombieSurvival.ModularBuildings.Editor.BuildingExteriorMaterials.Floors(b))foreach(string face in new[]{"Front_","Rear_"})foreach(int bay in new[]{middle-2,middle+2})
+            {
+                var t=f.Find(face+bay);if(!t||!ZombieSurvival.ModularBuildings.Editor.BuildingGenerator.IsTripleWindow(t))throw new System.Exception("Triple missing "+b.name);
+                if(t.GetComponentsInChildren<UnityEngine.Transform>(true).Any(x=>x.name=="ClosedWindowCollision"))throw new System.Exception("Static window blocker copied");
+                if(t.GetComponentsInChildren<UnityEngine.Collider>(true).Length==0)throw new System.Exception("Triple colliders missing");
+            }
+        }
+    }
+    foreach(var b in entranceBuildings){var errors=ZombieSurvival.ModularBuildings.Editor.BuildingApartments.ValidateEntranceAccess(b);if(errors.Count>0)throw new System.Exception(string.Join(";",errors));}
+    foreach(var p in transforms)if(!p.Key||Pose(p.Key)!=p.Value)throw new System.Exception("Untouched transform changed "+(p.Key?Path(p.Key):"missing"));
+    foreach(var p in materials)if(!p.Key||Mats(p.Key)!=p.Value)throw new System.Exception("Untouched material changed");
+    foreach(var p in apartments)if(!p.Key||UnityEditor.EditorJsonUtility.ToJson(p.Key)!=p.Value)throw new System.Exception("Apartment metadata changed");
+    foreach(var p in metadata)if(UnityEditor.EditorJsonUtility.ToJson(p.Key)!=p.Value)throw new System.Exception("Building metadata changed");
+}
+if(mode=="APPLY")
+{
+    UnityEditor.Undo.IncrementCurrentGroup();int group=UnityEditor.Undo.GetCurrentGroup();UnityEditor.Undo.SetCurrentGroupName("Три правила существующих домов");
+    try
+    {
+        foreach(var old in replace)
+        {
+            var go=(UnityEngine.GameObject)UnityEditor.PrefabUtility.InstantiatePrefab(triple,scene);generated.Add(go);go.transform.SetParent(old.parent,false);go.transform.localPosition=old.localPosition;go.transform.localRotation=old.localRotation;go.transform.localScale=old.localScale;go.name=old.name;go.layer=old.gameObject.layer;UnityEditor.GameObjectUtility.SetStaticEditorFlags(go,UnityEditor.GameObjectUtility.GetStaticEditorFlags(old.gameObject));go.transform.SetSiblingIndex(old.GetSiblingIndex());
+            foreach(var r in go.GetComponentsInChildren<UnityEngine.MeshRenderer>(true))
+            {if(IsWall(r))r.sharedMaterials=Enumerable.Repeat(wallMaterials[old],r.sharedMaterials.Length).ToArray();else if(extraMaterials[old].TryGetValue(r.name,out var mats))r.sharedMaterials=mats;UnityEditor.PrefabUtility.RecordPrefabInstancePropertyModifications(r);}
+            UnityEditor.Undo.RegisterCreatedObjectUndo(go,"Тройное окно");UnityEditor.Undo.DestroyObjectImmediate(old.gameObject);
+        }
+        foreach(var d in drains)UnityEditor.Undo.DestroyObjectImmediate(d.gameObject);
+        var configure=typeof(ZombieSurvival.ModularBuildings.Editor.BuildingApartments).GetMethod("ConfigureEntranceAccess",System.Reflection.BindingFlags.Static|System.Reflection.BindingFlags.NonPublic);
+        if(configure==null)throw new System.Exception("Missing entrance API");
+        foreach(var b in entranceBuildings)
+        {
+            var before=b.GetComponentsInChildren<UnityEngine.Component>(true);UnityEditor.Undo.RecordObjects(before.Where(c=>c is UnityEngine.Transform || c is ZombieSurvival.Interaction.DoorInteractable).Cast<UnityEngine.Object>().ToArray(),"Открыть вход");
+            configure.Invoke(null,new object[]{b});
+            foreach(var c in b.GetComponentsInChildren<UnityEngine.Component>(true).Except(before))UnityEditor.Undo.RegisterCreatedObjectUndo(c,"Входная дверь");
+        }
+        Verify();UnityEditor.Undo.CollapseUndoOperations(group);UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(scene);
+        System.IO.File.WriteAllText(dir+"MigrationApply.txt","PASS verified; scene NOT saved; windows="+replace.Count+" drains="+drains.Count);
+    }
+    catch{UnityEditor.Undo.RevertAllDownToGroup(group);throw;}
+}
+else if(mode=="VERIFY"){Verify();System.IO.File.WriteAllText(dir+"MigrationVerify.txt","PASS all buildings="+buildings.Length);}
+else if(mode!="DRY_RUN")throw new System.Exception("Unknown mode");
+System.IO.File.WriteAllText(dir+"UntouchedSnapshot_"+mode+".json",Newtonsoft.Json.JsonConvert.SerializeObject(new{transforms=transforms.Select(p=>new{id=p.Key.GetEntityId().ToString(),pose=p.Value}),materials=materials.Select(p=>new{id=p.Key.GetEntityId().ToString(),materials=p.Value}),buildings=metadata.Select(p=>new{id=p.Key.buildingId,json=p.Value}),apartments=apartments.Select(p=>new{id=p.Key.apartmentId,json=p.Value})},Newtonsoft.Json.Formatting.Indented));
+return mode+" ready windows="+replace.Count+" drains="+drains.Count+" buildings="+buildings.Length;
